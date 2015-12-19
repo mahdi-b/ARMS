@@ -18,9 +18,11 @@ mkdir 1_assembled && cd 1_assembled
 # assemble the forward and reverse reads. -o BALI is the prefix that will be assigned to the newly created files
 ~/bin/pear-0.9.4-bin-64/pear-0.9.4-64 -f ../testData/1/20K_R1.fq -r ../testData/1/20K_R2.fq -o BALI -j 10
 # raname the sequence as 1, 2, 3 ... rather the long Illumina names
-# reviously, this was done using fastx_renamer. To avoid name collision, this is now done through the bash script below
+# previously, this was done using fastx_renamer. To avoid name collision, this is now done through the bash script below
+
 # ~/bin/fastx/bin/fastx_renamer	    -n COUNT -i BALI.assembled.fastq -o BALI.assembled_renamed.fastq -Q 33
-python /home/ransomee/bin/rename_sequences.py TIM02B_500.assembled.fastq BALI prefix fastq
+
+python /home/ransomee/bin/rename_sequences.py BALI.assembled.fastq -o BALI.assembled_renamed.fastq fastq
 
 
 =================================================================================================
