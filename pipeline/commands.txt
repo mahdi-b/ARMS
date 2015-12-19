@@ -46,6 +46,10 @@ cat ../1_assembled/BALI.assembled_renamed.fastq | ~/bin/fastx/bin/fastx_barcode_
 cd ../
 mkdir 3_trim_ab && cd 3_trim_ab
 
+### TO SKIL THIS, just copy the previous file here.
+### ls ../2_split/* | parallel "cp {} {/.}_debarcoded.fastq" 
+### 
+
 # First remove the barcodes from the left site, 
 ls ../2_split/*.fastq | grep -v unmatched | parallel  ~/bin/flexbar/flexbar \
      -r {} -t {/.}_temp_out \
@@ -77,7 +81,7 @@ ls ../4_cleaned/out_*fastq  | parallel  seqret {} {/.}.fasta
 ls *cleaned.fasta  | parallel  "/usr/local/bin/usearch7.0.1090 -derep_fulllength {} -output {/.}_derep.fa -uc {/.}_uc.out"
 
 # parse the number of identical reads included in each sequence and write them to the {sample_file}_parsed.out
-ls *uc.out | parallel "python ../getSeedSequences.py {} {.}_parsed.out"
+ls *uc.out | parallel "python ~/bin/getSeedSequences.py {} {.}_parsed.out"
 
 # rename the sequences to include the the number of identical reads. Ex. in the fasta file {sample_file}_derep_renamed.fa, 
 # read 123_10 indicate that for sequence which id is 123, there 10 sequences that identical to it and 
