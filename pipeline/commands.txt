@@ -1,0 +1,218 @@
+ ________  ___  ___  _______   ___       __   ________  ________  ________  ________  ________     
+|\   ____\|\  \|\  \|\  ___ \ |\  \     |\  \|\   __  \|\   __  \|\   ____\|\   ____\|\   __  \    
+\ \  \___|\ \  \\\  \ \   __/|\ \  \    \ \  \ \  \|\ /\ \  \|\  \ \  \___|\ \  \___|\ \  \|\  \   
+ \ \  \    \ \   __  \ \  \_|/_\ \  \  __\ \  \ \   __  \ \   __  \ \  \    \ \  \    \ \   __  \  
+  \ \  \____\ \  \ \  \ \  \_|\ \ \  \|\__\_\  \ \  \|\  \ \  \ \  \ \  \____\ \  \____\ \  \ \  \ 
+   \ \_______\ \__\ \__\ \_______\ \____________\ \_______\ \__\ \__\ \_______\ \_______\ \__\ \__\
+    \|_______|\|__|\|__|\|_______|\|____________|\|_______|\|__|\|__|\|_______|\|_______|\|__|\|__|
+                                                                                                   
+								 ...COI without the growl!!!!
+
+
+=================================================================================================
+# Step 1: assembling and renaming sequences
+=================================================================================================
+
+mkdir 1_assembled && cd 1_assembled
+
+# assemble the forward and reverse reads. -o BALI is the prefix that will be assigned to the newly created files
+~/bin/pear-0.9.4-bin-64/pear-0.9.4-64 -f ../testData/1/20K_R1.fq -r ../testData/1/20K_R2.fq -o BALI -j 10
+# raname the sequence as 1, 2, 3 ... rather the long Illumina names
+~/bin/fastx/bin/fastx_renamer	    -n COUNT -i BALI.assembled.fastq -o BALI.assembled_renamed.fastq -Q 33
+
+=================================================================================================
+# Step 2: splitting the file into samples.
+=================================================================================================
+cd ../
+mkdir 2_split && cd 2_split
+
+# splits the assembled file based on the samples defined in the barcodes file. 
+# see testData/barcodes.txt for an example
+# Note: this creates an unmatches file... those are the sequences that do not match any barcode.
+# In what follows, I ignore the unmatched sequences
+cat ../1_assembled/BALI.assembled_renamed.fastq | ~/bin/fastx/bin/fastx_barcode_splitter.pl \
+    --bcfile ../testData/barcodes.txt --prefix out_ \
+    --suffix .fastq --bol --mismatches 1
+
+
+=================================================================================================
+# Step 3: Trim the (a)dapter and the (b)arcode sequences from thedata. 
+=================================================================================================
+cd ../
+mkdir 3_trim_ab && cd 3_trim_ab
+
+# First remove the barcodes from the left site, 
+ls ../2_split/*.fastq | grep -v unmatched | parallel  ~/bin/flexbar/flexbar \
+     -r {} -t {/.}_temp_out \
+     -ae LEFT -a ../testData/adapters.fasta 
+# then remove the adapter from the right side.
+ls ../2_split/*.fastq | grep -v unmatched | parallel ~/bin/flexbar/flexbar \
+    -r {/.}_temp_out.fastq -t {/.}_debarcoded \
+    -ae RIGHT -a ../testData/adapters_RC.fa
+
+=================================================================================================
+# Step 4: clean the low quality of the reads using a sliding window
+# Params for this step need to be explored more
+=================================================================================================
+cd ../
+mkdir 4_cleaned && cd 4_cleaned
+
+ls ../3_trim_ab/*debarcoded.fastq | parallel "java -jar ~/bin/Trimmomatic-0.32/trimmomatic.jar \
+   SE -phred33 {} {/.}_cleaned.fastq \
+   SLIDINGWINDOW:5:25 MINLEN:200"
+
+=================================================================================================
+# Step 5: dereplicate the data set
+=================================================================================================
+cd ../
+mkdir 5_dereplicate && cd 5_dereplicate
+
+# dereplication requires that we first conver the dataset to fasta
+ls ../4_cleaned/out_*fastq  | parallel  seqret {} {/.}.fasta
+ls *cleaned.fasta  | parallel  "/usr/local/bin/usearch7.0.1090 -derep_fulllength {} -output {/.}_derep.fa -uc {/.}_uc.out"
+
+# parse the number of identical reads included in each sequence and write them to the {sample_file}_parsed.out
+ls *uc.out | parallel "python ../getSeedSequences.py {} {.}_parsed.out"
+
+# rename the sequences to include the the number of identical reads. Ex. in the fasta file {sample_file}_derep_renamed.fa, 
+# read 123_10 indicate that for sequence which id is 123, there 10 sequences that identical to it and 
+# which were discarded.
+ls *cleaned.fasta | parallel "python ~/bin/renameSequences.py {/.}_derep.fa {/.}_uc_parsed.out {/.}_derep_renamed.fa"
+
+
+=================================================================================================
+# Step 6: Align the reads against the reference to infer orientation
+# this will be most likely change in the future since we don't need to align to 
+# infer orientation (can be inferred from barcode)
+=================================================================================================
+# run mother with the flip param
+# make it from the same directory as align.seqs can cause errors if run with relative path.
+ls *debarcoded_cleaned_derep_renamed.fa | parallel  \
+   mothur '"#align.seqs(candidate={}, template=../data/BIOCODETEMPLATE, flip=t)"'
+
+# create a new directory and more results to it after aligning the reads
+cd ..
+mkdir 6_aligned && cd 6_aligned
+mv ../5_dereplicate/*align* .
+mv ../5_dereplicate/*.flip.accnos .
+
+=================================================================================================
+# Step 7: Split the file to prepare to run MACSE
+# NOTE: We split all the files into smaller chunks so that we can run them on 
+# multiple core in parallle.
+# IMPORTANT, once you split files, you do not want to run ls on that directory, since it
+# could contain a large number of files. This would substancially slow you down
+=================================================================================================
+cd ../
+mkdir 7_split_aligned && cd 7_split_aligned
+
+# IMPORTNAT, make sure you adjust the number of sequences of files to obtain a relatively small number 
+# of chunks. Ex: no more than 300 files.
+# here, for the sake of simplicity, we are splitting in files of 1000 sequences each.
+# note, the last parameter is the format 
+ls ../6_aligned/*renamed.align | parallel "python ~/bin/splitKperFasta.py {} {/.} 1000 fasta"
+
+=================================================================================================
+# Step 8: run MACSE on all the chunks we created
+# -t 20 indicates that we will be running on 20 cores. Adjust this to fit the number 
+# of cores available on the machine.
+=================================================================================================
+cd ..
+mkdir 8_macse_out && cd 8_macse_out
+
+# Chewbacca runs enrichAlignment, then exportAlignment. In the last stage, it cleans the alignments and concatenates them 
+# into a single file MACSEOUT_MERGED.fasta, which can be clustered
+python ~/bin/ARMS/chewbacca.py -t 20 clean -n BALI -s ../7_split_aligned \
+       -p macse -o . --db ../data/BIOCODE_MACSE_VR.fasta
+
+=================================================================================================
+# Step 9: Cluster the sequences
+=================================================================================================
+cd ../
+mkdir 9_cluster && cd 9_cluster
+
+
+# We need to explore this more. Run by default for now.... 
+# Nore that any program can be used here as long as two files 
+# 1- seeds: contains the cluster centroids. This file contains the updates counts for each cluster.
+# ex. a seq 97_2 from the cluster, if selected as a seed, would not be for example 97_100. This indicates
+# that 98 sequences are now assigned to the cluster for which 97 is a seed.
+# 2-clustering.out: contains the clustering results. (see file for sample format)
+~/bin/swarm/src/swarm ../8_macse_out/MACSEOUT_MERGED.fasta \
+  		      --output-file clustering.out -u uclust_file -w seeds
+
+# We convert th seeds files to uppercase (strangely, it is output in lowercase by swarm)
+# this might not be necessary with other clustering programs
+
+tr  '[:lower:]' '[:upper:]' < seeds > seeds.fasta
+rm seeds
+
+=================================================================================================
+# Step 10: Identify hits against biocode
+=================================================================================================
+cd ../
+mkdir 10_search_biocode && cd 10_search_biocode
+
+~/bin/vsearch/bin/vsearch-1.1.1-linux-x86_64 --usearch_global \
+  	../9_cluster/seeds.fasta  --db ../data/BiocodePASSED_SAP.txt --id 0.9 \
+	--userfields query+target+id+alnlen+qcov --userout out \
+	--alnout alnout.txt 
+
+# Parse the alignment results and put those that pass the criterion (97 similarity, 85 coverage) in parsed_BIOCODE.out
+# parameters can be changed and this command can be rerun as many times as necessary 
+python ~/bin/parseVSearchout.py ../data/BiocodePASSED_SAP_tax_info.txt  out 97 85  
+	> parsed_BIOCODE.out
+
+=================================================================================================
+# Step 11: Run the alignment against the sequences extracted from the NCBI's NT.
+# extracting the sequences and building the necessary database needs to be done once.
+# I make the DB available on the server 
+=================================================================================================
+cd ../
+mkdir 11_search_nt && cd 11_search_nt
+
+~/bin/vsearch/bin/vsearch-1.1.1-linux-x86_64 --usearch_global \
+  ../9_cluster/seeds.fasta  --db /home/mahdi/refs/COI_DOWNLOADED/COI.fasta \
+    --id 0.9 \
+    --userfields query+target+id+alnlen+qcov --userout out \
+    --alnout alnout.txt --userfields query+target+id+alnlen+qcov 
+
+# This needs the taxonomy to be available. See below...
+# Parse the alignment results and put those that pass the criterion (97 similarity, 85 coverage) in parsed_nt.out
+# parameters can be changed and this command can be rerun as many times as necessary 
+python ~/bin/getTaxFromId.py out /home/mahdi/refs/taxonomy/ncbi.db 97 85 \
+       > parsed_nt.out
+
+# FOR BLAST
+# DO THIS ONCE TO EXTRACT SEQUENCES AND Format them
+# Uncomment the code below to run only once. Not that this 
+# will take a very long time!!!!
+
+# blastdbcmd -db ~/refs/nt/nt -entry all -outfmt "%g;;%t" > COI.ids
+# awk -F ";;" '{print $1}' COI.ids | blastdbcmd -db ~/refs/nt/nt -dbtype nucl  -entry_batch - -out COI.fasta
+# perl -ne 'if ($_ =~ />/){@data= split(/\|/, $_); print ">".$data[1]."\n"}else{print $_}' COI.fasta  > COI.fasta_
+# mv COI.fasta_ COI.fasta
+# sqlite3 ncbi.db   
+# create table gi_taxid(gi integer, taxid integer);
+# .tables  
+# .mode list  
+# .separator \t  
+# .import gi_taxid_nucl.dmp gi_taxid  
+# CREATE UNIQUE INDEX gi_idx_on_gi_taxid ON gi_taxid(gi);  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
