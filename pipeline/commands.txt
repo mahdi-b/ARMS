@@ -22,7 +22,7 @@ mkdir 1_assembled && cd 1_assembled
 
 # ~/bin/fastx/bin/fastx_renamer	    -n COUNT -i BALI.assembled.fastq -o BALI.assembled_renamed.fastq -Q 33
 
-python /home/ransomee/bin/rename_sequences.py BALI.assembled.fastq -o BALI.assembled_renamed.fastq fastq
+python /home/ransomee/bin/rename_sequences.py BALI.assembled.fastq  BALI.assembled_renamed.fastq fastq
 
 
 =================================================================================================
