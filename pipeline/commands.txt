@@ -18,7 +18,10 @@ mkdir 1_assembled && cd 1_assembled
 # assemble the forward and reverse reads. -o BALI is the prefix that will be assigned to the newly created files
 ~/bin/pear-0.9.4-bin-64/pear-0.9.4-64 -f ../testData/1/20K_R1.fq -r ../testData/1/20K_R2.fq -o BALI -j 10
 # raname the sequence as 1, 2, 3 ... rather the long Illumina names
-~/bin/fastx/bin/fastx_renamer	    -n COUNT -i BALI.assembled.fastq -o BALI.assembled_renamed.fastq -Q 33
+# reviously, this was done using fastx_renamer. To avoid name collision, this is now done through the bash script below
+# ~/bin/fastx/bin/fastx_renamer	    -n COUNT -i BALI.assembled.fastq -o BALI.assembled_renamed.fastq -Q 33
+python /home/ransomee/bin/rename_sequences.py TIM02B_500.assembled.fastq BALI prefix fastq
+
 
 =================================================================================================
 # Step 2: splitting the file into samples.
@@ -131,6 +134,10 @@ python ~/bin/ARMS/chewbacca.py -t 20 clean -n BALI -s ../7_split_aligned \
 cd ../
 mkdir 9_cluster && cd 9_cluster
 
+# prepare the file for clustering. Dereplicates across smaples and renames the resulting sequences with hashes
+~/bin/prepare.sh ../8_macse_out/MACSEOUT_MERGED.fasta
+
+
 
 # We need to explore this more. Run by default for now.... 
 # Nore that any program can be used here as long as two files 
@@ -138,7 +145,7 @@ mkdir 9_cluster && cd 9_cluster
 # ex. a seq 97_2 from the cluster, if selected as a seed, would not be for example 97_100. This indicates
 # that 98 sequences are now assigned to the cluster for which 97 is a seed.
 # 2-clustering.out: contains the clustering results. (see file for sample format)
-~/bin/swarm/src/swarm ../8_macse_out/MACSEOUT_MERGED.fasta \
+~/bin/swarm/src/swarm dereplicated_renamed.fasta \
   		      --output-file clustering.out -u uclust_file -w seeds
 
 # We convert th seeds files to uppercase (strangely, it is output in lowercase by swarm)
