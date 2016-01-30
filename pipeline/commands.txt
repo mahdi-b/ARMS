@@ -76,7 +76,7 @@ ls ../3_trim_ab/*debarcoded.fastq | parallel "java -jar ~/bin/Trimmomatic-0.32/t
 cd ../
 mkdir 5_dereplicate && cd 5_dereplicate
 
-# dereplication requires that we first conver the dataset to fasta
+# dereplication requires that we first convert the dataset to fasta
 ls ../4_cleaned/out_*fastq  | parallel  seqret {} {/.}.fasta
 ls *cleaned.fasta  | parallel  "/usr/local/bin/usearch7.0.1090 -derep_fulllength {} -output {/.}_derep.fa -uc {/.}_uc.out"
 
@@ -134,6 +134,11 @@ mkdir 8_macse_out && cd 8_macse_out
 python ~/bin/ARMS/chewbacca.py -t 20 clean -n BALI -s ../7_split_aligned \
        -p macse -o . --db ../data/BIOCODE_MACSE_VR.fasta
 
+
+
+
+
+
 =================================================================================================
 # Step 9: Cluster the sequences
 =================================================================================================
@@ -142,7 +147,9 @@ mkdir 9_cluster && cd 9_cluster
 
 # prepare the file for clustering. Dereplicates across smaples and renames the resulting sequences with hashes
 ~/bin/prepare.sh ../8_macse_out/MACSEOUT_MERGED.fasta
+python ~/bin/getSeedSequences.py uc.out uc_parsed.out
 
+# IMPORTANT: make sure that the abundances in dereplicated_renamed.fasta are sorted in decreasing order
 
 
 # We need to explore this more. Run by default for now.... 
@@ -160,6 +167,19 @@ mkdir 9_cluster && cd 9_cluster
 tr  '[:lower:]' '[:upper:]' < seeds > seeds.fasta
 rm seeds
 
+
+=================================================================================================
+# Step 9_P: Find Chimeras
+# we run this step after the clustering in order to speed up search since we align the sequences
+# against themselves.
+=================================================================================================
+cd ..
+mkdir 9_p_uchime && cd 9_p_uchime
+cp ../9_cluster/seeds.fasta .
+grep ">"  seeds.fasta | sed 's/>//' | awk '{print $1"\t"$1}' > seeds.names
+mothur "#chimera.uchime(fasta=seeds.fasta, name=seeds.names)"
+python /tmp/mothur_test/removeChimeras.py seeds.fasta seeds.uchime.accnos
+
 =================================================================================================
 # Step 10: Identify hits against biocode
 =================================================================================================
@@ -167,7 +187,7 @@ cd ../
 mkdir 10_search_biocode && cd 10_search_biocode
 
 ~/bin/vsearch/bin/vsearch-1.1.1-linux-x86_64 --usearch_global \
-  	../9_cluster/seeds.fasta  --db ../data/BiocodePASSED_SAP.txt --id 0.9 \
+  	../9_p_uchime/seeds.pick.fasta  --db ../data/BiocodePASSED_SAP.txt --id 0.9 \
 	--userfields query+target+id+alnlen+qcov --userout out \
 	--alnout alnout.txt 
 
@@ -185,7 +205,7 @@ cd ../
 mkdir 11_search_nt && cd 11_search_nt
 
 ~/bin/vsearch/bin/vsearch-1.1.1-linux-x86_64 --usearch_global \
-  ../9_cluster/seeds.fasta  --db /home/mahdi/refs/COI_DOWNLOADED/COI.fasta \
+  ../9_p_uchime/seeds.pick.fasta  --db /home/mahdi/refs/COI_DOWNLOADED/COI.fasta \
     --id 0.9 \
     --userfields query+target+id+alnlen+qcov --userout out \
     --alnout alnout.txt --userfields query+target+id+alnlen+qcov 
@@ -195,6 +215,16 @@ mkdir 11_search_nt && cd 11_search_nt
 # parameters can be changed and this command can be rerun as many times as necessary 
 python ~/bin/getTaxFromId.py out /home/mahdi/refs/taxonomy/ncbi.db 97 85 \
        > parsed_nt.out
+
+=================================================================================================
+# Step 12: Build the abundance matrix 
+=================================================================================================
+
+cd ../
+mkdir 12_matrix && cd 12_matrix
+
+python ~/bin/builMatrix.py ../5_dereplicate/ ../9_cluster/uc_parsed.out ../9_cluster/clustering.out matrix.out
+
 
 # FOR BLAST
 # DO THIS ONCE TO EXTRACT SEQUENCES AND Format them
