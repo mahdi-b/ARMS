@@ -146,8 +146,15 @@ cd ../
 mkdir 9_cluster && cd 9_cluster
 
 # prepare the file for clustering. Dereplicates across smaples and renames the resulting sequences with hashes
-~/bin/prepare.sh ../8_macse_out/MACSEOUT_MERGED.fasta
-python ~/bin/getSeedSequences.py uc.out uc_parsed.out
+~/bin/vsearch/bin/vsearch --derep_fulllength \
+  ../8_macse_out/MACSEOUT_MERGED.fasta --sizeout \
+ --fasta_width 0 --output amplicons_linearized_dereplicated.fasta -uc uc.out
+ 
+ python ~/bin/getSeedSequences.py uc.out uc_parsed.out
+ 
+ python ~/bin/formatReadWithCounts.py ../8_macse_out/MACSEOUT_MERGED.fasta uc_parsed.out dereplicated_renamed.fasta
+
+
 
 # IMPORTANT: make sure that the abundances in dereplicated_renamed.fasta are sorted in decreasing order
 
