@@ -1,0 +1,216 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>chewbacca module &mdash; ARMS 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="ARMS 0.1 documentation" href="../index.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-chewbacca">
+<span id="chewbacca-module"></span><h1>chewbacca module<a class="headerlink" href="#module-chewbacca" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="chewbacca.clean">
+<code class="descclassname">chewbacca.</code><code class="descname">clean</code><span class="sig-paren">(</span><em>args</em>, <em>pool</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/chewbacca.html#clean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#chewbacca.clean" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>args</strong> &#8211; A list of arguments to the function</li>
+<li><strong>pool</strong> &#8211; A multiprocessing.Pool object.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="chewbacca.dropShort">
+<code class="descclassname">chewbacca.</code><code class="descname">dropShort</code><span class="sig-paren">(</span><em>args</em>, <em>pool</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/chewbacca.html#dropShort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#chewbacca.dropShort" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>args</strong> &#8211; A list of arguments to the function</li>
+<li><strong>pool</strong> &#8211; A multiprocessing.Pool object.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="chewbacca.main">
+<code class="descclassname">chewbacca.</code><code class="descname">main</code><span class="sig-paren">(</span><em>argv</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/chewbacca.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#chewbacca.main" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Parses command line args, builds an argparse.ArgumentParser, and runs the chosen command.</dt>
+<dd>Otherwise, prints usage.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>argv</strong> &#8211; Command line arguments as a list of strings</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="chewbacca.preprocessData">
+<code class="descclassname">chewbacca.</code><code class="descname">preprocessData</code><span class="sig-paren">(</span><em>args</em>, <em>pool=&lt;multiprocessing.pool.Pool object&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/chewbacca.html#preprocessData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#chewbacca.preprocessData" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>args</strong> &#8211; A list of arguments to the function</li>
+<li><strong>pool</strong> &#8211; A multiprocessing.Pool object.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="chewbacca.removeChimeras">
+<code class="descclassname">chewbacca.</code><code class="descname">removeChimeras</code><span class="sig-paren">(</span><em>args</em>, <em>pool</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/chewbacca.html#removeChimeras"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#chewbacca.removeChimeras" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>args</strong> &#8211; A list of arguments to the function</li>
+<li><strong>pool</strong> &#8211; A multiprocessing.Pool object.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="chewbacca.runInstance">
+<code class="descclassname">chewbacca.</code><code class="descname">runInstance</code><span class="sig-paren">(</span><em>myInstance</em>, <em>args</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/chewbacca.html#runInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#chewbacca.runInstance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs an instance of a ProgramRunner, optionally as a dry run (print commands only).&#8217;
+:param myInstance A fully initalized ProgramRunner object to run.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="chewbacca.splitFile">
+<code class="descclassname">chewbacca.</code><code class="descname">splitFile</code><span class="sig-paren">(</span><em>args</em>, <em>pool</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/chewbacca.html#splitFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#chewbacca.splitFile" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>args</strong> &#8211; A list of arguments to the function</li>
+<li><strong>pool</strong> &#8211; A multiprocessing.Pool object.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/source/chewbacca.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Mahdi Belcaid, Greg Burgess.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      
+      |
+      <a href="../_sources/source/chewbacca.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

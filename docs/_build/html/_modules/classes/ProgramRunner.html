@@ -1,0 +1,201 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>classes.ProgramRunner &mdash; ARMS 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="ARMS 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for classes.ProgramRunner</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">signal</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">Helpers</span> <span class="k">import</span> <span class="n">printVerbose</span>
+<span class="kn">import</span> <span class="nn">re</span> 
+<span class="kn">import</span> <span class="nn">Validators</span>  <span class="c1"># fileExists, installed, etc..</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+
+<span class="c1"># TODO: move programs paths to a config file</span>
+<span class="n">MACSE</span> <span class="o">=</span> <span class="s2">&quot;/ARMS/programs/MACSE/macse_v1.01b.jar&quot;</span>
+<span class="n">FASTX</span> <span class="o">=</span> <span class="s2">&quot;~/programs/fastx/bin/&quot;</span>
+<span class="n">PEAR</span> <span class="o">=</span> <span class="s2">&quot;~/programs/pear-0.9.4-bin-64/pear-0.9.4-64&quot;</span>
+
+
+<div class="viewcode-block" id="ProgramRunner"><a class="viewcode-back" href="../../source/classes.html#classes.ProgramRunner.ProgramRunner">[docs]</a><span class="k">class</span> <span class="nc">ProgramRunner</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">commands</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;barcode.splitter&quot;</span><span class="p">:</span> <span class="n">FASTX</span> <span class="o">+</span> <span class="s2">&quot;/fastx_barcode_splitter.pl  --bcfile </span><span class="si">%s</span><span class="s2"> --prefix </span><span class="si">%s</span><span class="s2"> --suffix .fastq --bol </span><span class="se">\</span>
+<span class="s2">                                --mismatches 1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;fastx_renamer&quot;</span><span class="p">:</span> <span class="n">FASTX</span> <span class="o">+</span> <span class="s2">&quot;/fastx_renamer -n COUNT -i </span><span class="si">%s</span><span class="s2"> -o </span><span class="si">%s</span><span class="s2"> -Q 33&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;pear&quot;</span><span class="p">:</span> <span class="n">PEAR</span> <span class="o">+</span> <span class="s2">&quot; -f </span><span class="si">%s</span><span class="s2"> -r </span><span class="si">%s</span><span class="s2"> -o </span><span class="si">%s</span><span class="s2"> -j </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;make.contigs&quot;</span><span class="p">:</span> <span class="s2">&quot;mothur #make.contigs(ffastq=</span><span class="si">%s</span><span class="s2">, rfastq=</span><span class="si">%s</span><span class="s2">, bdiffs=1, pdiffs=2, oligos=</span><span class="si">%s</span><span class="s2">, processors=</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;fastq.info&quot;</span><span class="p">:</span> <span class="s2">&quot;mothur #fastq.info(fastq=</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;trim.seqs&quot;</span><span class="p">:</span> <span class="s2">&quot;mothur #trim.seqs(fasta=</span><span class="si">%s</span><span class="s2">, oligos=</span><span class="si">%s</span><span class="s2">, maxambig=1, maxhomop=8, minlength=300, maxlength=550, </span><span class="se">\</span>
+<span class="s2">                            bdiffs=1, pdiffs=2)&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;align.seqs&quot;</span><span class="p">:</span> <span class="s2">&quot;mothur #align.seqs(candidate=</span><span class="si">%s</span><span class="s2">, template=</span><span class="si">%s</span><span class="s2">, flip=t)&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;unique.seqs&quot;</span><span class="p">:</span> <span class="s2">&quot;mothur #unique.seqs(fasta=</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;macse_align&quot;</span><span class="p">:</span> <span class="s2">&quot;java -jar &quot;</span> <span class="o">+</span> <span class="n">MACSE</span> <span class="o">+</span> <span class="s2">&quot; -prog enrichAlignment  -seq </span><span class="si">%s</span><span class="s2"> -align </span><span class="si">%s</span><span class="s2"> -seq_lr </span><span class="si">%s</span><span class="s2"> -maxFS_inSeq 0 </span><span class="se">\</span>
+<span class="s2">                            -maxSTOP_inSeq 0  -maxINS_inSeq 0 -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 </span><span class="se">\</span>
+<span class="s2">                            -out_NT </span><span class="si">%s</span><span class="s2">_NT -out_AA </span><span class="si">%s</span><span class="s2">_AA -seqToAdd_logFile </span><span class="si">%s</span><span class="s2">_log.csv&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;macse_format&quot;</span><span class="p">:</span> <span class="s2">&quot;java -jar &quot;</span> <span class="o">+</span> <span class="n">MACSE</span> <span class="o">+</span> <span class="s2">&quot;  -prog exportAlignment -align </span><span class="si">%s</span><span class="s2"> -charForRemainingFS - -gc_def 5 </span><span class="se">\</span>
+<span class="s2">                        -out_AA </span><span class="si">%s</span><span class="s2"> -out_NT </span><span class="si">%s</span><span class="s2"> -statFile </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;chmimera.uchime&quot;</span><span class="p">:</span> <span class="s2">&quot;mothur #chimera.uchime(fasta=</span><span class="si">%s</span><span class="s2">, name=</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;remove.seqs&quot;</span><span class="p">:</span> <span class="s2">&quot;mothur #remove.seqs(accnos=</span><span class="si">%s</span><span class="s2">, fasta=</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;cluster-swarm&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">program</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">conditions</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="sd">&quot;&quot;&quot;Initalizes a ProgramRunner object.</span>
+
+<span class="sd">        :param program: A string from the dictionary of available commands.</span>
+<span class="sd">        :param params: A fully initalized list of parameters for the program to run.</span>
+<span class="sd">        :param conditions:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">program</span> <span class="o">=</span> <span class="n">program</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">command</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="p">[</span><span class="n">program</span><span class="p">]</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conditions</span> <span class="o">=</span> <span class="n">conditions</span>
+
+<div class="viewcode-block" id="ProgramRunner.validateConditions"><a class="viewcode-back" href="../../source/classes.html#classes.ProgramRunner.ProgramRunner.validateConditions">[docs]</a>    <span class="k">def</span> <span class="nf">validateConditions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conditions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Validates all conditions using a Validator object, returning True if successful and raising an exception</span>
+<span class="sd">            if not.</span>
+
+<span class="sd">        :param conditions: A list of pairs where the first element in each pari is a &lt;Validator.function&gt; and the</span>
+<span class="sd">                            second element is a list of parameters to that function.</span>
+<span class="sd">                            i.e. [(&lt;Validator.function&gt;, [parameters to &lt;Validator.function&gt;],) , ]</span>
+<span class="sd">        :return: True if validation is successful, and raising an exception in &lt;Validator.function&gt; if not.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># if any of the conditions fail, an exception is raised in getattr</span>
+        <span class="c1"># TODO: The exception should be raised in this function, so users know that the error is in validation of their conditions, not the</span>
+        <span class="c1">#   accessing of properties.</span>
+        <span class="k">for</span> <span class="n">condition</span> <span class="ow">in</span> <span class="n">conditions</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="n">Validators</span><span class="p">,</span> <span class="n">condition</span><span class="p">[</span><span class="mi">0</span><span class="p">])(</span><span class="n">condition</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="ProgramRunner.dryValidateConditions"><a class="viewcode-back" href="../../source/classes.html#classes.ProgramRunner.ProgramRunner.dryValidateConditions">[docs]</a>    <span class="k">def</span> <span class="nf">dryValidateConditions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conditions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Prints validation procedures without actually executing them.</span>
+
+<span class="sd">        :param conditions: A list of pairs where the first element in each pair is a &lt;Validator.function&gt; and the</span>
+<span class="sd">                            second element is a list of parameters to that function.</span>
+<span class="sd">                            i.e. [(&lt;Validator.function&gt;, [parameters to &lt;Validator.function&gt;],) , ]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># if any of the conditions fails, stop execution</span>
+        <span class="c1"># TODO ask Mahdi if this is the intended behavior</span>
+        <span class="k">for</span> <span class="n">condition</span> <span class="ow">in</span> <span class="n">conditions</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="nb">print</span> <span class="s2">&quot;</span><span class="se">\t\t</span><span class="s2">validating that </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">condition</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">condition</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
+            <span class="c1"># TODO: add code</span>
+
+<div class="viewcode-block" id="ProgramRunner.splitCommand"><a class="viewcode-back" href="../../source/classes.html#classes.ProgramRunner.ProgramRunner.splitCommand">[docs]</a>    <span class="k">def</span> <span class="nf">splitCommand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">command</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Splits a string on whitespace.  If it is a mothur command, split only on the first space.</span>
+<span class="sd">        :param command: A fully paramaterized command string</span>
+<span class="sd">        :return: A command string split on white space (or only on the first white space if it is a mothur command.)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># expand the ~ in the command line</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
+        <span class="n">commandList</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="s2">&quot;mothur&quot;</span> <span class="ow">in</span> <span class="n">command</span><span class="p">:</span>
+            <span class="n">commandList</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;mothur&quot;</span><span class="p">,</span>  <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">r&#39;mothur\s+&#39;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">command</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">commandList</span> <span class="o">=</span> <span class="n">command</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">commandList</span></div>
+
+<div class="viewcode-block" id="ProgramRunner.run"><a class="viewcode-back" href="../../source/classes.html#classes.ProgramRunner.ProgramRunner.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Validates conditions (or prints them for a dry run), then executes the command.</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">validateConditions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conditions</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">printVerbose</span><span class="o">.</span><span class="n">VERBOSE</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dryRun</span><span class="p">()</span>
+            <span class="n">commandList</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">splitCommand</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">)</span>
+            <span class="nb">print</span> <span class="n">commandList</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">devnull</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fnull</span><span class="p">:</span>
+                <span class="n">subprocess</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">commandList</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">fnull</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">fnull</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+            <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="ProgramRunner.dryRun"><a class="viewcode-back" href="../../source/classes.html#classes.ProgramRunner.ProgramRunner.dryRun">[docs]</a>    <span class="k">def</span> <span class="nf">dryRun</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Prints the validation commands that would be performed in an actual run, and the command that would be run.</span>
+
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dryValidateConditions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conditions</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">command</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Mahdi Belcaid, Greg Burgess.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
