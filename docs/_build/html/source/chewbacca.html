@@ -43,7 +43,7 @@
 <span id="chewbacca-module"></span><h1>chewbacca module<a class="headerlink" href="#module-chewbacca" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="chewbacca.clean">
-<code class="descclassname">chewbacca.</code><code class="descname">clean</code><span class="sig-paren">(</span><em>args</em>, <em>pool</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/chewbacca.html#clean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#chewbacca.clean" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">chewbacca.</code><code class="descname">clean</code><span class="sig-paren">(</span><em>args</em>, <em>pool=&lt;multiprocessing.pool.Pool object&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/chewbacca.html#clean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#chewbacca.clean" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -63,7 +63,7 @@
 
 <dl class="function">
 <dt id="chewbacca.dropShort">
-<code class="descclassname">chewbacca.</code><code class="descname">dropShort</code><span class="sig-paren">(</span><em>args</em>, <em>pool</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/chewbacca.html#dropShort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#chewbacca.dropShort" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">chewbacca.</code><code class="descname">dropShort</code><span class="sig-paren">(</span><em>args</em>, <em>pool=&lt;multiprocessing.pool.Pool object&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/chewbacca.html#dropShort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#chewbacca.dropShort" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -79,6 +79,14 @@
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="function">
+<dt id="chewbacca.joinReads">
+<code class="descclassname">chewbacca.</code><code class="descname">joinReads</code><span class="sig-paren">(</span><em>args</em>, <em>pool=&lt;multiprocessing.pool.Pool object&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/chewbacca.html#joinReads"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#chewbacca.joinReads" title="Permalink to this definition">¶</a></dt>
+<dd><p>Joins Left and Right fastq reads into a single fastq formatted file.
+:param args: A list of arguments to the function
+:param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.</p>
 </dd></dl>
 
 <dl class="function">
@@ -99,25 +107,19 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="chewbacca.preprocessData">
-<code class="descclassname">chewbacca.</code><code class="descname">preprocessData</code><span class="sig-paren">(</span><em>args</em>, <em>pool=&lt;multiprocessing.pool.Pool object&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/chewbacca.html#preprocessData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#chewbacca.preprocessData" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>args</strong> &#8211; A list of arguments to the function</li>
-<li><strong>pool</strong> &#8211; A multiprocessing.Pool object.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
+<dt id="chewbacca.parallel">
+<code class="descclassname">chewbacca.</code><code class="descname">parallel</code><span class="sig-paren">(</span><em>function</em>, <em>args</em>, <em>runners</em>, <em>pool=&lt;multiprocessing.pool.Pool object&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/chewbacca.html#parallel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#chewbacca.parallel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Executes one or more ProgramRunners in parallel.
+:param function:    The function to call over ProgramRunners.  Generally runInstance().
+:param args:        Arguments from the argparse object.
+:param runners:     A list of fully initalized ProgramRunners to execute.
+:param pool:        An initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
+:return:</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="chewbacca.removeChimeras">
-<code class="descclassname">chewbacca.</code><code class="descname">removeChimeras</code><span class="sig-paren">(</span><em>args</em>, <em>pool</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/chewbacca.html#removeChimeras"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#chewbacca.removeChimeras" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">chewbacca.</code><code class="descname">removeChimeras</code><span class="sig-paren">(</span><em>args</em>, <em>pool=&lt;multiprocessing.pool.Pool object&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/chewbacca.html#removeChimeras"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#chewbacca.removeChimeras" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -137,14 +139,14 @@
 
 <dl class="function">
 <dt id="chewbacca.runInstance">
-<code class="descclassname">chewbacca.</code><code class="descname">runInstance</code><span class="sig-paren">(</span><em>myInstance</em>, <em>args</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/chewbacca.html#runInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#chewbacca.runInstance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Runs an instance of a ProgramRunner, optionally as a dry run (print commands only).&#8217;
+<code class="descclassname">chewbacca.</code><code class="descname">runInstance</code><span class="sig-paren">(</span><em>args</em>, <em>myInstance</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/chewbacca.html#runInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#chewbacca.runInstance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs an instance of a ProgramRunner.  Calls ProgramRunner.run() for a ProgramRunner object.&#8217;
 :param myInstance A fully initalized ProgramRunner object to run.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="chewbacca.splitFile">
-<code class="descclassname">chewbacca.</code><code class="descname">splitFile</code><span class="sig-paren">(</span><em>args</em>, <em>pool</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/chewbacca.html#splitFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#chewbacca.splitFile" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">chewbacca.</code><code class="descname">splitFile</code><span class="sig-paren">(</span><em>args</em>, <em>pool=&lt;multiprocessing.pool.Pool object&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/chewbacca.html#splitFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#chewbacca.splitFile" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />

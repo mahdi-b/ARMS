@@ -49,35 +49,98 @@
 <dl class="function">
 <dt id="classes.Helpers.makeDirOrdie">
 <code class="descclassname">classes.Helpers.</code><code class="descname">makeDirOrdie</code><span class="sig-paren">(</span><em>dirPath</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/classes/Helpers.html#makeDirOrdie"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.Helpers.makeDirOrdie" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Creates a directory &#8216;dirPath&#8217; or exits if the &#8216;dirPath&#8217; directory already exists.  Prevents unnecessary execution.
+:param dirPath: The filepath to the directory to look for.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The path to the new directory (same as &#8216;dirPath&#8217;).</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="class">
 <dt id="classes.Helpers.printVerbose">
 <em class="property">class </em><code class="descclassname">classes.Helpers.</code><code class="descname">printVerbose</code><span class="sig-paren">(</span><em>msg</em>, <em>newline=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/classes/Helpers.html#printVerbose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.Helpers.printVerbose" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="classes.Helpers.printVerbose.VERBOSE">
+<code class="descname">VERBOSE</code><em class="property"> = False</em><a class="headerlink" href="#classes.Helpers.printVerbose.VERBOSE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="function">
 <dt id="classes.Helpers.splitFileBySample">
 <code class="descclassname">classes.Helpers.</code><code class="descname">splitFileBySample</code><span class="sig-paren">(</span><em>fastaFile</em>, <em>groupsFile</em>, <em>splitFastaDir</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/classes/Helpers.html#splitFileBySample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.Helpers.splitFileBySample" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><dl class="docutils">
+<dt>Splits an input &#8216;fastaFile&#8217; into separate files based on the mapping in a &#8216;groupsFile&#8217;, and outputs a separate</dt>
+<dd>fasta file for each group.  Sanitizes the sequence names by removing &#8221;.&#8221; dots added by align.seq.
+See &lt;<a class="reference external" href="http://www.mothur.org/wiki/Group_file">http://www.mothur.org/wiki/Group_file</a>&gt; for group file specification.
+See &lt;<a class="reference external" href="http://www.mothur.org/wiki/Fasta_file">http://www.mothur.org/wiki/Fasta_file</a>&gt; for .fasta file specification.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>fastaFile</strong> &#8211; The source .fasta file to parse.</li>
+<li><strong>groupsFile</strong> &#8211; A group file mapping each sequence in the &#8216;fastaFile&#8217; to a group.</li>
+<li><strong>splitFastaDir</strong> &#8211; File path to an output directory where the split files will be put.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 </div>
 <div class="section" id="module-classes.ProgramRunner">
 <span id="classes-programrunner-module"></span><h2>classes.ProgramRunner module<a class="headerlink" href="#module-classes.ProgramRunner" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="classes.ProgramRunner.ProgramRunner">
-<em class="property">class </em><code class="descclassname">classes.ProgramRunner.</code><code class="descname">ProgramRunner</code><span class="sig-paren">(</span><em>program</em>, <em>params</em>, <em>conditions={}</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/classes/ProgramRunner.html#ProgramRunner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.ProgramRunner.ProgramRunner" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">classes.ProgramRunner.</code><code class="descname">ProgramRunner</code><span class="sig-paren">(</span><em>program</em>, <em>params</em>, <em>conditions={}</em>, <em>stdin=&lt;open file '/dev/null'</em>, <em>mode 'r'&gt;</em>, <em>stdout=&lt;open file '/dev/null'</em>, <em>mode 'w'&gt;</em>, <em>stderr=&lt;open file '/dev/null'</em>, <em>mode 'w'&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/classes/ProgramRunner.html#ProgramRunner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.ProgramRunner.ProgramRunner" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>A class to interact with external command line programs.  The class contains a dictionary of formatted command
+strings.  The class supports validation, sanitization, and debugging of user-supplied parameters.</p>
+<dl class="docutils">
+<dt>Attributes:</dt>
+<dd><dl class="first docutils">
+<dt>DEFAULT_CONFIG_FILEPATH     The filepath to a config file containing user-specified overrides (such as file paths to</dt>
+<dd>exectuables.</dd>
+<dt>configsLoaded               Specifies that all config variables have been loaded, and that the file should not</dt>
+<dd>be read again durring the execution of this instance.</dd>
+</dl>
+<p>programPaths                Specifies the default location of executibles used in the commands dictionary.
+commandTemplates            A dictionary mapping chewbacca commands to un-paramaterized command line strings.</p>
+<blockquote class="last">
+<div>Used as templates for commands.</div></blockquote>
+</dd>
+</dl>
 <dl class="attribute">
-<dt id="classes.ProgramRunner.ProgramRunner.commands">
-<code class="descname">commands</code><em class="property"> = {'cluster-swarm': '', 'fastq.info': 'mothur #fastq.info(fastq=%s)', 'remove.seqs': 'mothur #remove.seqs(accnos=%s, fasta=%s)', 'trim.seqs': 'mothur #trim.seqs(fasta=%s, oligos=%s, maxambig=1, maxhomop=8, minlength=300, maxlength=550,                             bdiffs=1, pdiffs=2)', 'pear': '~/programs/pear-0.9.4-bin-64/pear-0.9.4-64 -f %s -r %s -o %s -j %s', 'unique.seqs': 'mothur #unique.seqs(fasta=%s)', 'barcode.splitter': '~/programs/fastx/bin//fastx_barcode_splitter.pl  --bcfile %s --prefix %s --suffix .fastq --bol                                 --mismatches 1', 'chmimera.uchime': 'mothur #chimera.uchime(fasta=%s, name=%s)', 'align.seqs': 'mothur #align.seqs(candidate=%s, template=%s, flip=t)', 'fastx_renamer': '~/programs/fastx/bin//fastx_renamer -n COUNT -i %s -o %s -Q 33', 'macse_align': 'java -jar /ARMS/programs/MACSE/macse_v1.01b.jar -prog enrichAlignment  -seq %s -align %s -seq_lr %s -maxFS_inSeq 0                             -maxSTOP_inSeq 0  -maxINS_inSeq 0 -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10                             -out_NT %s_NT -out_AA %s_AA -seqToAdd_logFile %s_log.csv', 'macse_format': 'java -jar /ARMS/programs/MACSE/macse_v1.01b.jar  -prog exportAlignment -align %s -charForRemainingFS - -gc_def 5                         -out_AA %s -out_NT %s -statFile %s', 'make.contigs': 'mothur #make.contigs(ffastq=%s, rfastq=%s, bdiffs=1, pdiffs=2, oligos=%s, processors=%s)'}</em><a class="headerlink" href="#classes.ProgramRunner.ProgramRunner.commands" title="Permalink to this definition">¶</a></dt>
+<dt id="classes.ProgramRunner.ProgramRunner.DEFAULT_CONFIG_FILEPATH">
+<code class="descname">DEFAULT_CONFIG_FILEPATH</code><em class="property"> = 'chewbacca.cfg'</em><a class="headerlink" href="#classes.ProgramRunner.ProgramRunner.DEFAULT_CONFIG_FILEPATH" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="classes.ProgramRunner.ProgramRunner.commandTemplates">
+<code class="descname">commandTemplates</code><em class="property"> = {}</em><a class="headerlink" href="#classes.ProgramRunner.ProgramRunner.commandTemplates" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="classes.ProgramRunner.ProgramRunner.configsLoaded">
+<code class="descname">configsLoaded</code><em class="property"> = False</em><a class="headerlink" href="#classes.ProgramRunner.ProgramRunner.configsLoaded" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="classes.ProgramRunner.ProgramRunner.dryRun">
 <code class="descname">dryRun</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/classes/ProgramRunner.html#ProgramRunner.dryRun"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.ProgramRunner.ProgramRunner.dryRun" title="Permalink to this definition">¶</a></dt>
-<dd><p>Prints the validation commands that would be performed in an actual run, and the command that would be run.</p>
+<dd><dl class="docutils">
+<dt>Prints the validation procedures that would be performed, and the commands that would be run in an actual</dt>
+<dd>run, without actually executing them.</dd>
+</dl>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -96,18 +159,40 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>conditions</strong> &#8211; A list of pairs where the first element in each pair is a &lt;Validator.function&gt; and the
-second element is a list of parameters to that function.
-i.e. [(&lt;Validator.function&gt;, [parameters to &lt;Validator.function&gt;],) , ]</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>conditions</strong> &#8211; A dictionary mapping &lt;Validator&gt;.function names to a list of parameters.  The dictionary
+key/function name is called on each parameter in the corresponding list of parameters.
+All parameters must satisfy their &lt;Validator&gt;.function in order for the specified
+program to execute.</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
 <dl class="method">
+<dt id="classes.ProgramRunner.ProgramRunner.initalizeCommands">
+<code class="descname">initalizeCommands</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/classes/ProgramRunner.html#ProgramRunner.initalizeCommands"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.ProgramRunner.ProgramRunner.initalizeCommands" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provides the static definition of
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.ProgramRunner.ProgramRunner.loadConfigs">
+<code class="descname">loadConfigs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/classes/ProgramRunner.html#ProgramRunner.loadConfigs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.ProgramRunner.ProgramRunner.loadConfigs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads configuration settings from the chewbacca configuration file (located in
+ProgramRunner.DEFAULT_CONFIG_FILEPATH).  If the file is not found, default values are used. Overwrites the
+default values of any found entries.  Currently loads the [Program  Paths] section, updating the
+programPaths dictionary.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="classes.ProgramRunner.ProgramRunner.programPaths">
+<code class="descname">programPaths</code><em class="property"> = {'MACSE': '/ARMS/programs/MACSE/macse_v1.01b.jar', 'FASTX': '~/programs/fastx/bin/', 'PEAR': ''}</em><a class="headerlink" href="#classes.ProgramRunner.ProgramRunner.programPaths" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="classes.ProgramRunner.ProgramRunner.run">
 <code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/classes/ProgramRunner.html#ProgramRunner.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.ProgramRunner.ProgramRunner.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Validates conditions (or prints them for a dry run), then executes the command.</p>
+<dd><p>Validates conditions (or prints them for a dry run), sanitizes parameters, and then executes the command.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -137,9 +222,10 @@ i.e. [(&lt;Validator.function&gt;, [parameters to &lt;Validator.function&gt;],) 
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>conditions</strong> &#8211; A list of pairs where the first element in each pari is a &lt;Validator.function&gt; and the
-second element is a list of parameters to that function.
-i.e. [(&lt;Validator.function&gt;, [parameters to &lt;Validator.function&gt;],) , ]</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>conditions</strong> &#8211; A dictionary mapping &lt;Validator&gt;.function names to a list of parameters.  The dictionary
+key/function name is called on each parameter in the corresponding list of parameters.
+All parameters must satisfy their &lt;Validator&gt;.function in order for the specified
+program to execute.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True if validation is successful, and raising an exception in &lt;Validator.function&gt; if not.</td>
 </tr>
@@ -150,40 +236,8 @@ i.e. [(&lt;Validator.function&gt;, [parameters to &lt;Validator.function&gt;],) 
 </dd></dl>
 
 </div>
-<div class="section" id="module-classes.Validators">
-<span id="classes-validators-module"></span><h2>classes.Validators module<a class="headerlink" href="#module-classes.Validators" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="classes.Validators.exists">
-<code class="descclassname">classes.Validators.</code><code class="descname">exists</code><span class="sig-paren">(</span><em>files</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/classes/Validators.html#exists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.Validators.exists" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns True if all files in a list exist in the current directory, and raises an Exception if not.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>files</strong> &#8211; A list of files to test</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True if all files exist, raises an Exception if not.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="classes.Validators.installed">
-<code class="descclassname">classes.Validators.</code><code class="descname">installed</code><span class="sig-paren">(</span><em>progName</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/classes/Validators.html#installed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.Validators.installed" title="Permalink to this definition">¶</a></dt>
-<dd><p>Tests if a program is installed, and available on $PATH.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>progName</strong> &#8211; Command line monicker of the program to test.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True if all programs exist, and raises an Exception if not.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
+<div class="section" id="classes-validators-module">
+<h2>classes.Validators module<a class="headerlink" href="#classes-validators-module" title="Permalink to this headline">¶</a></h2>
 </div>
 <div class="section" id="module-classes">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-classes" title="Permalink to this headline">¶</a></h2>
@@ -202,7 +256,7 @@ i.e. [(&lt;Validator.function&gt;, [parameters to &lt;Validator.function&gt;],) 
 <li><a class="reference internal" href="#submodules">Submodules</a></li>
 <li><a class="reference internal" href="#module-classes.Helpers">classes.Helpers module</a></li>
 <li><a class="reference internal" href="#module-classes.ProgramRunner">classes.ProgramRunner module</a></li>
-<li><a class="reference internal" href="#module-classes.Validators">classes.Validators module</a></li>
+<li><a class="reference internal" href="#classes-validators-module">classes.Validators module</a></li>
 <li><a class="reference internal" href="#module-classes">Module contents</a></li>
 </ul>
 </li>

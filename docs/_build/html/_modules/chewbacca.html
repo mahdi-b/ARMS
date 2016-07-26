@@ -41,50 +41,78 @@
           <div class="body" role="main">
             
   <h1>Source code for chewbacca</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">glob</span>
-<span class="kn">import</span> <span class="nn">argparse</span>
+<span></span><span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">glob</span>
 <span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="k">import</span> <span class="n">Pool</span>
+
+<span class="kn">from</span> <span class="nn">Bio</span> <span class="k">import</span> <span class="n">SeqIO</span>
+<span class="kn">from</span> <span class="nn">Bio.Seq</span> <span class="k">import</span> <span class="n">Seq</span>
 <span class="kn">from</span> <span class="nn">classes.Helpers</span> <span class="k">import</span> <span class="n">printVerbose</span>
 <span class="kn">from</span> <span class="nn">classes.Helpers</span> <span class="k">import</span> <span class="n">makeDirOrdie</span>
 <span class="kn">from</span> <span class="nn">classes.Helpers</span> <span class="k">import</span> <span class="n">splitFileBySample</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">Bio</span> <span class="k">import</span> <span class="n">SeqIO</span>
-<span class="kn">from</span> <span class="nn">Bio.Seq</span> <span class="k">import</span> <span class="n">Seq</span>
+<span class="kn">from</span> <span class="nn">classes.ProgramRunner</span> <span class="k">import</span> <span class="n">ProgramRunner</span>
+<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="k">import</span> <span class="n">Pool</span>
 <span class="kn">from</span> <span class="nn">shutil</span> <span class="k">import</span> <span class="n">copyfile</span>
 
-<span class="kn">from</span> <span class="nn">classes.ProgramRunner</span> <span class="k">import</span> <span class="n">ProgramRunner</span>
-
+<span class="c1"># Program Version</span>
 <span class="n">version</span> <span class="o">=</span> <span class="s2">&quot;0.01&quot;</span>
+<span class="c1"># Time format for printing</span>
 <span class="n">FORMAT</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%(asctime)s</span><span class="s2">  </span><span class="si">%(message)s</span><span class="s2">&quot;</span>
+<span class="c1"># Date format for printing</span>
 <span class="n">DATEFMT</span> <span class="o">=</span> <span class="s2">&quot;%m/</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span>
 
-<span class="n">args</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="c1"># rm -r rslt/;python chewbacca.py preprocess -n test -f ~/ARMS/testARMS/testData/20K_R2.fq -r ~/ARMS/testARMS/testData/20K_R1.fq -b /home/greg/ARMS/testARMS/testData/barcodes.txt -o rslt</span>
 
-
-<div class="viewcode-block" id="runInstance"><a class="viewcode-back" href="../source/chewbacca.html#chewbacca.runInstance">[docs]</a><span class="k">def</span> <span class="nf">runInstance</span><span class="p">(</span><span class="n">myInstance</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Runs an instance of a ProgramRunner, optionally as a dry run (print commands only).&#39;</span>
+<div class="viewcode-block" id="runInstance"><a class="viewcode-back" href="../source/chewbacca.html#chewbacca.runInstance">[docs]</a><span class="k">def</span> <span class="nf">runInstance</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">myInstance</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Runs an instance of a ProgramRunner.  Calls ProgramRunner.run() for a ProgramRunner object.&#39;</span>
 <span class="sd">        :param myInstance A fully initalized ProgramRunner object to run.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Use the global version to facilitate calling workers</span>
+    <span class="nb">print</span> <span class="s2">&quot;runinstance&quot;</span>
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">dryRun</span><span class="p">:</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">myInstance</span><span class="o">.</span><span class="n">dryRun</span><span class="p">())</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">myInstance</span><span class="o">.</span><span class="n">dryRun</span><span class="p">())</span>
+        <span class="c1">#logging.info(myInstance.dryRun())</span>
         <span class="n">myInstance</span><span class="o">.</span><span class="n">run</span><span class="p">()</span></div>
 
+<div class="viewcode-block" id="parallel"><a class="viewcode-back" href="../source/chewbacca.html#chewbacca.parallel">[docs]</a><span class="k">def</span> <span class="nf">parallel</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">runners</span><span class="p">,</span> <span class="n">pool</span><span class="o">=</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="mi">1</span><span class="p">)):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Executes one or more ProgramRunners in parallel.</span>
+<span class="sd">    :param function:    The function to call over ProgramRunners.  Generally runInstance().</span>
+<span class="sd">    :param args:        Arguments from the argparse object.</span>
+<span class="sd">    :param runners:     A list of fully initalized ProgramRunners to execute.</span>
+<span class="sd">    :param pool:        An initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[(</span><span class="n">args</span><span class="p">,</span> <span class="n">runner</span><span class="p">)</span> <span class="k">for</span> <span class="n">runner</span> <span class="ow">in</span> <span class="n">runners</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">arg</span><span class="p">,</span> <span class="n">runner</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">runInstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="n">runner</span><span class="p">)</span></div>
+    <span class="c1">#pool.map(function, data)</span>
 
-<div class="viewcode-block" id="preprocessData"><a class="viewcode-back" href="../source/chewbacca.html#chewbacca.preprocessData">[docs]</a><span class="k">def</span> <span class="nf">preprocessData</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">pool</span><span class="o">=</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="mi">1</span><span class="p">)):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="joinReads"><a class="viewcode-back" href="../source/chewbacca.html#chewbacca.joinReads">[docs]</a><span class="k">def</span> <span class="nf">joinReads</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">pool</span><span class="o">=</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="mi">1</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;Joins Left and Right fastq reads into a single fastq formatted file.</span>
 <span class="sd">    :param args: A list of arguments to the function</span>
-<span class="sd">    :param pool: A multiprocessing.Pool object.</span>
+<span class="sd">    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="sd">&quot;&quot;&quot; parser_preprocess = subparsers.add_parser(&#39;preprocess&#39;)</span>
+<span class="sd">        parser_preprocess.add_argument(&#39;-n&#39;, &#39;--name&#39;, required=True, help=&quot;Run Id&quot;)</span>
+<span class="sd">        parser_preprocess.add_argument(&#39;-f&#39;, &#39;--input_f&#39;, required=True, help=&quot;Forward Fastq Reads&quot;)</span>
+<span class="sd">        parser_preprocess.add_argument(&#39;-r&#39;, &#39;--input_r&#39;, required=True, help=&quot;Reverse Fastq Reads&quot;)</span>
+<span class="sd">        parser_preprocess.add_argument(&#39;-b&#39;, &#39;--barcodes&#39;, required=True,</span>
+<span class="sd">                                       help=&quot;Tab delimted files of barcodes and their samples&quot;)</span>
+<span class="sd">        parser_preprocess.add_argument(&#39;-o&#39;, &#39;--outDir&#39;, required=True, help=&quot;Directory where outputs will be saved&quot;)</span>
+<span class="sd">        parser_preprocess.set_defaults(func=joinReads)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="c1"># TODO: test run.name is a single word</span>
-
-
+    <span class="c1"># Make the output directory, or abort if it already exists</span>
     <span class="n">makeDirOrdie</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">outDir</span><span class="p">)</span>
-    <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;Preprocessing the data:&quot;</span><span class="p">)</span>
+    <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;Joining the reads:&quot;</span><span class="p">)</span>
 
     <span class="c1"># *****************************************************************************************</span>
     <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Renaming sequences&quot;</span><span class="p">)</span>
@@ -92,19 +120,22 @@
     <span class="c1"># &quot;~/programs/fastx/bin/fastx_renamer -n COUNT -i %s %s&quot;</span>
     <span class="n">rename_outFile_f</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">outDir</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">input_f</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_renamed&quot;</span><span class="p">)</span>
     <span class="n">rename_outFile_r</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">outDir</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">input_r</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_renamed&quot;</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">input_f</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">input_r</span><span class="p">)</span>
+    <span class="n">parallel</span><span class="p">(</span><span class="n">runInstance</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="p">[</span><span class="n">ProgramRunner</span><span class="p">(</span><span class="s2">&quot;fastx_renamer&quot;</span><span class="p">,[</span><span class="n">args</span><span class="o">.</span><span class="n">input_f</span><span class="p">,</span> <span class="n">rename_outFile_f</span><span class="p">],</span> <span class="p">{</span><span class="s2">&quot;exists&quot;</span><span class="p">:[</span><span class="n">args</span><span class="o">.</span><span class="n">input_f</span><span class="p">]}),</span>
+                            <span class="n">ProgramRunner</span><span class="p">(</span><span class="s2">&quot;fastx_renamer&quot;</span><span class="p">,[</span><span class="n">args</span><span class="o">.</span><span class="n">input_r</span><span class="p">,</span> <span class="n">rename_outFile_r</span><span class="p">],</span> <span class="p">{</span><span class="s2">&quot;exists&quot;</span><span class="p">:[</span><span class="n">args</span><span class="o">.</span><span class="n">input_r</span><span class="p">]}),</span>
+                            <span class="p">])</span>
 
-    <span class="c1"># pool.map(runInstance, [ProgramRunner(&quot;fastx_renamer&quot;,[args.input_f, rename_outFile_f], {&quot;exists&quot;:[args.input_f]}),</span>
-    <span class="c1">#                        ProgramRunner(&quot;fastx_renamer&quot;,[args.input_r, rename_outFile_r], {&quot;exists&quot;:[args.input_r]}),</span>
-    <span class="c1">#                        ])</span>
     <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Renamed </span><span class="si">%s</span><span class="s2"> sequences&quot;</span><span class="p">)</span>
     <span class="c1"># *****************************************************************************************</span>
     <span class="c1"># Making the contigs using Pear</span>
     <span class="c1"># &quot;~/programs/pear-0.9.4-bin-64/pear-0.9.4-64 -f %s -r %s -o %s -j %s&quot;</span>
     <span class="n">assembledPrefix</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">outDir</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-    <span class="c1"># pool.map(runInstance, [ProgramRunner(&quot;pear&quot;,</span>
-    <span class="c1">#                                         [rename_outFile_f, rename_outFile_r, assembledPrefix, args.threads],</span>
-    <span class="c1">#                                         {&quot;exists&quot;:[rename_outFile_f, rename_outFile_r]})</span>
-    <span class="c1">#                        ])</span>
+    <span class="n">parallel</span><span class="p">(</span><span class="n">runInstance</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="p">[</span><span class="n">ProgramRunner</span><span class="p">(</span><span class="s2">&quot;pear&quot;</span><span class="p">,</span>
+                                         <span class="p">[</span><span class="n">rename_outFile_f</span><span class="p">,</span> <span class="n">rename_outFile_r</span><span class="p">,</span> <span class="n">assembledPrefix</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">threads</span><span class="p">],</span>
+                                         <span class="p">{</span><span class="s2">&quot;exists&quot;</span><span class="p">:[</span><span class="n">rename_outFile_f</span><span class="p">,</span> <span class="n">rename_outFile_r</span><span class="p">]})</span>
+                            <span class="p">])</span>
+
     <span class="n">assembledFastqFile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">outDir</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.assembled.fastq&quot;</span><span class="p">)</span>
     <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="si">%s</span><span class="s2"> sequences assembled, </span><span class="si">%s</span><span class="s2"> contigs discarded, </span><span class="si">%s</span><span class="s2"> sequences discarded&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
 
@@ -112,7 +143,9 @@
     <span class="c1"># 1- split_libraries_fastq.py</span>
     <span class="c1"># 2- usearch -fastq_filter</span>
     <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;Splitting based on barcodes&quot;</span><span class="p">)</span>
-    <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">runInstance</span><span class="p">,</span> <span class="p">[</span><span class="n">ProgramRunner</span><span class="p">(</span><span class="s2">&quot;barcode.splitter&quot;</span><span class="p">,</span>
+
+    <span class="c1">#pass the pipe to the child</span>
+    <span class="n">parallel</span><span class="p">(</span><span class="n">runInstance</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="p">[</span><span class="n">ProgramRunner</span><span class="p">(</span><span class="s2">&quot;barcode.splitter&quot;</span><span class="p">,</span>
                                          <span class="p">[</span><span class="n">assembledFastqFile</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">barcodes</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">outDir</span><span class="p">,</span> <span class="s2">&quot;splitOut_&quot;</span><span class="p">)],</span>
                                          <span class="p">{</span><span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">assembledFastqFile</span><span class="p">]})</span>
                            <span class="p">])</span>
@@ -120,14 +153,14 @@
     <span class="n">listOfSamples</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">outDir</span><span class="p">,</span> <span class="s2">&quot;splitOut_*&quot;</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="splitFile"><a class="viewcode-back" href="../source/chewbacca.html#chewbacca.splitFile">[docs]</a><span class="k">def</span> <span class="nf">splitFile</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">pool</span><span class="p">):</span>
+<div class="viewcode-block" id="splitFile"><a class="viewcode-back" href="../source/chewbacca.html#chewbacca.splitFile">[docs]</a><span class="k">def</span> <span class="nf">splitFile</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">pool</span><span class="o">=</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="mi">1</span><span class="p">)):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">    :param args: A list of arguments to the function</span>
 <span class="sd">    :param pool: A multiprocessing.Pool object.</span>
 <span class="sd">    :return:</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Split the cleaned file resulting from preprocessData into a user defined</span>
+    <span class="c1"># Split the cleaned file resulting from joinReads into a user defined</span>
     <span class="c1"># number of chunks</span>
 
 
@@ -137,7 +170,7 @@
         <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Done splitting file&quot;</span><span class="p">)</span>  <span class="c1"># TODO: eventually send a param to Program running, prevenint it from starting after CTRL+C has been invoked</span></div>
 
 
-<div class="viewcode-block" id="clean"><a class="viewcode-back" href="../source/chewbacca.html#chewbacca.clean">[docs]</a><span class="k">def</span> <span class="nf">clean</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">pool</span><span class="p">):</span>
+<div class="viewcode-block" id="clean"><a class="viewcode-back" href="../source/chewbacca.html#chewbacca.clean">[docs]</a><span class="k">def</span> <span class="nf">clean</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">pool</span><span class="o">=</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="mi">1</span><span class="p">)):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">    :param args: A list of arguments to the function</span>
@@ -151,21 +184,18 @@
         <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">program</span> <span class="o">==</span> <span class="s2">&quot;macse&quot;</span><span class="p">:</span>
             <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> Aligning reads using MACSE&quot;</span><span class="p">)</span>
 
-            <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">runInstance</span><span class="p">,</span> <span class="p">[</span><span class="n">ProgramRunner</span><span class="p">(</span><span class="s2">&quot;macse_align&quot;</span><span class="p">,</span>
+            <span class="n">parallel</span><span class="p">(</span><span class="n">runInstance</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="p">[</span><span class="n">ProgramRunner</span><span class="p">(</span><span class="s2">&quot;macse_align&quot;</span><span class="p">,</span>
                                                  <span class="p">[</span><span class="n">args</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">samplesDir</span><span class="p">,</span> <span class="n">sample</span><span class="p">)]</span> <span class="o">+</span> <span class="p">[</span>
                                                      <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">outDir</span><span class="p">,</span> <span class="n">sample</span><span class="p">)]</span> <span class="o">*</span> <span class="mi">3</span>
                                                  <span class="p">,</span> <span class="p">{</span><span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="p">[]})</span> <span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">samplesDir</span><span class="p">)])</span>
 
             <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> Processing MACSE alignments&quot;</span><span class="p">)</span>
-            <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">runInstance</span><span class="p">,</span> <span class="p">[</span><span class="n">ProgramRunner</span><span class="p">(</span><span class="s2">&quot;macse_format&quot;</span><span class="p">,</span>
+            <span class="n">parallel</span><span class="p">(</span><span class="n">runInstance</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="p">[</span><span class="n">ProgramRunner</span><span class="p">(</span><span class="s2">&quot;macse_format&quot;</span><span class="p">,</span>
                                                  <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">outDir</span><span class="p">,</span> <span class="n">sample</span> <span class="o">+</span> <span class="s2">&quot;_NT&quot;</span><span class="p">),</span>
                                                   <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">outDir</span><span class="p">,</span> <span class="n">sample</span> <span class="o">+</span> <span class="s2">&quot;_AA_macse.fasta&quot;</span><span class="p">),</span>
                                                   <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">outDir</span><span class="p">,</span> <span class="n">sample</span> <span class="o">+</span> <span class="s2">&quot;_NT_macse.fasta&quot;</span><span class="p">),</span>
                                                   <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">outDir</span><span class="p">,</span> <span class="n">sample</span> <span class="o">+</span> <span class="s2">&quot;_macse.csv&quot;</span><span class="p">)],</span>
                                                   <span class="p">{</span><span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="p">[]})</span> <span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">samplesDir</span><span class="p">)])</span>
-
-        <span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-        <span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
 
         <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Cleaning MACSE alignments&quot;</span><span class="p">)</span>
 
@@ -194,21 +224,18 @@
         <span class="n">pool</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="removeChimeras"><a class="viewcode-back" href="../source/chewbacca.html#chewbacca.removeChimeras">[docs]</a><span class="k">def</span> <span class="nf">removeChimeras</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">pool</span><span class="p">):</span>
+<div class="viewcode-block" id="removeChimeras"><a class="viewcode-back" href="../source/chewbacca.html#chewbacca.removeChimeras">[docs]</a><span class="k">def</span> <span class="nf">removeChimeras</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">pool</span><span class="o">=</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="mi">1</span><span class="p">)):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">    :param args: A list of arguments to the function</span>
 <span class="sd">    :param pool: A multiprocessing.Pool object.</span>
 <span class="sd">    :return:</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">program</span> <span class="o">==</span> <span class="s2">&quot;uchime&quot;</span><span class="p">:</span>
-
         <span class="c1"># *****************************************************************************************</span>
         <span class="c1"># findind the chimeras</span>
         <span class="c1"># &quot;chmimera.uchime&quot;: &quot;mothur #chimera.uchime(fasta=%s, name=%s)&quot;,</span>
-        <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">runInstance</span><span class="p">,</span> <span class="p">[</span><span class="n">ProgramRunner</span><span class="p">(</span><span class="s2">&quot;chmimera.uchime&quot;</span><span class="p">,</span>
+        <span class="n">parallel</span><span class="p">(</span><span class="n">runInstance</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="p">[</span><span class="n">ProgramRunner</span><span class="p">(</span><span class="s2">&quot;chmimera.uchime&quot;</span><span class="p">,</span>
                                              <span class="p">[</span><span class="n">args</span><span class="o">.</span><span class="n">inputFile</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">namesFile</span><span class="p">],</span>
                                              <span class="p">{</span><span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">args</span><span class="o">.</span><span class="n">inputFile</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">namesFile</span><span class="p">]})</span>
                                <span class="p">])</span>
@@ -219,7 +246,7 @@
         <span class="n">uchimeAccnos</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">inputFile</span><span class="p">),</span> <span class="s2">&quot;*uchime.chimeras&quot;</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
         <span class="nb">print</span> <span class="s2">&quot;outFile is </span><span class="si">%s</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="n">uchimeAccnos</span>
         <span class="n">p</span> <span class="o">=</span> <span class="n">ProgramRunner</span><span class="p">(</span><span class="s2">&quot;remove.seqs&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">uchimeAccnos</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">inputFile</span><span class="p">],</span> <span class="p">{</span><span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">uchimeAccnos</span><span class="p">]})</span>
-        <span class="n">runInstance</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="n">parallel</span><span class="p">(</span><span class="n">runInstance</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
 
         <span class="c1"># *****************************************************************************************</span>
         <span class="c1"># Renaming the outfile and updating the names file</span>
@@ -237,7 +264,7 @@
     <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2"> removed </span><span class="si">%s</span><span class="s2"> chimeric sequences&quot;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="dropShort"><a class="viewcode-back" href="../source/chewbacca.html#chewbacca.dropShort">[docs]</a><span class="k">def</span> <span class="nf">dropShort</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">pool</span><span class="p">):</span>
+<div class="viewcode-block" id="dropShort"><a class="viewcode-back" href="../source/chewbacca.html#chewbacca.dropShort">[docs]</a><span class="k">def</span> <span class="nf">dropShort</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">pool</span><span class="o">=</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="mi">1</span><span class="p">)):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    :param args: A list of arguments to the function</span>
 <span class="sd">    :param pool: A multiprocessing.Pool object.</span>
@@ -265,7 +292,7 @@
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--dryRun&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">subparsers</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_subparsers</span><span class="p">(</span><span class="n">dest</span><span class="o">=</span><span class="s1">&#39;action&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Available commands&#39;</span><span class="p">)</span>
 
-    <span class="c1"># preprocess data</span>
+    <span class="c1"># join reads</span>
     <span class="n">parser_preprocess</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span><span class="s1">&#39;preprocess&#39;</span><span class="p">)</span>
     <span class="n">parser_preprocess</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-n&#39;</span><span class="p">,</span> <span class="s1">&#39;--name&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Run Id&quot;</span><span class="p">)</span>
     <span class="n">parser_preprocess</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-f&#39;</span><span class="p">,</span> <span class="s1">&#39;--input_f&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Forward Fastq Reads&quot;</span><span class="p">)</span>
@@ -273,7 +300,7 @@
     <span class="n">parser_preprocess</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-b&#39;</span><span class="p">,</span> <span class="s1">&#39;--barcodes&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                                    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Tab delimted files of barcodes and their samples&quot;</span><span class="p">)</span>
     <span class="n">parser_preprocess</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="s1">&#39;--outDir&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Directory where outputs will be saved&quot;</span><span class="p">)</span>
-    <span class="n">parser_preprocess</span><span class="o">.</span><span class="n">set_defaults</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">preprocessData</span><span class="p">)</span>
+    <span class="n">parser_preprocess</span><span class="o">.</span><span class="n">set_defaults</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">joinReads</span><span class="p">)</span>
 
     <span class="c1"># split file by samples</span>
     <span class="n">parser_split</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span><span class="s1">&#39;partition&#39;</span><span class="p">)</span>
@@ -324,7 +351,7 @@
 
 
 
-    <span class="k">global</span> <span class="n">args</span>
+    <span class="k">global</span> <span class="n">args</span><span class="p">,</span> <span class="n">pool</span>
     <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="n">FORMAT</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span> <span class="n">datefmt</span><span class="o">=</span><span class="n">DATEFMT</span><span class="p">)</span>
@@ -332,13 +359,15 @@
         <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="n">FORMAT</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="n">datefmt</span><span class="o">=</span><span class="n">DATEFMT</span><span class="p">)</span>
 
     <span class="n">printVerbose</span><span class="o">.</span><span class="n">VERBOSE</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">verbose</span>
-    <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;Running with </span><span class="si">%s</span><span class="s2"> threads&quot;</span> <span class="o">%</span> <span class="n">args</span><span class="o">.</span><span class="n">threads</span><span class="p">)</span>
+    <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;Running with </span><span class="si">%s</span><span class="s2"> process(es)&quot;</span> <span class="o">%</span> <span class="n">args</span><span class="o">.</span><span class="n">threads</span><span class="p">)</span>
     <span class="n">pool</span> <span class="o">=</span> <span class="n">Pool</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">threads</span><span class="p">)</span>
     <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Initial ARGS are: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t\t</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">dryRun</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">dryRun</span>
+    <span class="n">args</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">pool</span><span class="p">)</span>
 
-    <span class="n">args</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">pool</span><span class="p">)</span></div>
-
+    <span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span></div>
 
 <span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     <span class="n">main</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span>

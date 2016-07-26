@@ -1,47 +1,75 @@
-import glob
 import argparse
+import glob
 import logging
+import os
 import sys
-from multiprocessing import Pool
+
+from Bio import SeqIO
+from Bio.Seq import Seq
 from classes.Helpers import printVerbose
 from classes.Helpers import makeDirOrdie
 from classes.Helpers import splitFileBySample
-import os
-from Bio import SeqIO
-from Bio.Seq import Seq
+from classes.ProgramRunner import ProgramRunner
+from multiprocessing import Pool
 from shutil import copyfile
 
-from classes.ProgramRunner import ProgramRunner
-
+# Program Version
 version = "0.01"
+# Time format for printing
 FORMAT = "%(asctime)s  %(message)s"
+# Date format for printing
 DATEFMT = "%m/%d %H:%M:%S"
 
-args = {}
+# rm -r rslt/;python chewbacca.py preprocess -n test -f ~/ARMS/testARMS/testData/20K_R2.fq -r ~/ARMS/testARMS/testData/20K_R1.fq -b /home/greg/ARMS/testARMS/testData/barcodes.txt -o rslt
 
-
-def runInstance(myInstance, args):
-    """Runs an instance of a ProgramRunner, optionally as a dry run (print commands only).'
+def runInstance(args, myInstance):
+    """Runs an instance of a ProgramRunner.  Calls ProgramRunner.run() for a ProgramRunner object.'
         :param myInstance A fully initalized ProgramRunner object to run.
     """
     # Use the global version to facilitate calling workers
+    print "runinstance"
     if args.dryRun:
         logging.info(myInstance.dryRun())
     else:
-        logging.info(myInstance.dryRun())
+        #logging.info(myInstance.dryRun())
         myInstance.run()
 
+def parallel(function, args, runners, pool=Pool(processes=1)):
+    '''
+    Executes one or more ProgramRunners in parallel.
+    :param function:    The function to call over ProgramRunners.  Generally runInstance().
+    :param args:        Arguments from the argparse object.
+    :param runners:     A list of fully initalized ProgramRunners to execute.
+    :param pool:        An initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
+    :return:
+    '''
+    data = [(args, runner) for runner in runners]
+    for arg, runner in data:
+            runInstance(arg,runner)
+    #pool.map(function, data)
 
-def preprocessData(args, pool=Pool(processes=1)):
-    """
+
+def joinReads(args, pool=Pool(processes=1)):
+    """Joins Left and Right fastq reads into a single fastq formatted file.
     :param args: A list of arguments to the function
-    :param pool: A multiprocessing.Pool object.
+    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
     """
+
+    """ parser_preprocess = subparsers.add_parser('preprocess')
+        parser_preprocess.add_argument('-n', '--name', required=True, help="Run Id")
+        parser_preprocess.add_argument('-f', '--input_f', required=True, help="Forward Fastq Reads")
+        parser_preprocess.add_argument('-r', '--input_r', required=True, help="Reverse Fastq Reads")
+        parser_preprocess.add_argument('-b', '--barcodes', required=True,
+                                       help="Tab delimted files of barcodes and their samples")
+        parser_preprocess.add_argument('-o', '--outDir', required=True, help="Directory where outputs will be saved")
+        parser_preprocess.set_defaults(func=joinReads)
+
+    """
+
     # TODO: test run.name is a single word
-
-
+    # Make the output directory, or abort if it already exists
     makeDirOrdie(args.outDir)
-    printVerbose("Preprocessing the data:")
+    printVerbose("Joining the reads:")
 
     # *****************************************************************************************
     printVerbose("\tRenaming sequences")
@@ -49,19 +77,22 @@ def preprocessData(args, pool=Pool(processes=1)):
     # "~/programs/fastx/bin/fastx_renamer -n COUNT -i %s %s"
     rename_outFile_f = os.path.join(args.outDir, os.path.basename(args.input_f) + "_renamed")
     rename_outFile_r = os.path.join(args.outDir, os.path.basename(args.input_r) + "_renamed")
+    print os.path.exists(args.input_f)
+    print os.path.exists(args.input_r)
+    parallel(runInstance, args, [ProgramRunner("fastx_renamer",[args.input_f, rename_outFile_f], {"exists":[args.input_f]}),
+                            ProgramRunner("fastx_renamer",[args.input_r, rename_outFile_r], {"exists":[args.input_r]}),
+                            ])
 
-    # pool.map(runInstance, [ProgramRunner("fastx_renamer",[args.input_f, rename_outFile_f], {"exists":[args.input_f]}),
-    #                        ProgramRunner("fastx_renamer",[args.input_r, rename_outFile_r], {"exists":[args.input_r]}),
-    #                        ])
     printVerbose("\tRenamed %s sequences")
     # *****************************************************************************************
     # Making the contigs using Pear
     # "~/programs/pear-0.9.4-bin-64/pear-0.9.4-64 -f %s -r %s -o %s -j %s"
     assembledPrefix = os.path.join(args.outDir, args.name)
-    # pool.map(runInstance, [ProgramRunner("pear",
-    #                                         [rename_outFile_f, rename_outFile_r, assembledPrefix, args.threads],
-    #                                         {"exists":[rename_outFile_f, rename_outFile_r]})
-    #                        ])
+    parallel(runInstance, args, [ProgramRunner("pear",
+                                         [rename_outFile_f, rename_outFile_r, assembledPrefix, args.threads],
+                                         {"exists":[rename_outFile_f, rename_outFile_r]})
+                            ])
+
     assembledFastqFile = os.path.join(args.outDir, args.name + ".assembled.fastq")
     printVerbose("\t%s sequences assembled, %s contigs discarded, %s sequences discarded" % (-1, -1, -1))
 
@@ -69,7 +100,9 @@ def preprocessData(args, pool=Pool(processes=1)):
     # 1- split_libraries_fastq.py
     # 2- usearch -fastq_filter
     printVerbose("Splitting based on barcodes")
-    pool.map(runInstance, [ProgramRunner("barcode.splitter",
+
+    #pass the pipe to the child
+    parallel(runInstance, args, [ProgramRunner("barcode.splitter",
                                          [assembledFastqFile, args.barcodes, os.path.join(args.outDir, "splitOut_")],
                                          {"exists": [assembledFastqFile]})
                            ])
@@ -77,14 +110,14 @@ def preprocessData(args, pool=Pool(processes=1)):
     listOfSamples = glob.glob(os.path.join(args.outDir, "splitOut_*"))
 
 
-def splitFile(args, pool):
+def splitFile(args, pool=Pool(processes=1)):
     """
 
     :param args: A list of arguments to the function
     :param pool: A multiprocessing.Pool object.
     :return:
     """
-    # Split the cleaned file resulting from preprocessData into a user defined
+    # Split the cleaned file resulting from joinReads into a user defined
     # number of chunks
 
 
@@ -94,7 +127,7 @@ def splitFile(args, pool):
         "\tDone splitting file")  # TODO: eventually send a param to Program running, prevenint it from starting after CTRL+C has been invoked
 
 
-def clean(args, pool):
+def clean(args, pool=Pool(processes=1)):
     """
 
     :param args: A list of arguments to the function
@@ -108,21 +141,18 @@ def clean(args, pool):
         if args.program == "macse":
             printVerbose("\t %s Aligning reads using MACSE")
 
-            pool.map(runInstance, [ProgramRunner("macse_align",
+            parallel(runInstance, args, [ProgramRunner("macse_align",
                                                  [args.db, args.db, os.path.join(args.samplesDir, sample)] + [
                                                      os.path.join(args.outDir, sample)] * 3
                                                  , {"exists": []}) for sample in os.listdir(args.samplesDir)])
 
             printVerbose("\t %s Processing MACSE alignments")
-            pool.map(runInstance, [ProgramRunner("macse_format",
+            parallel(runInstance, args, [ProgramRunner("macse_format",
                                                  [os.path.join(args.outDir, sample + "_NT"),
                                                   os.path.join(args.outDir, sample + "_AA_macse.fasta"),
                                                   os.path.join(args.outDir, sample + "_NT_macse.fasta"),
                                                   os.path.join(args.outDir, sample + "_macse.csv")],
                                                   {"exists": []}) for sample in os.listdir(args.samplesDir)])
-
-        pool.close()
-        pool.join()
 
         printVerbose("\tCleaning MACSE alignments")
 
@@ -151,7 +181,7 @@ def clean(args, pool):
         pool.terminate()
 
 
-def removeChimeras(args, pool):
+def removeChimeras(args, pool=Pool(processes=1)):
     """
 
     :param args: A list of arguments to the function
@@ -162,7 +192,7 @@ def removeChimeras(args, pool):
         # *****************************************************************************************
         # findind the chimeras
         # "chmimera.uchime": "mothur #chimera.uchime(fasta=%s, name=%s)",
-        pool.map(runInstance, [ProgramRunner("chmimera.uchime",
+        parallel(runInstance, args, [ProgramRunner("chmimera.uchime",
                                              [args.inputFile, args.namesFile],
                                              {"exists": [args.inputFile, args.namesFile]})
                                ])
@@ -173,7 +203,7 @@ def removeChimeras(args, pool):
         uchimeAccnos = glob.glob(os.path.join(os.path.dirname(args.inputFile), "*uchime.chimeras"))[0]
         print "outFile is %s " % uchimeAccnos
         p = ProgramRunner("remove.seqs", [uchimeAccnos, args.inputFile], {"exists": [uchimeAccnos]})
-        runInstance(p)
+        parallel(runInstance, args, p)
 
         # *****************************************************************************************
         # Renaming the outfile and updating the names file
@@ -191,7 +221,7 @@ def removeChimeras(args, pool):
     printVerbose("\t removed %s chimeric sequences")
 
 
-def dropShort(args, pool):
+def dropShort(args, pool=Pool(processes=1)):
     """
     :param args: A list of arguments to the function
     :param pool: A multiprocessing.Pool object.
@@ -219,7 +249,7 @@ def main(argv):
     parser.add_argument('--dryRun', action='store_true', default=False)
     subparsers = parser.add_subparsers(dest='action', help='Available commands')
 
-    # preprocess data
+    # join reads
     parser_preprocess = subparsers.add_parser('preprocess')
     parser_preprocess.add_argument('-n', '--name', required=True, help="Run Id")
     parser_preprocess.add_argument('-f', '--input_f', required=True, help="Forward Fastq Reads")
@@ -227,7 +257,7 @@ def main(argv):
     parser_preprocess.add_argument('-b', '--barcodes', required=True,
                                    help="Tab delimted files of barcodes and their samples")
     parser_preprocess.add_argument('-o', '--outDir', required=True, help="Directory where outputs will be saved")
-    parser_preprocess.set_defaults(func=preprocessData)
+    parser_preprocess.set_defaults(func=joinReads)
 
     # split file by samples
     parser_split = subparsers.add_parser('partition')
@@ -278,7 +308,7 @@ def main(argv):
 
 
 
-    global args
+    global args, pool
     args = parser.parse_args()
     if args.verbose:
         logging.basicConfig(format=FORMAT, level=logging.DEBUG, datefmt=DATEFMT)
@@ -286,13 +316,15 @@ def main(argv):
         logging.basicConfig(format=FORMAT, level=logging.ERROR, datefmt=DATEFMT)
 
     printVerbose.VERBOSE = args.verbose
-    printVerbose("Running with %s threads" % args.threads)
+    printVerbose("Running with %s process(es)" % args.threads)
     pool = Pool(args.threads)
     logging.debug("Initial ARGS are: %s", args)
     print("\t\t")
-
+    dryRun = args.dryRun
     args.func(args, pool)
 
+    pool.close()
+    pool.join()
 
 if __name__ == "__main__":
     main(sys.argv)

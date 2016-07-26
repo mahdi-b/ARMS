@@ -41,76 +41,101 @@
           <div class="body" role="main">
             
   <h1>Source code for classes.ProgramRunner</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">signal</span>
+<span></span><span class="kn">import</span> <span class="nn">ConfigParser</span>
+<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">Helpers</span> <span class="k">import</span> <span class="n">printVerbose</span>
-<span class="kn">import</span> <span class="nn">re</span> 
-<span class="kn">import</span> <span class="nn">Validators</span>  <span class="c1"># fileExists, installed, etc..</span>
+<span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">Validator</span>  <span class="c1"># fileExists, installed, etc..</span>
 
-<span class="c1"># TODO: move programs paths to a config file</span>
-<span class="n">MACSE</span> <span class="o">=</span> <span class="s2">&quot;/ARMS/programs/MACSE/macse_v1.01b.jar&quot;</span>
-<span class="n">FASTX</span> <span class="o">=</span> <span class="s2">&quot;~/programs/fastx/bin/&quot;</span>
-<span class="n">PEAR</span> <span class="o">=</span> <span class="s2">&quot;~/programs/pear-0.9.4-bin-64/pear-0.9.4-64&quot;</span>
+<span class="kn">from</span> <span class="nn">Helpers</span> <span class="k">import</span> <span class="n">printVerbose</span>
+<span class="kn">from</span> <span class="nn">pipes</span> <span class="k">import</span> <span class="n">quote</span>
+
+
+
 
 
 <div class="viewcode-block" id="ProgramRunner"><a class="viewcode-back" href="../../source/classes.html#classes.ProgramRunner.ProgramRunner">[docs]</a><span class="k">class</span> <span class="nc">ProgramRunner</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="n">commands</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;barcode.splitter&quot;</span><span class="p">:</span> <span class="n">FASTX</span> <span class="o">+</span> <span class="s2">&quot;/fastx_barcode_splitter.pl  --bcfile </span><span class="si">%s</span><span class="s2"> --prefix </span><span class="si">%s</span><span class="s2"> --suffix .fastq --bol </span><span class="se">\</span>
-<span class="s2">                                --mismatches 1&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;fastx_renamer&quot;</span><span class="p">:</span> <span class="n">FASTX</span> <span class="o">+</span> <span class="s2">&quot;/fastx_renamer -n COUNT -i </span><span class="si">%s</span><span class="s2"> -o </span><span class="si">%s</span><span class="s2"> -Q 33&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;pear&quot;</span><span class="p">:</span> <span class="n">PEAR</span> <span class="o">+</span> <span class="s2">&quot; -f </span><span class="si">%s</span><span class="s2"> -r </span><span class="si">%s</span><span class="s2"> -o </span><span class="si">%s</span><span class="s2"> -j </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;make.contigs&quot;</span><span class="p">:</span> <span class="s2">&quot;mothur #make.contigs(ffastq=</span><span class="si">%s</span><span class="s2">, rfastq=</span><span class="si">%s</span><span class="s2">, bdiffs=1, pdiffs=2, oligos=</span><span class="si">%s</span><span class="s2">, processors=</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;fastq.info&quot;</span><span class="p">:</span> <span class="s2">&quot;mothur #fastq.info(fastq=</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;trim.seqs&quot;</span><span class="p">:</span> <span class="s2">&quot;mothur #trim.seqs(fasta=</span><span class="si">%s</span><span class="s2">, oligos=</span><span class="si">%s</span><span class="s2">, maxambig=1, maxhomop=8, minlength=300, maxlength=550, </span><span class="se">\</span>
-<span class="s2">                            bdiffs=1, pdiffs=2)&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;align.seqs&quot;</span><span class="p">:</span> <span class="s2">&quot;mothur #align.seqs(candidate=</span><span class="si">%s</span><span class="s2">, template=</span><span class="si">%s</span><span class="s2">, flip=t)&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;unique.seqs&quot;</span><span class="p">:</span> <span class="s2">&quot;mothur #unique.seqs(fasta=</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;macse_align&quot;</span><span class="p">:</span> <span class="s2">&quot;java -jar &quot;</span> <span class="o">+</span> <span class="n">MACSE</span> <span class="o">+</span> <span class="s2">&quot; -prog enrichAlignment  -seq </span><span class="si">%s</span><span class="s2"> -align </span><span class="si">%s</span><span class="s2"> -seq_lr </span><span class="si">%s</span><span class="s2"> -maxFS_inSeq 0 </span><span class="se">\</span>
-<span class="s2">                            -maxSTOP_inSeq 0  -maxINS_inSeq 0 -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 </span><span class="se">\</span>
-<span class="s2">                            -out_NT </span><span class="si">%s</span><span class="s2">_NT -out_AA </span><span class="si">%s</span><span class="s2">_AA -seqToAdd_logFile </span><span class="si">%s</span><span class="s2">_log.csv&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;macse_format&quot;</span><span class="p">:</span> <span class="s2">&quot;java -jar &quot;</span> <span class="o">+</span> <span class="n">MACSE</span> <span class="o">+</span> <span class="s2">&quot;  -prog exportAlignment -align </span><span class="si">%s</span><span class="s2"> -charForRemainingFS - -gc_def 5 </span><span class="se">\</span>
-<span class="s2">                        -out_AA </span><span class="si">%s</span><span class="s2"> -out_NT </span><span class="si">%s</span><span class="s2"> -statFile </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;chmimera.uchime&quot;</span><span class="p">:</span> <span class="s2">&quot;mothur #chimera.uchime(fasta=</span><span class="si">%s</span><span class="s2">, name=</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;remove.seqs&quot;</span><span class="p">:</span> <span class="s2">&quot;mothur #remove.seqs(accnos=</span><span class="si">%s</span><span class="s2">, fasta=</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;cluster-swarm&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-        <span class="p">}</span>
+    <span class="sd">&#39;&#39;&#39;A class to interact with external command line programs.  The class contains a dictionary of formatted command</span>
+<span class="sd">    strings.  The class supports validation, sanitization, and debugging of user-supplied parameters.</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">program</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">conditions</span><span class="o">=</span><span class="p">{}):</span>
-        <span class="sd">&quot;&quot;&quot;Initalizes a ProgramRunner object.</span>
+<span class="sd">    Attributes:</span>
+<span class="sd">        DEFAULT_CONFIG_FILEPATH     The filepath to a config file containing user-specified overrides (such as file paths to</span>
+<span class="sd">                                        exectuables.</span>
+<span class="sd">        configsLoaded               Specifies that all config variables have been loaded, and that the file should not</span>
+<span class="sd">                                        be read again durring the execution of this instance.</span>
+<span class="sd">        programPaths                Specifies the default location of executibles used in the commands dictionary.</span>
+<span class="sd">        commandTemplates            A dictionary mapping chewbacca commands to un-paramaterized command line strings.</span>
+<span class="sd">                                        Used as templates for commands.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">DEFAULT_CONFIG_FILEPATH</span> <span class="o">=</span> <span class="s2">&quot;chewbacca.cfg&quot;</span>
+    <span class="n">configsLoaded</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">commandTemplates</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">programPaths</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;MACSE&quot;</span><span class="p">:</span> <span class="s2">&quot;/ARMS/programs/MACSE/macse_v1.01b.jar&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;FASTX&quot;</span><span class="p">:</span> <span class="s2">&quot;~/programs/fastx/bin/&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;PEAR&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span>
+    <span class="p">}</span>
 
-<span class="sd">        :param program: A string from the dictionary of available commands.</span>
-<span class="sd">        :param params: A fully initalized list of parameters for the program to run.</span>
-<span class="sd">        :param conditions:</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">program</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">conditions</span><span class="o">=</span><span class="p">{},</span> <span class="n">stdin</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">devnull</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">),</span> <span class="n">stdout</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">devnull</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">),</span>
+                 <span class="n">stderr</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">devnull</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)):</span>
+        <span class="sd">&quot;&quot;&quot;Initalizes a ProgramRunner object.  Reads chewbacca.cfg and loads configuration settings, builds the command</span>
+<span class="sd">        string, and configures stdIO pipes.</span>
+
+<span class="sd">        :param program:     A chewbacca command (as a string).  Used as a key to fetch the command string from</span>
+<span class="sd">                                ProgramRunner.commandTemplates.</span>
+<span class="sd">        :param params:      A list of parameters for the chosen chewbacca command.</span>
+<span class="sd">        :param conditions:  A dictionary mapping &lt;Validator&gt;.function names to a list of parameters.  The dictionary</span>
+<span class="sd">                                key/function name is called on each parameter in the corresponding list of parameters.</span>
+<span class="sd">                                All parameters must satisfy their &lt;Validator&gt;.function in order for the specified</span>
+<span class="sd">                                program to execute.</span>
+<span class="sd">        :param stdin:       A handle to the stdin pipe for the command.  Defaults to os.devnull.</span>
+<span class="sd">        :param stdout:      A handle to the stdout pipe for the command.  Defaults to os.devnull.</span>
+<span class="sd">        :param stderr:      A hande to the stderr pipe for the command.  Defaults to os.devnull.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ProgramRunner</span><span class="o">.</span><span class="n">configsLoaded</span><span class="p">:</span>
+            <span class="n">ProgramRunner</span><span class="o">.</span><span class="n">loadConfigs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">ProgramRunner</span><span class="o">.</span><span class="n">initalizeCommands</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">ProgramRunner</span><span class="o">.</span><span class="n">configsLoaded</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">program</span> <span class="o">=</span> <span class="n">program</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">command</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="p">[</span><span class="n">program</span><span class="p">]</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">command</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">commandTemplates</span><span class="p">[</span><span class="n">program</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">conditions</span> <span class="o">=</span> <span class="n">conditions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stdin</span> <span class="o">=</span> <span class="n">stdin</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">stdout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stderr</span> <span class="o">=</span> <span class="n">stderr</span>
+
+
 
 <div class="viewcode-block" id="ProgramRunner.validateConditions"><a class="viewcode-back" href="../../source/classes.html#classes.ProgramRunner.ProgramRunner.validateConditions">[docs]</a>    <span class="k">def</span> <span class="nf">validateConditions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conditions</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Validates all conditions using a Validator object, returning True if successful and raising an exception</span>
 <span class="sd">            if not.</span>
 
-<span class="sd">        :param conditions: A list of pairs where the first element in each pari is a &lt;Validator.function&gt; and the</span>
-<span class="sd">                            second element is a list of parameters to that function.</span>
-<span class="sd">                            i.e. [(&lt;Validator.function&gt;, [parameters to &lt;Validator.function&gt;],) , ]</span>
+<span class="sd">        :param conditions: A dictionary mapping &lt;Validator&gt;.function names to a list of parameters.  The dictionary</span>
+<span class="sd">                                key/function name is called on each parameter in the corresponding list of parameters.</span>
+<span class="sd">                                All parameters must satisfy their &lt;Validator&gt;.function in order for the specified</span>
+<span class="sd">                                program to execute.</span>
 <span class="sd">        :return: True if validation is successful, and raising an exception in &lt;Validator.function&gt; if not.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># if any of the conditions fail, an exception is raised in getattr</span>
         <span class="c1"># TODO: The exception should be raised in this function, so users know that the error is in validation of their conditions, not the</span>
         <span class="c1">#   accessing of properties.</span>
         <span class="k">for</span> <span class="n">condition</span> <span class="ow">in</span> <span class="n">conditions</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
-            <span class="nb">getattr</span><span class="p">(</span><span class="n">Validators</span><span class="p">,</span> <span class="n">condition</span><span class="p">[</span><span class="mi">0</span><span class="p">])(</span><span class="n">condition</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="n">Validator</span><span class="p">,</span> <span class="n">condition</span><span class="p">[</span><span class="mi">0</span><span class="p">])(</span><span class="n">condition</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="c1"># TODO sanitize inputs</span>
+
         <span class="k">return</span> <span class="kc">True</span></div>
 
 
 <div class="viewcode-block" id="ProgramRunner.dryValidateConditions"><a class="viewcode-back" href="../../source/classes.html#classes.ProgramRunner.ProgramRunner.dryValidateConditions">[docs]</a>    <span class="k">def</span> <span class="nf">dryValidateConditions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conditions</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Prints validation procedures without actually executing them.</span>
 
-<span class="sd">        :param conditions: A list of pairs where the first element in each pair is a &lt;Validator.function&gt; and the</span>
-<span class="sd">                            second element is a list of parameters to that function.</span>
-<span class="sd">                            i.e. [(&lt;Validator.function&gt;, [parameters to &lt;Validator.function&gt;],) , ]</span>
+<span class="sd">        :param conditions: A dictionary mapping &lt;Validator&gt;.function names to a list of parameters.  The dictionary</span>
+<span class="sd">                                key/function name is called on each parameter in the corresponding list of parameters.</span>
+<span class="sd">                                All parameters must satisfy their &lt;Validator&gt;.function in order for the specified</span>
+<span class="sd">                                program to execute.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># if any of the conditions fails, stop execution</span>
         <span class="c1"># TODO ask Mahdi if this is the intended behavior</span>
@@ -133,7 +158,7 @@
         <span class="k">return</span> <span class="n">commandList</span></div>
 
 <div class="viewcode-block" id="ProgramRunner.run"><a class="viewcode-back" href="../../source/classes.html#classes.ProgramRunner.ProgramRunner.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Validates conditions (or prints them for a dry run), then executes the command.</span>
+        <span class="sd">&quot;&quot;&quot;Validates conditions (or prints them for a dry run), sanitizes parameters, and then executes the command.</span>
 
 <span class="sd">        :return: None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -141,21 +166,81 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">validateConditions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conditions</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">printVerbose</span><span class="o">.</span><span class="n">VERBOSE</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">dryRun</span><span class="p">()</span>
-            <span class="n">commandList</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">splitCommand</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">)</span>
-            <span class="nb">print</span> <span class="n">commandList</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">devnull</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fnull</span><span class="p">:</span>
-                <span class="n">subprocess</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">commandList</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">fnull</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">fnull</span><span class="p">)</span>
+            <span class="c1"># call and check_call are blocking, Popen is non-blocking</span>
+            <span class="nb">print</span> <span class="s2">&quot;running &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">command</span>
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">,</span><span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="c1"># commandList = self.splitCommand(self.command)</span>
+            <span class="c1"># print commandList</span>
+            <span class="c1"># print &quot; &quot;.join(commandList)</span>
+            <span class="c1"># subprocess.call(commandList, stderr=fnull, stdout=fnull)</span>
+            <span class="c1"># subprocess.call(commandList,stdin=self.stdin,stdout=self.stdout,stderr=self.stderr)</span>
+            <span class="c1"># subprocess.call(&quot; &quot;.join(commandList))</span>
         <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
             <span class="k">return</span></div>
 
 
 <div class="viewcode-block" id="ProgramRunner.dryRun"><a class="viewcode-back" href="../../source/classes.html#classes.ProgramRunner.ProgramRunner.dryRun">[docs]</a>    <span class="k">def</span> <span class="nf">dryRun</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Prints the validation commands that would be performed in an actual run, and the command that would be run.</span>
+        <span class="sd">&quot;&quot;&quot;Prints the validation procedures that would be performed, and the commands that would be run in an actual</span>
+<span class="sd">            run, without actually executing them.</span>
 
 <span class="sd">        :return:</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dryValidateConditions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conditions</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">command</span></div></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">command</span></div>
+
+
+<div class="viewcode-block" id="ProgramRunner.loadConfigs"><a class="viewcode-back" href="../../source/classes.html#classes.ProgramRunner.ProgramRunner.loadConfigs">[docs]</a>    <span class="k">def</span> <span class="nf">loadConfigs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Loads configuration settings from the chewbacca configuration file (located in</span>
+<span class="sd">            ProgramRunner.DEFAULT_CONFIG_FILEPATH).  If the file is not found, default values are used. Overwrites the</span>
+<span class="sd">            default values of any found entries.  Currently loads the [Program  Paths] section, updating the</span>
+<span class="sd">            programPaths dictionary.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">configFilePath</span> <span class="o">=</span> <span class="n">ProgramRunner</span><span class="o">.</span><span class="n">DEFAULT_CONFIG_FILEPATH</span>
+        <span class="n">configSection</span> <span class="o">=</span> <span class="s2">&quot;Program Paths&quot;</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">configFilePath</span><span class="p">):</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Loaded Chewbacca config files from </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">configFilePath</span><span class="p">)</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="o">.</span><span class="n">RawConfigParser</span><span class="p">()</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">configFilePath</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">program</span> <span class="ow">in</span> <span class="n">ProgramRunner</span><span class="o">.</span><span class="n">programPaths</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">has_option</span><span class="p">(</span><span class="n">configSection</span><span class="p">,</span> <span class="n">program</span><span class="p">):</span>
+                    <span class="n">configSetting</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">configSection</span><span class="p">,</span> <span class="n">program</span><span class="p">)</span>
+                    <span class="n">ProgramRunner</span><span class="o">.</span><span class="n">programPaths</span><span class="p">[</span><span class="n">program</span><span class="p">]</span> <span class="o">=</span> <span class="n">configSetting</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Read </span><span class="si">%s</span><span class="s2"> filepath as </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">program</span><span class="p">,</span> <span class="n">configSetting</span><span class="p">))</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Chewbacca config file not found.  Using defaults.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ProgramRunner.initalizeCommands"><a class="viewcode-back" href="../../source/classes.html#classes.ProgramRunner.ProgramRunner.initalizeCommands">[docs]</a>    <span class="k">def</span> <span class="nf">initalizeCommands</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Provides the static definition of</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ProgramRunner</span><span class="o">.</span><span class="n">configsLoaded</span><span class="p">:</span>
+            <span class="n">programPaths</span> <span class="o">=</span> <span class="n">ProgramRunner</span><span class="o">.</span><span class="n">programPaths</span>
+            <span class="n">ProgramRunner</span><span class="o">.</span><span class="n">commandTemplates</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;barcode.splitter&quot;</span><span class="p">:</span> <span class="s2">&quot;cat </span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2"> | &quot;</span> <span class="o">+</span> <span class="n">programPaths</span><span class="p">[</span><span class="s2">&quot;FASTX&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;fastx_barcode_splitter.pl  --bcfile </span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2"> </span><span class="se">\</span>
+<span class="s2">                                    -prefix </span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2"> --suffix .fastq --bol --mismatches 1&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;fastx_renamer&quot;</span><span class="p">:</span>    <span class="n">programPaths</span><span class="p">[</span><span class="s2">&quot;FASTX&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;fastx_renamer -n COUNT -i </span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2"> -o </span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2"> -Q 33&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;pear&quot;</span><span class="p">:</span>             <span class="n">programPaths</span><span class="p">[</span><span class="s2">&quot;PEAR&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot; -f </span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2"> -r </span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2"> -o </span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2"> -j </span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;make.contigs&quot;</span><span class="p">:</span>     <span class="s2">&quot;mothur #make.contigs(ffastq=</span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2">, rfastq=</span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2">, bdiffs=1, pdiffs=2, oligos=</span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2">, </span><span class="se">\</span>
+<span class="s2">                                    processors=</span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2">)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;fastq.info&quot;</span><span class="p">:</span>       <span class="s2">&quot;mothur #fastq.info(fastq=</span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2">)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;trim.seqs&quot;</span><span class="p">:</span>        <span class="s2">&quot;mothur #trim.seqs(fasta=</span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2">, oligos=</span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2">, maxambig=1, maxhomop=8, minlength=300, </span><span class="se">\</span>
+<span class="s2">                                    maxlength=550, bdiffs=1, pdiffs=2)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;align.seqs&quot;</span><span class="p">:</span>       <span class="s2">&quot;mothur #align.seqs(candidate=</span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2">, template=</span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2">, flip=t)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;unique.seqs&quot;</span><span class="p">:</span>      <span class="s2">&quot;mothur #unique.seqs(fasta=</span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2">)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;macse_align&quot;</span><span class="p">:</span>      <span class="s2">&quot;java -jar &quot;</span> <span class="o">+</span> <span class="n">programPaths</span><span class="p">[</span><span class="s2">&quot;MACSE&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot; -prog enrichAlignment  -seq </span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2"> -align </span><span class="se">\</span>
+<span class="s2">                                    </span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2"> -seq_lr </span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2"> -maxFS_inSeq 0  -maxSTOP_inSeq 0  -maxINS_inSeq 0 </span><span class="se">\</span>
+<span class="s2">                                    -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 -out_NT </span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2">_NT </span><span class="se">\</span>
+<span class="s2">                                    -out_AA </span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2">_AA -seqToAdd_logFile </span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2">_log.csv&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;macse_format&quot;</span><span class="p">:</span>     <span class="s2">&quot;java -jar &quot;</span> <span class="o">+</span> <span class="n">programPaths</span><span class="p">[</span><span class="s2">&quot;MACSE&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;  -prog exportAlignment -align </span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2"> </span><span class="se">\</span>
+<span class="s2">                                    -charForRemainingFS -gc_def 5 -out_AA </span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2"> -out_NT </span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2"> -statFile </span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;chmimera.uchime&quot;</span><span class="p">:</span>  <span class="s2">&quot;mothur #chimera.uchime(fasta=</span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2">, name=</span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2">)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;remove.seqs&quot;</span><span class="p">:</span>      <span class="s2">&quot;mothur #remove.seqs(accnos=</span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2">, fasta=</span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2">)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;cluster-swarm&quot;</span><span class="p">:</span>    <span class="s2">&quot;&quot;</span>
+        <span class="p">}</span></div></div>
 </pre></div>
 
           </div>
