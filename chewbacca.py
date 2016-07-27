@@ -43,119 +43,187 @@ def parallel(function, args, runners, pool=Pool(processes=1)):
     :param pool:        An initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
     :return:
     '''
+
     data = [(args, runner) for runner in runners]
     for arg, runner in data:
             runInstance(arg,runner)
     #pool.map(function, data)
 
 
-def joinReads(args, pool=Pool(processes=1)):
-    """Joins Left and Right fastq reads into a single fastq formatted file.
-    :param args: A list of arguments to the function
+def serialRename(args, pool=Pool(processes=1)):
+    """Renames sequences in a fastq file as 1,2,3,...
+    :param args: An argparse object with the following parameters:
+                    input_f     Forward Fastq Reads
+                    input_r     Reverse Fastq Reads
+                    outDir      Directory where outputs will be saved
+    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
+    """
+    try:
+        # Make the output directory, or abort if it already exists
+        makeDirOrdie(args.outDir)
+        printVerbose("\tRenaming sequences")
+        # "~/programs/fastx/bin/fastx_renamer -n COUNT -i %s %s"
+        rename_outFile_f = os.path.join(args.outDir, os.path.basename(args.input_f) + "_renamed")
+        rename_outFile_r = os.path.join(args.outDir, os.path.basename(args.input_r) + "_renamed")
+        parallel(runInstance, args, [
+                                ProgramRunner("fastx_renamer",[args.input_f, rename_outFile_f], {"exists":[args.input_f]}),
+                                ProgramRunner("fastx_renamer",[args.input_r, rename_outFile_r], {"exists":[args.input_r]}),
+                                ])
+        printVerbose("\tRenamed %s sequences")
+    except KeyboardInterrupt:
+        pool.terminate()
+
+def assembleReads(args, pool=Pool(processes=1)):
+    """Assembles reads from two (left and right) fastq files.
+    :param args: An argparse object with the following parameters:
+                    name        Textual ID for the data set
+                    input_f     Forward Fastq Reads
+                    input_r     Reverse Fastq Reads
+                    threads     The number of threads to use durring assembly.
+                    outDir      Directory where outputs will be saved
     :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
     """
 
-    """ parser_preprocess = subparsers.add_parser('preprocess')
-        parser_preprocess.add_argument('-n', '--name', required=True, help="Run Id")
-        parser_preprocess.add_argument('-f', '--input_f', required=True, help="Forward Fastq Reads")
-        parser_preprocess.add_argument('-r', '--input_r', required=True, help="Reverse Fastq Reads")
-        parser_preprocess.add_argument('-b', '--barcodes', required=True,
-                                       help="Tab delimted files of barcodes and their samples")
-        parser_preprocess.add_argument('-o', '--outDir', required=True, help="Directory where outputs will be saved")
-        parser_preprocess.set_defaults(func=joinReads)
-
-    """
-
-    # TODO: test run.name is a single word
-    # Make the output directory, or abort if it already exists
-    makeDirOrdie(args.outDir)
-    printVerbose("Joining the reads:")
-
-    # *****************************************************************************************
-    printVerbose("\tRenaming sequences")
-
-    # "~/programs/fastx/bin/fastx_renamer -n COUNT -i %s %s"
-    rename_outFile_f = os.path.join(args.outDir, os.path.basename(args.input_f) + "_renamed")
-    rename_outFile_r = os.path.join(args.outDir, os.path.basename(args.input_r) + "_renamed")
-    print os.path.exists(args.input_f)
-    print os.path.exists(args.input_r)
-    parallel(runInstance, args, [ProgramRunner("fastx_renamer",[args.input_f, rename_outFile_f], {"exists":[args.input_f]}),
-                            ProgramRunner("fastx_renamer",[args.input_r, rename_outFile_r], {"exists":[args.input_r]}),
-                            ])
-
-    printVerbose("\tRenamed %s sequences")
     # *****************************************************************************************
     # Making the contigs using Pear
     # "~/programs/pear-0.9.4-bin-64/pear-0.9.4-64 -f %s -r %s -o %s -j %s"
-    assembledPrefix = os.path.join(args.outDir, args.name)
-    parallel(runInstance, args, [ProgramRunner("pear",
-                                         [rename_outFile_f, rename_outFile_r, assembledPrefix, args.threads],
-                                         {"exists":[rename_outFile_f, rename_outFile_r]})
-                            ])
+    try:
+        printVerbose("\tAssembling reads")
+        # TODO figure out a better way to handle filenames
+        rename_outFile_f = os.path.join(args.outDir, os.path.basename(args.input_f) + "_renamed")
+        rename_outFile_r = os.path.join(args.outDir, os.path.basename(args.input_r) + "_renamed")
 
-    assembledFastqFile = os.path.join(args.outDir, args.name + ".assembled.fastq")
-    printVerbose("\t%s sequences assembled, %s contigs discarded, %s sequences discarded" % (-1, -1, -1))
+        assembledPrefix = os.path.join(args.outDir, args.name)
+        parallel(runInstance, args, [ProgramRunner("pear",
+                                             [rename_outFile_f, rename_outFile_r, assembledPrefix, args.threads],
+                                             {"exists":[rename_outFile_f, rename_outFile_r]})
+                                ])
 
-    # MAHDI  Comment the rest of the program to replace the pipeline with
+        assembledFastqFile = os.path.join(args.outDir, args.name + ".assembled.fastq")
+        printVerbose("\t%s sequences assembled, %s contigs discarded, %s sequences discarded" % (-1, -1, -1))
+    except KeyboardInterrupt:
+        pool.terminate()
+
+
+def splitOnBarcodes(args, pool=Pool(processes=1)):
+    """Splits a fasta/fastq file on a set of barcodes.  An output file will be created for each sample, listing all members
+        from that sample.
+    :param args: An argparse object with the following parameters:
+                    name        Run Id
+                    barcodes    Tab delimited files of barcodes and their samples
+                    outDir      Directory where outputs will be saved
+    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
+    """
+    # TODO MAHDI  Comment the rest of the program to replace the pipeline with
     # 1- split_libraries_fastq.py
     # 2- usearch -fastq_filter
-    printVerbose("Splitting based on barcodes")
+    try:
+        # TODO figure out a better way to handle filenames
+        assembledFastqFile = os.path.join(args.outDir, args.name + ".assembled.fastq")
 
-    #pass the pipe to the child
-    parallel(runInstance, args, [ProgramRunner("barcode.splitter",
-                                         [assembledFastqFile, args.barcodes, os.path.join(args.outDir, "splitOut_")],
-                                         {"exists": [assembledFastqFile]})
-                           ])
+        printVerbose("Splitting based on barcodes")
+        parallel(runInstance, args, [ProgramRunner("barcode.splitter",
+                                             [assembledFastqFile, args.barcodes, os.path.join(args.outDir, "splitOut_")],
+                                             {"exists": [assembledFastqFile]})
+                               ])
+        printVerbose("Demuxed sequences.")
 
-    listOfSamples = glob.glob(os.path.join(args.outDir, "splitOut_*"))
+    except KeyboardInterrupt:
+        pool.terminate()
 
 
-def splitFile(args, pool=Pool(processes=1)):
+def trim(args, pool=Pool(processes=1)):
+    """Trims the adapter and barcode from each sequence.
+
+    :param args: An argparse object with the following parameters:
+                    inputFasta  Fasta file with sequences to be trimmed
+                    oligos      A mothur oligos file with barcodes and primers.  See:
+                                    <http://www.mothur.org/wiki/Trim.seqs#oligos>
+                    outDir      Directory where outputs will be saved
+    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
     """
+    try:
+        makeDirOrdie(args.outDir)
+        printVerbose("Splitting based on barcodes")
+        parallel(runInstance, args, [ProgramRunner("trim.seqs",
+                                                   [args.inputFasta, args.oligos],
+                                                   {"exists": [args.inputFasta, args.oligos]})
+                                     ])
+        printVerbose("Trimmed sequences.")
+        listOfSamples = glob.glob(os.path.join(args.outDir, "splitOut_*"))
+    except KeyboardInterrupt:
+        pool.terminate()
 
-    :param args: A list of arguments to the function
-    :param pool: A multiprocessing.Pool object.
-    :return:
+# TODO decide whether to use this function or splitOnBarcodes.  This one uses SeqIO, the above users fastx
+def splitFile(args, pool=Pool(processes=1)):
+    """Splits a fastq file on a set of barcodes.  An output file will be created for each sample, listing all members
+        from that sample.
+    :param args: An argparse object with the following parameters:
+                    name        Run Id
+                    input_f     Forward Fastq Reads
+                    input_r     Reverse Fastq Reads
+                    barcodes    Tab delimited files of barcodes and their samples
+                    outDir      Directory where outputs will be saved
+    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
     """
     # Split the cleaned file resulting from joinReads into a user defined
     # number of chunks
+    try:
+        makeDirOrdie(args.outDir)
+        splitFileBySample(args.inputFasta, args.groups, args.outDir)
+        printVerbose(
+            "\tDone splitting file")  # TODO: eventually send a param to Program running, prevent it from starting after CTRL+C has been invoked
+    except KeyboardInterrupt:
+        pool.terminate()
 
 
-    makeDirOrdie(args.outDir)
-    splitFileBySample(args.inputFasta, args.groups, args.outDir)
-    printVerbose(
-        "\tDone splitting file")  # TODO: eventually send a param to Program running, prevenint it from starting after CTRL+C has been invoked
+def alignSeqs(args, pool=Pool(processes=1)):
+    """Aligns sequences by iteratively adding them to a known good alignment.
 
-
-def clean(args, pool=Pool(processes=1)):
+     :param args: An argparse object with the following parameters:
+                    db                  Database against which to align and filter reads
+                    samplesDir          Directory containig the samples to be cleaned
+                    outDir              Directory where outputs will be saved
+     :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
     """
-
-    :param args: A list of arguments to the function
-    :param pool: A multiprocessing.Pool object.
-    :return:
-    """
-
-
+    #"macse_align":      "java -jar " + programPaths["MACSE"] + " -prog enrichAlignment  -seq \"%s\" -align \
+    #                                    \"%s\" -seq_lr \"%s\" -maxFS_inSeq 0  -maxSTOP_inSeq 0  -maxINS_inSeq 0 \
+    #                                    -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 -out_NT \"%s\"_NT \
+    #                                    -out_AA \"%s\"_AA -seqToAdd_logFile \"%s\"_log.csv",
     makeDirOrdie(args.outDir)
     try:
         if args.program == "macse":
             printVerbose("\t %s Aligning reads using MACSE")
-
             parallel(runInstance, args, [ProgramRunner("macse_align",
                                                  [args.db, args.db, os.path.join(args.samplesDir, sample)] + [
                                                      os.path.join(args.outDir, sample)] * 3
                                                  , {"exists": []}) for sample in os.listdir(args.samplesDir)])
+    except KeyboardInterrupt:
+        pool.terminate()
 
-            printVerbose("\t %s Processing MACSE alignments")
-            parallel(runInstance, args, [ProgramRunner("macse_format",
-                                                 [os.path.join(args.outDir, sample + "_NT"),
-                                                  os.path.join(args.outDir, sample + "_AA_macse.fasta"),
-                                                  os.path.join(args.outDir, sample + "_NT_macse.fasta"),
-                                                  os.path.join(args.outDir, sample + "_macse.csv")],
-                                                  {"exists": []}) for sample in os.listdir(args.samplesDir)])
+
+def cleanAlignments(args, pool=Pool(processes=1)):
+    """Removes non-nucleotide characters in MACSE aligned sequences for all fasta files in the samples directory
+        (the samplesDir argument).
+    :param args: An argparse object with the following parameters:
+                    samplesDir          Directory containig the samples to be cleaned
+                    outDir              Directory where outputs will be saved
+    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
+    """
+    # "macse_format":     "java -jar " + programPaths["MACSE"] + "  -prog exportAlignment -align \"%s\" \
+    #
+    #                                  -charForRemainingFS - -gc_def 5 -out_AA \"%s\" -out_NT \"%s\" -statFile \"%s\""
+    try:
+        printVerbose("\t %s Processing MACSE alignments")
+        parallel(runInstance, args, [ProgramRunner("macse_format",
+                                             [os.path.join(args.outDir, sample + "_NT"),
+                                              os.path.join(args.outDir, sample + "_AA_macse.fasta"),
+                                              os.path.join(args.outDir, sample + "_NT_macse.fasta"),
+                                              os.path.join(args.outDir, sample + "_macse.csv")],
+                                              {"exists": []}) for sample in os.listdir(args.samplesDir)])
 
         printVerbose("\tCleaning MACSE alignments")
-
+        # TODO Ask Mahdi what to do with this.  Is this separate step?
         # Remove the reference sequences from the MACSE files and remove the non nucleotide characters from the sequences.
         # we need the datbase seq. names to remove them from the results files
 
@@ -174,9 +242,10 @@ def clean(args, pool=Pool(processes=1)):
                     good_seqs.append(mySeq)
             print "completed %s samples" % i
             i += 1
-        SeqIO.write(good_seqs, open(os.path.join(args.outDir, "MACSEOUT_MERGED.fasta"), 'w'), 'fasta')
+        SeqIO.write(good_seqs, open(os.path.join(args.outDir, "MACSE_OUT_MERGED.fasta"), 'w'), 'fasta')
 
         printVerbose("\t%s sequences cleaned, %s sequences retained, %s sequences discarded" % (1, 1, 1))
+
     except KeyboardInterrupt:
         pool.terminate()
 
@@ -186,15 +255,14 @@ def removeChimeras(args, pool=Pool(processes=1)):
 
     :param args: A list of arguments to the function
     :param pool: A multiprocessing.Pool object.
-    :return:
     """
     if args.program == "uchime":
         # *****************************************************************************************
         # findind the chimeras
         # "chmimera.uchime": "mothur #chimera.uchime(fasta=%s, name=%s)",
         parallel(runInstance, args, [ProgramRunner("chmimera.uchime",
-                                             [args.inputFile, args.namesFile],
-                                             {"exists": [args.inputFile, args.namesFile]})
+                                                   [args.inputFile, args.namesFile],
+                                                   {"exists": [args.inputFile, args.namesFile]})
                                ])
         # *****************************************************************************************
         # removing the chimeras from input file
@@ -225,7 +293,6 @@ def dropShort(args, pool=Pool(processes=1)):
     """
     :param args: A list of arguments to the function
     :param pool: A multiprocessing.Pool object.
-    :return:
     """
     # Dropping short sequences
     good_seqs = []
@@ -249,15 +316,36 @@ def main(argv):
     parser.add_argument('--dryRun', action='store_true', default=False)
     subparsers = parser.add_subparsers(dest='action', help='Available commands')
 
-    # join reads
-    parser_preprocess = subparsers.add_parser('preprocess')
-    parser_preprocess.add_argument('-n', '--name', required=True, help="Run Id")
-    parser_preprocess.add_argument('-f', '--input_f', required=True, help="Forward Fastq Reads")
-    parser_preprocess.add_argument('-r', '--input_r', required=True, help="Reverse Fastq Reads")
-    parser_preprocess.add_argument('-b', '--barcodes', required=True,
+    # Rename reads serially
+    parser_serialize = subparsers.add_parser('serialize')
+    parser_serialize.add_argument('-f', '--input_f', required=True, help="Forward Fastq Reads")
+    parser_serialize.add_argument('-r', '--input_r', required=True, help="Reverse Fastq Reads")
+    parser_serialize.add_argument('-o', '--outDir', required=True, help="Directory where outputs will be saved")
+    parser_serialize.set_defaults(func=serialRename)
+
+    # Trims the barcode and adapters/primers
+    parser_trim = subparsers.add_parser('trim')
+    parser_trim.add_argument('-i', '--inputFasta', required=True, help="Input Fasta/Fastq File")
+    parser_trim.add_argument('-g', '--oligos', required=True, help="Mothur oligos file")
+    parser_trim.add_argument('-o', '--outDir', required=True, help="Directory where outputs will be saved")
+    parser_trim.set_defaults(func=trim)
+
+    # Assemble reads
+    parser_assemble = subparsers.add_parser('assemble')
+    parser_assemble.add_argument('-n', '--name', required=True, help="Run Id")
+    parser_assemble.add_argument('-f', '--input_f', required=True, help="Forward Fastq Reads")
+    parser_assemble.add_argument('-r', '--input_r', required=True, help="Reverse Fastq Reads")
+    parser_assemble.add_argument('-o', '--outDir', required=True, help="Directory where outputs will be saved")
+    #parser_assemble.add_argument('-t', '--threads', required=True, help="The number of threads to use")
+    parser_assemble.set_defaults(func=assembleReads)
+
+    # split file by barcode
+    parser_demux = subparsers.add_parser('demux')
+    parser_demux.add_argument('-n', '--name', required=True, help="Run Id")
+    parser_demux.add_argument('-b', '--barcodes', required=True,
                                    help="Tab delimted files of barcodes and their samples")
-    parser_preprocess.add_argument('-o', '--outDir', required=True, help="Directory where outputs will be saved")
-    parser_preprocess.set_defaults(func=joinReads)
+    parser_demux.add_argument('-o', '--outDir', required=True, help="Output directory")
+    parser_demux.set_defaults(func=splitOnBarcodes)
 
     # split file by samples
     parser_split = subparsers.add_parser('partition')
@@ -268,17 +356,24 @@ def main(argv):
     parser_split.add_argument('-o', '--outDir', required=True, help="Output directory")
     parser_split.set_defaults(func=splitFile)
 
-    # Clean files
-    parser_clean = subparsers.add_parser('clean')
-    parser_clean.add_argument('-n', '--name', required=True, help="Run Id")
-    parser_clean.add_argument('-s', '--samplesDir', required=True,
+    # Align Reads
+    parser_align = subparsers.add_parser('align')
+    parser_align.add_argument('-s', '--samplesDir', required=True,
                               help="Directory containing the samples file required for clustering")
-    parser_clean.add_argument('-p', '--program', required=True,
-                              help="Program name for clenaing. Available options are: ... ")
-    parser_clean.add_argument('-d', '--db', required=True, help="Database against which to align and filter reads")
-    parser_clean.add_argument('-f', '--namesFile', required=False, help=" Mothus .names file to update", default=None)
-    parser_clean.add_argument('-o', '--outDir', required=True, help=" Output directory")
-    parser_clean.set_defaults(func=clean)
+    parser_align.add_argument('-p', '--program', required=True,
+                              help="Program name for cleaning. Available options are: ... ")
+    parser_align.add_argument('-d', '--db', required=True, help="Database against which to align and filter reads")
+    parser_align.add_argument('-o', '--outDir', required=True, help=" Output directory")
+    parser_align.set_defaults(func=alignSeqs)
+
+
+    # Clean Aligned Reads
+    parser_align = subparsers.add_parser('clean')
+    parser_align.add_argument('-s', '--samplesDir', required=True,
+                              help="Directory containing the samples file required for clustering")
+    parser_align.add_argument('-o', '--outDir', required=True, help=" Output directory")
+    parser_align.set_defaults(func=cleanAlignments)
+
 
     # Remove Chimeras
     parser_chimera = subparsers.add_parser('removeChimeras')
@@ -306,7 +401,12 @@ def main(argv):
     # parser_cluster.set_defaults(func=clusterReads)
 
 
+    # Convert fastq to fasta
 
+    parser_toFastq = subparsers.add_parser('toFastq')
+    parser_toFastq.add_argument('-i', '--inputFasta', required=True, help="Input Fasta File")
+    parser_toFastq.add_argument('-q', '--inputQual', required=True, help=" Input qual file")
+    parser_toFastq.set_defaults(func=convert)
 
     global args, pool
     args = parser.parse_args()

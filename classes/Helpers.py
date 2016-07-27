@@ -18,9 +18,7 @@ class printVerbose(object):
         if printVerbose.VERBOSE:
             if newline:
                 print "\n"
-                print msg
-            else:
-                print msg
+            print msg
 
 
 def makeDirOrdie(dirPath):
@@ -37,6 +35,27 @@ def makeDirOrdie(dirPath):
     # TODO Ask Mahdi why we do this?  Why not just return?
     return dirPath
 
+
+def sanitize(inputs):
+    """White list sanitizes a dictionary of inputs, returning a dictionary of sanitized strings.  Raises an exception if
+        an invalid character is found."""
+
+
+
+    for name, input in inputs.iteritems():
+        text = str(input)
+        if
+        inputs[name] =
+    return inputs
+
+def move(origin, destination):
+    """Moves a file from an origin to a destination.  Sanitizes inputs before execution.
+
+    :param origin:          File path to the file to be moved
+    :param destination:     File path to the file's new destination
+    """
+
+    os.rename(sanitize(origin), sanitize(destination))
 
 def splitFileBySample(fastaFile, groupsFile, splitFastaDir):
     """ Splits an input 'fastaFile' into separate files based on the mapping in a 'groupsFile', and outputs a separate

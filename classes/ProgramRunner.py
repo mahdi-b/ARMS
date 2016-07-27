@@ -57,7 +57,7 @@ class ProgramRunner(object):
             ProgramRunner.configsLoaded = True
         logging.debug(params)
         self.program = program
-        self.command = self.commandTemplates[program]
+        self.command = self.commandTemplates[program] % tuple(params)
         self.conditions = conditions
         self.stdin = stdin
         self.stdout = stdout
@@ -181,20 +181,23 @@ class ProgramRunner(object):
                                     -prefix \"%s\" --suffix .fastq --bol --mismatches 1",
             "fastx_renamer":    programPaths["FASTX"] + "fastx_renamer -n COUNT -i \"%s\" -o \"%s\" -Q 33",
             "pear":             programPaths["PEAR"] + " -f \"%s\" -r \"%s\" -o \"%s\" -j \"%s\"",
-            "make.contigs":     "mothur #make.contigs(ffastq=\"%s\", rfastq=\"%s\", bdiffs=1, pdiffs=2, oligos=\"%s\", \
-                                    processors=\"%s\")",
-            "fastq.info":       "mothur #fastq.info(fastq=\"%s\")",
-            "trim.seqs":        "mothur #trim.seqs(fasta=\"%s\", oligos=\"%s\", maxambig=1, maxhomop=8, minlength=300, \
-                                    maxlength=550, bdiffs=1, pdiffs=2)",
-            "align.seqs":       "mothur #align.seqs(candidate=\"%s\", template=\"%s\", flip=t)",
-            "unique.seqs":      "mothur #unique.seqs(fasta=\"%s\")",
+
+            "make.contigs":     "mothur \'#make.contigs(ffastq=\"%s\", rfastq=\"%s\", bdiffs=1, pdiffs=2, oligos=\"%s\", \
+                                    processors=\"%s\")\'",
+            "fastq.info":       "mothur \'#fastq.info(fastq=\"%s\")\'",
+            "trim.seqs":        "mothur \'#trim.seqs(fasta=\"%s\", oligos=\"%s\", maxambig=1, maxhomop=8, \
+                                    minlength=300, maxlength=550, bdiffs=1, pdiffs=2)\'",
+            "align.seqs":       "mothur \'#align.seqs(candidate=\"%s\", template=\"%s\", flip=t)\'",
+            "unique.seqs":      "mothur \'#unique.seqs(fasta=\"%s\")\'",
             "macse_align":      "java -jar " + programPaths["MACSE"] + " -prog enrichAlignment  -seq \"%s\" -align \
                                     \"%s\" -seq_lr \"%s\" -maxFS_inSeq 0  -maxSTOP_inSeq 0  -maxINS_inSeq 0 \
                                     -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 -out_NT \"%s\"_NT \
                                     -out_AA \"%s\"_AA -seqToAdd_logFile \"%s\"_log.csv",
             "macse_format":     "java -jar " + programPaths["MACSE"] + "  -prog exportAlignment -align \"%s\" \
-                                    -charForRemainingFS -gc_def 5 -out_AA \"%s\" -out_NT \"%s\" -statFile \"%s\"",
-            "chmimera.uchime":  "mothur #chimera.uchime(fasta=\"%s\", name=\"%s\")",
-            "remove.seqs":      "mothur #remove.seqs(accnos=\"%s\", fasta=\"%s\")",
-            "cluster-swarm":    ""
+                                    -charForRemainingFS - -gc_def 5 -out_AA \"%s\" -out_NT \"%s\" -statFile \"%s\"",
+            "chmimera.uchime":  "mothur \'#chimera.uchime(fasta=\"%s\", name=\"%s\")\'",
+            "remove.seqs":      "mothur \'#remove.seqs(accnos=\"%s\", fasta=\"%s\")\'",
+            "cluster-swarm":    "",
+            "make.fastq":       "mothur \'#make.fastq(fasta=%s,qfile=%s)\'",
+            "make.fasta":       "mothur \'#fastq.info(fastq=%s,fasta=T)\'"
         }
