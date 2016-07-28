@@ -35,6 +35,16 @@ def makeDirOrdie(dirPath):
     # TODO Ask Mahdi why we do this?  Why not just return?
     return dirPath
 
+def makeDir(dirPath):
+    """Create a directory 'dirPath' if it doesn't already exist.
+    :param dirPath: The filepath to the directory to look for.
+
+    :return: The path to the new directory (same as 'dirPath').
+    """
+    if not os.path.isdir(dirPath):
+        os.makedirs(dirPath)
+    else:
+        logging.warning("Split fasta directory %s already exists " % dirPath)
 
 def sanitize(inputs):
     """White list sanitizes a dictionary of inputs, returning a dictionary of sanitized strings.  Raises an exception if
@@ -44,8 +54,7 @@ def sanitize(inputs):
 
     for name, input in inputs.iteritems():
         text = str(input)
-        if
-        inputs[name] =
+
     return inputs
 
 def move(origin, destination):

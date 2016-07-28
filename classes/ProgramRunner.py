@@ -9,22 +9,19 @@ from Helpers import printVerbose
 from pipes import quote
 
 
-
-
-
 class ProgramRunner(object):
-    '''A class to interact with external command line programs.  The class contains a dictionary of formatted command
+    """A class to interact with external command line programs.  The class contains a dictionary of formatted command
     strings.  The class supports validation, sanitization, and debugging of user-supplied parameters.
 
     Attributes:
-        DEFAULT_CONFIG_FILEPATH     The filepath to a config file containing user-specified overrides (such as file paths to
-                                        exectuables.
+        DEFAULT_CONFIG_FILEPATH     The filepath to a config file containing user-specified overrides (such as file
+                                        paths to exectuables.
         configsLoaded               Specifies that all config variables have been loaded, and that the file should not
                                         be read again durring the execution of this instance.
         programPaths                Specifies the default location of executibles used in the commands dictionary.
         commandTemplates            A dictionary mapping chewbacca commands to un-paramaterized command line strings.
                                         Used as templates for commands.
-    '''
+    """
     DEFAULT_CONFIG_FILEPATH = "chewbacca.cfg"
     configsLoaded = False
     commandTemplates = {}
@@ -33,7 +30,6 @@ class ProgramRunner(object):
         "FASTX": "~/programs/fastx/bin/",
         "PEAR": ""
     }
-
 
     def __init__(self, program, params, conditions={}, stdin=open(os.devnull, 'r'), stdout=open(os.devnull, 'w'),
                  stderr=open(os.devnull, 'w')):
@@ -53,7 +49,7 @@ class ProgramRunner(object):
         """
         if not ProgramRunner.configsLoaded:
             ProgramRunner.loadConfigs(self)
-            ProgramRunner.initalizeCommands(self)
+            ProgramRunner.initalizeCommands()
             ProgramRunner.configsLoaded = True
         logging.debug(params)
         self.program = program
@@ -62,8 +58,6 @@ class ProgramRunner(object):
         self.stdin = stdin
         self.stdout = stdout
         self.stderr = stderr
-
-
 
     def validateConditions(self, conditions):
         """Validates all conditions using a Validator object, returning True if successful and raising an exception
@@ -84,7 +78,6 @@ class ProgramRunner(object):
         # TODO sanitize inputs
 
         return True
-
 
     def dryValidateConditions(self, conditions):
         """Prints validation procedures without actually executing them.
@@ -109,7 +102,7 @@ class ProgramRunner(object):
         command = os.path.expanduser(command)
         commandList = []
         if "mothur" in command:
-            commandList = ["mothur",  re.sub(r'mothur\s+', "", command)]
+            commandList = ["mothur", re.sub(r'mothur\s+', "", command)]
         else:
             commandList = command.split()
         return commandList
@@ -125,7 +118,7 @@ class ProgramRunner(object):
                 self.dryRun()
             # call and check_call are blocking, Popen is non-blocking
             print "running " + self.command
-            subprocess.Popen(self.command,shell=True)
+            subprocess.Popen(self.command, shell=True)
             # commandList = self.splitCommand(self.command)
             # print commandList
             # print " ".join(commandList)
@@ -135,7 +128,6 @@ class ProgramRunner(object):
         except KeyboardInterrupt:
             return
 
-
     def dryRun(self):
         """Prints the validation procedures that would be performed, and the commands that would be run in an actual
             run, without actually executing them.
@@ -144,7 +136,6 @@ class ProgramRunner(object):
         """
         self.dryValidateConditions(self.conditions)
         return self.command
-
 
     def loadConfigs(self):
         """Loads configuration settings from the chewbacca configuration file (located in
@@ -169,35 +160,38 @@ class ProgramRunner(object):
             logging.debug("Chewbacca config file not found.  Using defaults.")
 
 
-    def initalizeCommands(self):
-        '''
-        Provides the static definition of
-        :return:
-        '''
+    def initalizeCommands():
+        """
+        Provides the static definition of the commandTemplates dictionary.
+        """
+        # TODO: Mothur doesn't like quoted filenames.  Gross.
         if not ProgramRunner.configsLoaded:
             programPaths = ProgramRunner.programPaths
             ProgramRunner.commandTemplates = {
-            "barcode.splitter": "cat \"%s\" | " + programPaths["FASTX"] + "fastx_barcode_splitter.pl  --bcfile \"%s\" \
-                                    -prefix \"%s\" --suffix .fastq --bol --mismatches 1",
-            "fastx_renamer":    programPaths["FASTX"] + "fastx_renamer -n COUNT -i \"%s\" -o \"%s\" -Q 33",
-            "pear":             programPaths["PEAR"] + " -f \"%s\" -r \"%s\" -o \"%s\" -j \"%s\"",
+                "barcode.splitter": "cat \"%s\" | " + programPaths["FASTX"] + 'fastx_barcode_splitter.pl  --bcfile "%s" \
+                                    -prefix "%s" --suffix .fastq --bol --mismatches 1',
+                "fastx_renamer": programPaths["FASTX"] + "fastx_renamer -n COUNT -i \"%s\" -o \"%s\" -Q 33",
+                "pear": programPaths["PEAR"] + " -f \"%s\" -r \"%s\" -o \"%s\" -j %d -m %d",
+                "make.contigs": "mothur \'#make.contigs(ffastq=%s, rfastq=%s, bdiffs=1, pdiffs=2, oligos=%s, \
+                                    processors=%s)\'",
+                "trim.seqs": "mothur \'#trim.seqs(fasta=%s, oligos=%s, maxambig=1, maxhomop=8, \
+                                    minlength=300, maxlength=550, bdiffs=1, pdiffs=7)\'",
+                "macse_align": "java -jar " + programPaths["MACSE"] + " -prog enrichAlignment  -seq \"%s\" -align \
+                                            \"%s\" -seq_lr \"%s\" -maxFS_inSeq 0  -maxSTOP_inSeq 0  -maxINS_inSeq 0 \
+                                            -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 -out_NT \"%s\"_NT \
+                                            -out_AA \"%s\"_AA -seqToAdd_logFile \"%s\"_log.csv",
+                "macse_format": "java -jar " + programPaths["MACSE"] + "  -prog exportAlignment -align \"%s\" \
+                                            -charForRemainingFS - -gc_def 5 -out_AA \"%s\" -out_NT \"%s\" -statFile \
+                                            \"%s\"",
+                "trimomatic": "java -jar ~/ARMS/programs/Trimmomatic-0.33/trimmomatic-0.33.jar SE -%s \"%s\" \"%s\" \
+                                            SLIDINGWINDOW:%d:%d MINLEN:%d",
+                "chmimera.uchime": "mothur \'#chimera.uchime(fasta=%s, name=%s)\'",
+                "make.fastq": "mothur \'#make.fastq(fasta=%s,qfile=%s)\'",
+                "make.fasta": "mothur \'#fastq.info(fastq=%s,fasta=T)\'",
 
-            "make.contigs":     "mothur \'#make.contigs(ffastq=\"%s\", rfastq=\"%s\", bdiffs=1, pdiffs=2, oligos=\"%s\", \
-                                    processors=\"%s\")\'",
-            "fastq.info":       "mothur \'#fastq.info(fastq=\"%s\")\'",
-            "trim.seqs":        "mothur \'#trim.seqs(fasta=\"%s\", oligos=\"%s\", maxambig=1, maxhomop=8, \
-                                    minlength=300, maxlength=550, bdiffs=1, pdiffs=2)\'",
-            "align.seqs":       "mothur \'#align.seqs(candidate=\"%s\", template=\"%s\", flip=t)\'",
-            "unique.seqs":      "mothur \'#unique.seqs(fasta=\"%s\")\'",
-            "macse_align":      "java -jar " + programPaths["MACSE"] + " -prog enrichAlignment  -seq \"%s\" -align \
-                                    \"%s\" -seq_lr \"%s\" -maxFS_inSeq 0  -maxSTOP_inSeq 0  -maxINS_inSeq 0 \
-                                    -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 -out_NT \"%s\"_NT \
-                                    -out_AA \"%s\"_AA -seqToAdd_logFile \"%s\"_log.csv",
-            "macse_format":     "java -jar " + programPaths["MACSE"] + "  -prog exportAlignment -align \"%s\" \
-                                    -charForRemainingFS - -gc_def 5 -out_AA \"%s\" -out_NT \"%s\" -statFile \"%s\"",
-            "chmimera.uchime":  "mothur \'#chimera.uchime(fasta=\"%s\", name=\"%s\")\'",
-            "remove.seqs":      "mothur \'#remove.seqs(accnos=\"%s\", fasta=\"%s\")\'",
-            "cluster-swarm":    "",
-            "make.fastq":       "mothur \'#make.fastq(fasta=%s,qfile=%s)\'",
-            "make.fasta":       "mothur \'#fastq.info(fastq=%s,fasta=T)\'"
-        }
+                "fastq.info": "mothur \'#fastq.info(fastq=%s)\'",
+                "align.seqs": "mothur \'#align.seqs(candidate=%s, template=%s, flip=t)\'",
+                "unique.seqs": "mothur \'#unique.seqs(fasta=%s)\'",
+                "remove.seqs": "mothur \'#remove.seqs(accnos=%s, fasta=%s)\'",
+                "cluster-swarm": "",
+            }

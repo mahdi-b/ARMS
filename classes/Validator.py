@@ -14,6 +14,31 @@ def exists(files):
     return True
 
 
+def postive(values):
+    """Returns True if each value in values is positive.
+
+    :param values:  A list of numbers.
+    :return:    True if all values are positive, raises an Exception if not.
+    """
+
+    for val in values:
+        if val <= 0:
+            raise Exception("Expected positive value.  Found %f." % val)
+    return True
+
+
+def nonNegative(values):
+    """Returns True if each value in values is non-negative.
+
+    :param values:  A list of numbers.
+    :return:    True if all values are positive, raises an Exception if not.
+    """
+
+    for val in values:
+        if val < 0:
+            raise Exception("Expected positive value.  Found %f." % val)
+    return True
+
 def installed(progName):
     """Tests if a program is installed, and available on $PATH.
 
