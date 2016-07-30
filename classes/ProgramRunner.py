@@ -49,7 +49,7 @@ class ProgramRunner(object):
         """
         if not ProgramRunner.configsLoaded:
             ProgramRunner.loadConfigs(self)
-            ProgramRunner.initalizeCommands()
+            ProgramRunner.initalizeCommands(self)
             ProgramRunner.configsLoaded = True
         logging.debug(params)
         self.program = program
@@ -160,7 +160,8 @@ class ProgramRunner(object):
             logging.debug("Chewbacca config file not found.  Using defaults.")
 
 
-    def initalizeCommands():
+
+    def initalizeCommands(self):
         """
         Provides the static definition of the commandTemplates dictionary.
         """
@@ -185,13 +186,13 @@ class ProgramRunner(object):
                                             \"%s\"",
                 "trimomatic": "java -jar ~/ARMS/programs/Trimmomatic-0.33/trimmomatic-0.33.jar SE -%s \"%s\" \"%s\" \
                                             SLIDINGWINDOW:%d:%d MINLEN:%d",
-                "chmimera.uchime": "mothur \'#chimera.uchime(fasta=%s, name=%s)\'",
+                "chmimera.uchime": "mothur \'#chimera.uchime(fasta=%s, %s)\'",
                 "make.fastq": "mothur \'#make.fastq(fasta=%s,qfile=%s)\'",
-                "make.fasta": "mothur \'#fastq.info(fastq=%s,fasta=T)\'",
+                "make.fasta": "mothur \'#fastq.info(fastq=%s)\'",
+                "remove.seqs": "mothur \'#remove.seqs(accnos=%s, %s)\'",
+                "screen.seqs": "mothur \'#screen.seqs(fasta=%s %s)\'",
 
-                "fastq.info": "mothur \'#fastq.info(fastq=%s)\'",
                 "align.seqs": "mothur \'#align.seqs(candidate=%s, template=%s, flip=t)\'",
                 "unique.seqs": "mothur \'#unique.seqs(fasta=%s)\'",
-                "remove.seqs": "mothur \'#remove.seqs(accnos=%s, fasta=%s)\'",
                 "cluster-swarm": "",
             }
