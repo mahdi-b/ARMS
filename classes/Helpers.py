@@ -22,6 +22,13 @@ class printVerbose(object):
                 print "\n"
             print msg
 
+class MissingMothurFilterException(Exception):
+    def __str__(self):
+        return "Expected a mothur filter parameter, but found none"
+
+class MissingMothurFileException(Exception):
+    def __str__(self):
+        return "Expected a mothur file to update, but found none."
 
 
 def runInstance(args, myInstance):
@@ -173,21 +180,21 @@ def mothur_buildOptionString(args, mustFilter=False, mustUpdate=False):
     filters = ["start", "end", "minlength", "maxlength", "maxambig", "maxn", "maxhomop"]
     updateFiles = ["groups", "names", "alnReport", "contigsReport", "summaryFile"]
     filterString = buildCSL(args,filters)
-    filterString = buildCSL(args, filters)
+    updateString = buildCSL(args, updateFiles)
     updateString = buildCSL(args, updateFiles)
     didntFindFilter = (len(filterString) ==  0)
     didntFindUpdate = (len(updateString) == 0)
     if mustFilter and didntFindFilter:
-        raise Exception("Expected at least one mothur filter to apply.")
+        raise MissingMothurFilterException
 
     if mustUpdate and didntFindUpdate:
-        raise Exception("Expected at least one mothur file to update.")
+        raise MissingMothurFileException
 
-    comma = ","
-    if didntFindFilter and didntFindUpdate:
+    comma = ", "
+    if didntFindFilter or didntFindUpdate:
         comma = ""
-    print updateString
-    print filterString
+    # print updateString
+    # print filterString
     return "%s%s%s" % (updateString, comma, filterString)
 
 
@@ -201,10 +208,16 @@ def buildCSL(item, attributes):
     """
     optionString = ""
     for attr in attributes:
-        if getattr(item, attr):
-            optionString = optionString + "%s=%s, " % (attr, getattr(item, attr))
+        val = ""
+        try:
+            val = getattr(item, attr)
+            if val != None:
+                optionString = optionString + "%s=%s, " % (attr, val)
+        except:
+            pass
+
     # chop off the trailing comma
-    return optionString[:-1]
+    return optionString [:-2]
 
 
 

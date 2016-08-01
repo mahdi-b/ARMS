@@ -190,7 +190,7 @@ class ProgramRunner(object):
                 "make.fastq": "mothur \'#make.fastq(fasta=%s,qfile=%s)\'",
                 "make.fasta": "mothur \'#fastq.info(fastq=%s)\'",
                 "remove.seqs": "mothur \'#remove.seqs(accnos=%s, %s)\'",
-                "screen.seqs": "mothur \'#screen.seqs(fasta=%s %s)\'",
+                "screen.seqs": "mothur \'#screen.seqs(fasta=%s, %s)\'",
 
                 "align.seqs": "mothur \'#align.seqs(candidate=%s, template=%s, flip=t)\'",
                 "unique.seqs": "mothur \'#unique.seqs(fasta=%s)\'",
