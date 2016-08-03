@@ -46,3 +46,4 @@ def installed(progName):
     :return: True if all programs exist, and raises an Exception if not.
     """
     pass
+

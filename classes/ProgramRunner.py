@@ -4,8 +4,7 @@ import os
 import re
 import subprocess
 import Validator  # fileExists, installed, etc..
-
-from Helpers import printVerbose
+from Helpers import printVerbose, validate
 from pipes import quote
 
 
@@ -60,24 +59,17 @@ class ProgramRunner(object):
         self.stderr = stderr
 
     def validateConditions(self, conditions):
-        """Validates all conditions using a Validator object, returning True if successful and raising an exception
-            if not.
+        """Validates this program's conditions for execution.
 
         :param conditions: A dictionary mapping <Validator>.function names to a list of parameters.  The dictionary
-                                key/function name is called on each parameter in the corresponding list of parameters.
-                                All parameters must satisfy their <Validator>.function in order for the specified
-                                program to execute.
-        :return: True if validation is successful, and raising an exception in <Validator.function> if not.
+                            key/function name is called on each parameter in the corresponding list of parameters.
+                            All parameters must satisfy their <Validator>.function in order for the specified
+                            program to execute.
+
+        :return:            True if validation is successful, and raising an exception in <Validator.function> if not.
         """
-        # if any of the conditions fail, an exception is raised in getattr
-        # TODO: The exception should be raised in this function, so users know that the error is in validation of their conditions, not the
-        #   accessing of properties.
-        for condition in conditions.iteritems():
-            getattr(Validator, condition[0])(condition[1])
+        return validate(conditions)
 
-        # TODO sanitize inputs
-
-        return True
 
     def dryValidateConditions(self, conditions):
         """Prints validation procedures without actually executing them.
@@ -191,7 +183,6 @@ class ProgramRunner(object):
                 "make.fasta": "mothur \'#fastq.info(fastq=%s)\'",
                 "remove.seqs": "mothur \'#remove.seqs(accnos=%s, %s)\'",
                 "screen.seqs": "mothur \'#screen.seqs(fasta=%s, %s)\'",
-
                 "align.seqs": "mothur \'#align.seqs(candidate=%s, template=%s, flip=t)\'",
                 "unique.seqs": "mothur \'#unique.seqs(fasta=%s)\'",
                 "cluster-swarm": "",
