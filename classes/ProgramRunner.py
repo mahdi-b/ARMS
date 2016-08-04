@@ -146,7 +146,7 @@ class ProgramRunner(object):
                 if config.has_option(configSection, program):
                     configSetting = config.get(configSection, program)
                     ProgramRunner.programPaths[program] = configSetting
-                    logging.debug("Read %s filepath as %s" % (program, configSetting))
+                    #logging.debug("Read %s filepath as %s" % (program, configSetting))
 
         else:
             logging.debug("Chewbacca config file not found.  Using defaults.")
@@ -183,6 +183,7 @@ class ProgramRunner(object):
                 "make.fasta": "mothur \'#fastq.info(fastq=%s)\'",
                 "remove.seqs": "mothur \'#remove.seqs(accnos=%s, %s)\'",
                 "screen.seqs": "mothur \'#screen.seqs(fasta=%s, %s)\'",
+                "flexbar":  "flexbar -r \"%s\" -t \"%s\" -ae \"%s\" -a \"%s\"",
 
                 "align.seqs": "mothur \'#align.seqs(candidate=%s, template=%s, flip=t)\'",
                 "unique.seqs": "mothur \'#unique.seqs(fasta=%s)\'",

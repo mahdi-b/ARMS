@@ -136,15 +136,25 @@ def main(argv):
     parser_serialize.set_defaults(func=serialRename)
 
 
-
-    # Trims the barcode and adapters/primers with Mothur
+    # ===========================================================
+    # ==  Trims barcodes and adapters using mothur or flexbar  ==
+    # ===========================================================
+    parser_trim = subparsers.add_parser('trim_adapters')
+    parser_trim.add_argument('-i', '--input', required=True, help="Input Fasta/Fastq File")
+    parser_trim.add_argument('-p', '--program', required=True, help="The name of the program to use")
+    parser_trim.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
+    parser_trim.set_defaults(func=trim)
+    # Mothur
     # "trim.seqs":        "mothur \'#trim.seqs(fasta=\"%s\", oligos=\"%s\", maxambig=1, maxhomop=8, \
     #                                minlength=300, maxlength=550, bdiffs=1, pdiffs=2)\'",
-    parser_mothurTrim = subparsers.add_parser('mothurTrim')
-    parser_mothurTrim.add_argument('-i', '--inputFasta', required=True, help="Input Fasta/Fastq File")
-    parser_mothurTrim.add_argument('-g', '--oligos', required=True, help="Mothur oligos file")
-    parser_mothurTrim.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
-    parser_mothurTrim.set_defaults(func=trim)
+    mothur_trim = parser_trim.add_argument_group('mothur', 'Mothur options')
+    mothur_trim.add_argument('-g', '--oligos', help="Mothur oligos file")
+    # flexbar
+    #"flexbar":  "flexbar -r \"%s\" -t \"%s\" -ae \"%s\" -a \"%s\""
+    flexbar_trim = parser_trim.add_argument_group('flexbar', 'flexbar options')
+    flexbar_trim.add_argument('-b', '--barcodes', help="Barcodes file")
+    flexbar_trim.add_argument('-a', '--adapters', help="Adapters file")
+
 
 
 

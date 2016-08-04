@@ -62,14 +62,13 @@ def assemble_pear(args, pool=Pool(processes=1)):
     # "~/programs/pear-0.9.4-bin-64/pear-0.9.4-64 -f %s -r %s -o %s -j %s -m %d"
     try:
         printVerbose("\tAssembling reads with pear")
-        # files must be named name_forward or name_reverse
-        forwardPrefix = "_forward"
-        reversePrevix = "_reverse"
-        names = []
-
-        forwards_reads = getInputs(args.input_f)
-        reverse_reads = getInputs(args.input_r)
-
+        ids = []
+        forwards_reads = getInputs(args.input_f, "*_forward.f*")
+        reverse_reads = getInputs(args.input_r, "*_reverse.f*")
+        print args.input_f
+        print args.input_r
+        print forwards_reads
+        print reverse_reads
         if len(forwards_reads) != len(reverse_reads):
             print "Error: Unequal number of forwards/reverse reads."
             exit()
@@ -78,32 +77,35 @@ def assemble_pear(args, pool=Pool(processes=1)):
             print "Error: No read files found"
             exit()
 
+        # read the file names from the front of the sequence prefix
         regex_matches = [re.search(r'(.*)_forward\..*', filename.split("/")[-1]) for filename in forwards_reads]
         for match in regex_matches:
             if match != None:
                 print(match)
-                names.append(match.groups(0)[0])
+                ids.append(match.groups(0)[0])
             else:
                 print "Error: Read files must be named <name>_forward.<filetype> or <name>_reverse.<filetype>"
                 exit()
 
-        inputs = zip(forwards_reads, reverse_reads, names)
+        inputs = zip(forwards_reads, reverse_reads, ids)
 
 
         threads = 1
         if not args.threads is None and args.threads > 1:
             threads = args.threads
 
-        parallel(runInstance, args, [ProgramRunner("pear", [forwards, reverse, name, threads],
-                                                   {"exists": [forwards, reverse]}) for forwards, reverse, name in inputs])
+        parallel(runInstance, args, [ProgramRunner("pear", [forwards, reverse, "%s.%s" % (args.name, id), threads],
+                                               {"exists": [forwards, reverse]}) for forwards, reverse, id in inputs])
+        # wait for the programs to finish writing output
         pool.close()
         pool.join()
+
         # collect output files
         out_files = []
         out_file_patterns = ["assembled", "discarded", "unassembled.forward", "unassembled.reverse"]
-        for forwards, reverse, name in inputs:
+        for forwards, reverse, id in inputs:
             for file_pattern in out_file_patterns:
-                out_files.append(glob.glob("%s.%s.%s" % (name, file_pattern, '*'))[0])
+                out_files.append(glob.glob("%s.%s.%s.%s" % (args.name, id, file_pattern, '*'))[0])
         return out_files
         # printVerbose("\t%s sequences assembled, %s contigs discarded, %s sequences discarded" % (-1, -1, -1))
     except KeyboardInterrupt:
@@ -134,12 +136,13 @@ def assemble_mothur(args, pool=Pool(processes=1)):
     except KeyboardInterrupt:
         pool.terminate()
 
-
+# TODO Document that if samples from site A occur in more than one file, then they will overwrite eachother when you run
+# TODO    the barcode splitter.  Seqences from each sample need to be put in their own file.
 def splitOnBarcodes(args, pool=Pool(processes=1)):
     """Splits a fasta/fastq file on a set of barcodes.  An output file will be created for each sample, listing all members
         from that sample.
     :param args: An argparse object with the following parameters:
-                    inputFile  File to split
+                    inputFile   File to split or all
                     barcodes    Tab delimited files of barcodes and their samples
                     outdir      Directory where outputs will be saved
     :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
@@ -149,13 +152,21 @@ def splitOnBarcodes(args, pool=Pool(processes=1)):
     # 2- usearch -fastq_filter
     try:
         makeDir(args.outdir)
+        files_to_split = getInputs(args.inputFile, "*.assembled.f*")
+
         printVerbose("Splitting based on barcodes")
         parallel(runInstance, args, [ProgramRunner("barcode.splitter",
-                                                   [args.inputFile, args.barcodes,
-                                                    os.path.join(args.outdir, "splitOut_")],
-                                                   {"exists": [args.inputFile]})
-                                     ])
+                                                   [input_file, args.barcodes, os.path.join(args.outdir, "splitOut_")],
+                                                   {"exists": [args.inputFile]}) for input_file in files_to_split])
+
+        # wait for output files to be written
+        pool.close()
+        pool.join()
         printVerbose("Demuxed sequences.")
+
+        # gatehr output files and move them to their final destination
+        output_files = enumerateDir(".", "splitOut_*")
+        bulk_move_to_dir(output_files, args.outdir)
 
     except KeyboardInterrupt:
         pool.terminate()
@@ -163,7 +174,78 @@ def splitOnBarcodes(args, pool=Pool(processes=1)):
 
 def trim(args, pool=Pool(processes=1)):
     """Trims the adapter and barcode from each sequence.
+    """
+    supportedPrograms = {
+        "flexbar": trim_flexbar,
+        "mothur": trim_mothur
+    }
+    keys = supportedPrograms.keys()
+    prog = args.program
+    if args.program in keys:
+        # Validate argument dependencies
+        if prog == "flexbar":
+            if not args.barcodes:
+                "-b parameter requried for flexbar trim"
+            if not args.adapters:
+                "-a parameter required for flexbar trim"
 
+        if prog == "mothur":
+            if not args.oligos:
+                "-g parameter required for mothur trim"
+
+        # Make the output directory
+        makeDir(args.outdir)
+        # Run and get a list of output files
+        outputs = supportedPrograms[prog](args, pool)
+        # Relocate all output files
+        #bulk_move_to_dir(outputs, args.outdir)
+    else:
+        "Invalid program choice.  Supported programs are " + keys
+
+
+def trim_flexbar(args, pool=Pool(processes=1)):
+    # "flexbar":  "flexbar -r \"%s\" -t \"%s\" -ae \"%s\" -a \"%s\"",
+    def getFileName(path):
+        return os.path.splitext(os.path.basename(path))[0]
+    try:
+        makeDir(args.outdir)
+        input_files = getInputs(args.input, "splitOut_*")
+
+        print input_files
+        print getFileName(input_files[0])
+        arg = [(input_file, "%s/temp_%s" % (args.outdir, getFileName(input_file)), "LEFT", args.barcodes )for input_file in input_files]
+        print arg
+        # Trim the left
+
+
+        printVerbose("Trimming barcodes and adapters with flexbar")
+        # TODO those exists validators dont really need ot be there since we globbed our files
+        parallel(runInstance, args, [ProgramRunner("flexbar",
+                           [input_file, "%s/temp_%s" % (args.outdir, getFileName(input_file)), "LEFT", args.barcodes],
+                           {"exists": [input_file]}) for input_file in input_files])
+
+        temp_files = getInputs(args.outdir, "temp_*")
+        # Trim the right
+        parallel(runInstance, args, [ProgramRunner("flexbar",
+                           [input_file, "%s/%s_debarcoded" % (args.outdir,getFileName(input_file)[5:]), "RIGHT", args.adapters],
+                           {"exists": [input_file]}) for input_file in temp_files])
+
+        # wait for output files to be written
+        pool.close()
+        pool.join()
+        printVerbose("Demuxed sequences.")
+
+        # gatehr output files and move them to their final destination
+        output_files = enumerateDir(".", "splitOut_*")
+
+        pool.close()
+        pool.join()
+        
+    except KeyboardInterrupt:
+        pool.terminate()
+
+def trim_mothur(args, pool=Pool(processes=1)):
+    """
     :param args: An argparse object with the following parameters:
                     inputFasta  Fasta file with sequences to be trimmed
                     oligos      A mothur oligos file with barcodes and primers.  See:
@@ -172,14 +254,14 @@ def trim(args, pool=Pool(processes=1)):
     :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
     """
     try:
-        printVerbose("Trimming barcodes and adapters")
-        makeDir(args.outdir)
-        parallel(runInstance, args, [ProgramRunner("trim.seqs",
-                                                   [args.inputFasta, args.oligos],
-                                                   {"exists": [args.inputFasta, args.oligos]})
-                                     ])
+        printVerbose("Trimming barcodes and adapters with mothur")
+        inputs = getInputs(args.input, "splitOut_*", "*unmatched.*")
+        parallel(runInstance, args, [ProgramRunner("trim.seqs", [input, args.oligos],
+                                                   {"exists": [args.oligos]})
+                                                    for input in inputs])
         printVerbose("Trimmed sequences.")
-        listOfSamples = glob.glob(os.path.join(args.outdir, "splitOut_*"))
+        pool.close()
+        pool.join()
     except KeyboardInterrupt:
         pool.terminate()
 

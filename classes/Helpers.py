@@ -91,7 +91,7 @@ def makeDir(dirPath):
         logging.warning("Split fasta directory %s already exists " % dirPath)
 
 
-def getInputs(path, pattern="*"):
+def getInputs(path, pattern="*", butNot=""):
     """Checks if a path is a file or folder.  Optionally takes a pattern.  Returns a list of either a single file, or
         all files in a folder (matching pattern if it was provided).
 
@@ -102,8 +102,14 @@ def getInputs(path, pattern="*"):
     if os.path.isfile(path):
         return [path]
     if os.path.isdir(path):
-        return enumerateDir(path, pattern)
-
+        patternMatch = enumerateDir(path, pattern)
+        if butNot:
+            negativeMatch = enumerate(path,butNot)
+            return list(set(patternMatch) - set(negativeMatch))
+        else:
+            return patternMatch
+    else:
+        return []
 
 def enumerateDir(dir, pattern="*"):
     hits = "%s/%s" % (dir, pattern)
