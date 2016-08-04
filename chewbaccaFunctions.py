@@ -1,4 +1,5 @@
 import glob
+import re
 from Bio.Seq import Seq
 from classes.Helpers import *
 from classes.ProgramRunner import ProgramRunner
@@ -40,7 +41,7 @@ def assemble(args, pool=Pool(processes=1)):
         # Run and get a list of output files
         outputs = supportedPrograms[args.program](args, pool)
         # Relocate all output files
-        #bulk_move_to_dir(outputs, args.outdir)
+        bulk_move_to_dir(outputs, args.outdir)
     else:
         "Invalid program choice.  Supported programs are " + keys
 
@@ -61,14 +62,49 @@ def assemble_pear(args, pool=Pool(processes=1)):
     # "~/programs/pear-0.9.4-bin-64/pear-0.9.4-64 -f %s -r %s -o %s -j %s -m %d"
     try:
         printVerbose("\tAssembling reads with pear")
-        assembledPrefix = os.path.join(args.outdir, args.name)
-        parallel(runInstance, args, [ProgramRunner("pear",
-                                                   [args.input_f, args.input_r, assembledPrefix, args.threads,
-                                                    args.maxlength],
-                                                   {"exists": [args.input_f, args.input_r]})
-                                     ])
-        assembledFastqFile = args.name + ".assembled.fastq"
-        return [assembledFastqFile]
+        # files must be named name_forward or name_reverse
+        forwardPrefix = "_forward"
+        reversePrevix = "_reverse"
+        names = []
+
+        forwards_reads = getInputs(args.input_f)
+        reverse_reads = getInputs(args.input_r)
+
+        if len(forwards_reads) != len(reverse_reads):
+            print "Error: Unequal number of forwards/reverse reads."
+            exit()
+
+        if len(forwards_reads) == 0:
+            print "Error: No read files found"
+            exit()
+
+        regex_matches = [re.search(r'(.*)_forward\..*', filename.split("/")[-1]) for filename in forwards_reads]
+        for match in regex_matches:
+            if match != None:
+                print(match)
+                names.append(match.groups(0)[0])
+            else:
+                print "Error: Read files must be named <name>_forward.<filetype> or <name>_reverse.<filetype>"
+                exit()
+
+        inputs = zip(forwards_reads, reverse_reads, names)
+
+
+        threads = 1
+        if not args.threads is None and args.threads > 1:
+            threads = args.threads
+
+        parallel(runInstance, args, [ProgramRunner("pear", [forwards, reverse, name, threads],
+                                                   {"exists": [forwards, reverse]}) for forwards, reverse, name in inputs])
+        pool.close()
+        pool.join()
+        # collect output files
+        out_files = []
+        out_file_patterns = ["assembled", "discarded", "unassembled.forward", "unassembled.reverse"]
+        for forwards, reverse, name in inputs:
+            for file_pattern in out_file_patterns:
+                out_files.append(glob.glob("%s.%s.%s" % (name, file_pattern, '*'))[0])
+        return out_files
         # printVerbose("\t%s sequences assembled, %s contigs discarded, %s sequences discarded" % (-1, -1, -1))
     except KeyboardInterrupt:
         pool.terminate()
@@ -170,6 +206,10 @@ def splitFile(args, pool=Pool(processes=1)):
         # TODO: eventually send a param to Program running, prevent it from starting after CTRL+C has been invoked
     except KeyboardInterrupt:
         pool.terminate()
+
+def alignSeqs(args, pool=Pool(processes=1)):
+    pass
+
 
 
 def macseAlignSeqs(args, pool=Pool(processes=1)):

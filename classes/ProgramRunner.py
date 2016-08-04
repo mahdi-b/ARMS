@@ -164,7 +164,7 @@ class ProgramRunner(object):
                 "barcode.splitter": "cat \"%s\" | " + programPaths["FASTX"] + 'fastx_barcode_splitter.pl  --bcfile "%s" \
                                     -prefix "%s" --suffix .fastq --bol --mismatches 1',
                 "fastx_renamer": programPaths["FASTX"] + "fastx_renamer -n COUNT -i \"%s\" -o \"%s\" -Q 33",
-                "pear": programPaths["PEAR"] + " -f \"%s\" -r \"%s\" -o \"%s\" -j %d -m %d",
+                "pear": programPaths["PEAR"] + " -f \"%s\" -r \"%s\" -o \"%s\" -j %d ",
                 "make.contigs": "mothur \'#make.contigs(ffastq=%s, rfastq=%s, bdiffs=1, pdiffs=2, oligos=%s, \
                                     processors=%s)\'",
                 "trim.seqs": "mothur \'#trim.seqs(fasta=%s, oligos=%s, maxambig=1, maxhomop=8, \
@@ -183,6 +183,7 @@ class ProgramRunner(object):
                 "make.fasta": "mothur \'#fastq.info(fastq=%s)\'",
                 "remove.seqs": "mothur \'#remove.seqs(accnos=%s, %s)\'",
                 "screen.seqs": "mothur \'#screen.seqs(fasta=%s, %s)\'",
+
                 "align.seqs": "mothur \'#align.seqs(candidate=%s, template=%s, flip=t)\'",
                 "unique.seqs": "mothur \'#unique.seqs(fasta=%s)\'",
                 "cluster-swarm": "",

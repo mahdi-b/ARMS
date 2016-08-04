@@ -90,13 +90,24 @@ def makeDir(dirPath):
     else:
         logging.warning("Split fasta directory %s already exists " % dirPath)
 
-def enumerateDir(dir, pattern=""):
-    hits = ""
-    if pattern:
-        hits = "%s/%s" %(dir, pattern)
-    else:
-        hits = dir
-    return glob.glob(hits)
+
+def getInputs(path, pattern="*"):
+    """Checks if a path is a file or folder.  Optionally takes a pattern.  Returns a list of either a single file, or
+        all files in a folder (matching pattern if it was provided).
+
+    :param path:        File path to a folder or file.
+    :param pattern:     Optional pattern string. e.g. *.txt grabs all .txt files in path.
+    :return:            A list of one or more files.
+    """
+    if os.path.isfile(path):
+        return [path]
+    if os.path.isdir(path):
+        return enumerateDir(path, pattern)
+
+
+def enumerateDir(dir, pattern="*"):
+    hits = "%s/%s" % (dir, pattern)
+    return sorted(glob.glob(hits), key=str.lower)
 
 
 def sanitize_string(input):
@@ -142,7 +153,6 @@ def bulk_move_to_dir(target_files, dest_dir_path):
     :param dest_dir_path:
     :return:
     """
-    print target_files
     for target_file in target_files:
         move_to_dir(target_file, dest_dir_path)
 

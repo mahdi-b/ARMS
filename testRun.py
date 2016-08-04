@@ -38,9 +38,16 @@ makeFasta = [base + "makeFasta" + " -i %s" % x for x in glob.glob(os.path.expand
 trim = [base + "mothurTrim " + "-i %s -o %s -g %s" % (x, "trimmed", g) for x in glob.glob(os.path.expanduser("/home/greg/ARMS/src/ARMS/demux/splitOut*.fasta"))]
 
 
-
 #reset()
 #subprocess.check_output(assemble,shell=True)
-subprocess.check_output(demux, shell=True)
+#subprocess.check_output(demux, shell=True)
+#for t in trim:
+#    subprocess.check_output(t, shell=True)
+
+print reset
+print assemble
+print demux
 for t in trim:
-    subprocess.check_output(t, shell=True)
+	print t
+
+
