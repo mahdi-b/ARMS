@@ -95,7 +95,7 @@ def assemble_pear(args, pool=Pool(processes=1)):
         if not args.threads is None and args.threads > 1:
             threads = args.threads
 
-        parallel(runInstance, [ProgramRunner("pear", [forwards, reverse, "%s.%s" % (args.name, id), threads],
+        parallel(runProgramRunner, [ProgramRunner("pear", [forwards, reverse, "%s.%s" % (args.name, id), threads],
                                                {"exists": [forwards, reverse]}) for forwards, reverse, id in inputs])
         # wait for the programs to finish writing output
         pool.close()
@@ -127,7 +127,7 @@ def assemble_mothur(args, pool=Pool(processes=1)):
     # "make.contigs": "mothur \'#make.contigs(ffastq=%s, rfastq=%s, bdiffs=1, pdiffs=2, oligos=%s, processors=%s)\'"
     try:
         printVerbose("\tAssembling reads with pear")
-        parallel(runInstance, [ProgramRunner("trimmomatic", [args.forward, args.reverse, args.bdiffs, args.pdiffs,
+        parallel(runProgramRunner, [ProgramRunner("trimmomatic", [args.forward, args.reverse, args.bdiffs, args.pdiffs,
                                                                    args.oligos, args.processors],
                                                    {"exists": [args.outputFile, args.inputFile, args.oligos],
                                                     "positive": [args.processors],
@@ -160,7 +160,7 @@ def splitOnBarcodes(args, pool=Pool(processes=1)):
         file_id = range(len(files_to_split))
         file_id_pairs = zip(files_to_split, file_id)
         printVerbose("Splitting based on barcodes")
-        parallel(runInstance, [ProgramRunner("barcode.splitter",
+        parallel(runProgramRunner, [ProgramRunner("barcode.splitter",
                                                    [input, args.barcodes, "%s/splitOut_" %
                                                     (args.outdir), "_%d.fastq" % id],
                                                    {"exists": [input]}) for input, id in file_id_pairs])
@@ -224,13 +224,13 @@ def trim_flexbar(args, pool=Pool(processes=1)):
 
         printVerbose("Trimming barcodes and adapters with flexbar")
         # TODO those exists validators dont really need ot be there since we globbed our files
-        parallel(runInstance, [ProgramRunner("flexbar",
+        parallel(runProgramRunner, [ProgramRunner("flexbar",
                            [input_file, "%s/temp_%s" % (args.outdir, getFileName(input_file)), "LEFT", args.barcodes],
                            {"exists": [input_file]}) for input_file in input_files])
 
         temp_files = getInputs(args.outdir, "temp_*")
         # Trim the right
-        parallel(runInstance, [ProgramRunner("flexbar",
+        parallel(runProgramRunner, [ProgramRunner("flexbar",
                            [input_file, "%s/%s_debarcoded" % (args.outdir,getFileName(input_file)[5:]), "RIGHT", args.adapters],
                            {"exists": [input_file]}) for input_file in temp_files])
 
@@ -262,7 +262,7 @@ def trim_mothur(args, pool=Pool(processes=1)):
     try:
         printVerbose("Trimming barcodes and adapters with mothur")
         inputs = getInputs(args.input, "splitOut_*", "*unmatched.*")
-        parallel(runInstance, [ProgramRunner("trim.seqs", [input, args.oligos],
+        parallel(runProgramRunner, [ProgramRunner("trim.seqs", [input, args.oligos],
                                                    {"exists": [args.oligos]})
                                                     for input in inputs])
         printVerbose("Trimmed sequences.")
@@ -287,7 +287,7 @@ def trimmomatic(args, pool=Pool(processes=1)):
     try:
         makeDir(args.outdir)
         inputs = getInputs(args.input, "*_debarcoded.f*")
-        parallel(runInstance, [ProgramRunner("trimmomatic", [input,
+        parallel(runProgramRunner, [ProgramRunner("trimmomatic", [input,
                                                     "%s/%s_cleaned.fastq" % (args.outdir, getFileName(input)),
                                                     args.windowSize, args.quality, args.minLen],
                                                     {"exists": [args.outdir, input],
@@ -315,7 +315,7 @@ def dereplicate(args, pool=Pool(processes=1)):
         makeDir(args.outdir)
         inputs = getInputs(args.input, "*_cleaned.f*")
         print inputs
-        parallel(runInstance, [ProgramRunner("usearch", [input,
+        parallel(runProgramRunner, [ProgramRunner("usearch", [input,
                                                         "%s/%s_derep.fa" % (args.outdir, getFileName(input)),
                                                         "%s/%s_uc.out" % (args.outdir, getFileName(input))],
                                                         {"exists": [args.outdir, input]})
@@ -379,7 +379,7 @@ def macseAlignSeqs(args, pool=Pool(processes=1)):
     try:
         if args.program == "macse":
             printVerbose("\t %s Aligning reads using MACSE")
-            parallel(runInstance, [ProgramRunner("macse_align",
+            parallel(runProgramRunner, [ProgramRunner("macse_align",
                                                        [args.db, args.db, os.path.join(args.samplesDir, sample)] + [
                                                            os.path.join(args.outdir, sample)] * 3
                                                        , {"exists": []}) for sample in os.listdir(args.samplesDir)])
@@ -400,7 +400,7 @@ def macseCleanAlignments(args, pool=Pool(processes=1)):
     #                                  -charForRemainingFS - -gc_def 5 -out_AA \"%s\" -out_NT \"%s\" -statFile \"%s\""
     try:
         printVerbose("\t %s Processing MACSE alignments")
-        parallel(runInstance, [ProgramRunner("macse_format",
+        parallel(runProgramRunner, [ProgramRunner("macse_format",
                                                    [os.path.join(args.outdir, sample + "_NT"),
                                                     os.path.join(args.outdir, sample + "_AA_macse.fasta"),
                                                     os.path.join(args.outdir, sample + "_NT_macse.fasta"),
@@ -459,7 +459,7 @@ def findChimeras(args, pool=Pool(processes=1)):
                 referenceString = "reference=%s" % args.refDB
                 refFile = args.refDB
 
-            parallel(runInstance, [ProgramRunner("chmimera.uchime",
+            parallel(runProgramRunner, [ProgramRunner("chmimera.uchime",
                                                        [args.inputFile, referenceString],
                                                        {"exists": [args.inputFasta, refFile]})
                                          ])
@@ -491,7 +491,7 @@ def removeSeqs(args, pool=Pool(processes=1)):
     inputFile = ""
     try:
         # Remove from the accon sequences from the input file
-        parallel(runInstance, [ProgramRunner("remove.seqs", [args.accnosFile, args.inputFile],
+        parallel(runProgramRunner, [ProgramRunner("remove.seqs", [args.accnosFile, args.inputFile],
                                                    {"exists": [args.accnosFile, inputFile]})
                                      ])
         # Get the output file name with no directory prefix
@@ -539,7 +539,7 @@ def screenSeqs(args, pool=Pool(processes=1)):
     # TODO Not sure if mothur actually supports these different imput formats for this command.  Documentation is vague.
     try:
         optionString = mothur_buildOptionString(args, mustFilter=True)
-        parallel(runInstance, [ProgramRunner("screen.seqs", [args.inputfile, optionString],
+        parallel(runProgramRunner, [ProgramRunner("screen.seqs", [args.inputfile, optionString],
                                                    {"exists": [args.inputfile]})
                                      ])
     except KeyboardInterrupt:
@@ -555,7 +555,7 @@ def makeFastq(args, pool=Pool(processes=1)):
     :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
     """
     try:
-        parallel(runInstance, [ProgramRunner("make.fastq", [args.inputFasta, args.inputQual],
+        parallel(runProgramRunner, [ProgramRunner("make.fastq", [args.inputFasta, args.inputQual],
                                                    {"exists": [args.inputFasta, args.inputQual]})
                                      ])
     except KeyboardInterrupt:
@@ -569,7 +569,7 @@ def makeFasta(args, pool=Pool(processes=1)):
     :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
     """
     try:
-        parallel(runInstance, [ProgramRunner("make.fasta", [args.inputFastq], {"exists": [args.inputFastq]})
+        parallel(runProgramRunner, [ProgramRunner("make.fasta", [args.inputFastq], {"exists": [args.inputFastq]})
                                      ])
     except KeyboardInterrupt:
         pool.terminate()
@@ -628,8 +628,7 @@ def renameSequences (args, pool=Pool(processes=1)):
 
         inputs = getInputs(args.input)
 
-        serialRename(input_file, output_file, file_type)
-        parallel(pool_wrapper, args, [])
+        parallel(serialRename, [(input, output, file_type)])
 
         pool.close()
         pool.join()
@@ -651,7 +650,7 @@ def fastxRename(args, pool=Pool(processes=1)):
         # "~/programs/fastx/bin/fastx_renamer -n COUNT -i %s %s"
         rename_outFile_f = os.path.join(args.outdir, os.path.basename(args.input_f) + "_renamed")
         rename_outFile_r = os.path.join(args.outdir, os.path.basename(args.input_r) + "_renamed")
-        parallel(runInstance, [
+        parallel(runProgramRunner, [
             ProgramRunner("fastx_renamer", [args.input_f, rename_outFile_f], {"exists": [args.input_f]}),
             ProgramRunner("fastx_renamer", [args.input_r, rename_outFile_r], {"exists": [args.input_r]}),
         ])

@@ -35,7 +35,7 @@ demux = base + "demux " + "-i %s -b %s -o %s" % ("assemble/test.assembled.fastq"
 
 makeFasta = [base + "makeFasta" + " -i %s" % x for x in glob.glob(os.path.expanduser("/home/greg/ARMS/src/ARMS/rslt/splitOut*.fastq"))]
 
-trim = [base + "mothurTrim " + "-i %s -o %s -g %s" % (x, "trimmed", g) for x in glob.glob(os.path.expanduser("/home/greg/ARMS/src/ARMS/demux/splitOut*.fasta"))]
+trim = [base + "mothurTrim " + "-i %s -o %s -g %s" % (x, "trimmed", g) for x in glob.glob("2_split/splitOut*.*")]
 
 
 #reset()

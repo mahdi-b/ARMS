@@ -54,7 +54,7 @@ class MissingMothurFileException(Exception):
         return "Expected a mothur file to update, but found none."
 
 
-def runInstance(myInstance):
+def runProgramRunner(myInstance):
     """Runs an instance of a ProgramRunner.  Calls ProgramRunner.run() for a ProgramRunner object.'
         :param myInstance A fully initalized ProgramRunner object to run.
     """
@@ -63,7 +63,7 @@ def runInstance(myInstance):
     # logging.info(myInstance.dryRun())
     myInstance.run()
 
-def pool_wrapper(params):
+def runPython(params):
     """Wraps a multi-parameter, local, python method, so that it can be run as a multiprocessing.Pool job.
 
     :param params:  A tuple, where the first item is a function, and the remainder is a set of parameters
@@ -79,7 +79,7 @@ def parallel(function, data, pool=Pool(processes=1)):
     Executes one or more ProgramRunners in parallel.
     :param function:    The function to call.  Generally runInstance() for ProgramRunner objects, or a local python
                             function.
-    :param data:        The arguments to run the function with.
+    :param data:        A list of arguments to run the function over.
     :param pool:        An initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
     :return:
     '''
