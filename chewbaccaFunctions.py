@@ -152,12 +152,12 @@ def splitOnBarcodes(args, pool=Pool(processes=1)):
     # 2- usearch -fastq_filter
     try:
         makeDir(args.outdir)
-        files_to_split = getInputs(args.inputFile, "*.assembled.f*")
+        files_to_split = getInputs(args.input, "*.assembled.f*")
 
         printVerbose("Splitting based on barcodes")
         parallel(runInstance, args, [ProgramRunner("barcode.splitter",
-                                                   [input_file, args.barcodes, os.path.join(args.outdir, "splitOut_")],
-                                                   {"exists": [args.inputFile]}) for input_file in files_to_split])
+                                                   [input, args.barcodes, os.path.join(args.outdir, "splitOut_")],
+                                                   {"exists": [args.inputFile]}) for input in files_to_split])
 
         # wait for output files to be written
         pool.close()
@@ -205,8 +205,6 @@ def trim(args, pool=Pool(processes=1)):
 
 def trim_flexbar(args, pool=Pool(processes=1)):
     # "flexbar":  "flexbar -r \"%s\" -t \"%s\" -ae \"%s\" -a \"%s\"",
-    def getFileName(path):
-        return os.path.splitext(os.path.basename(path))[0]
     try:
         makeDir(args.outdir)
         input_files = getInputs(args.input, "splitOut_*")
@@ -240,9 +238,11 @@ def trim_flexbar(args, pool=Pool(processes=1)):
 
         pool.close()
         pool.join()
-        
+
     except KeyboardInterrupt:
         pool.terminate()
+
+
 
 def trim_mothur(args, pool=Pool(processes=1)):
     """
@@ -264,6 +264,68 @@ def trim_mothur(args, pool=Pool(processes=1)):
         pool.join()
     except KeyboardInterrupt:
         pool.terminate()
+
+def trimmomatic(args, pool=Pool(processes=1)):
+    """Uses a sliding window to identify and trim away areas of low quality.
+
+    :param args: An argparse object with the following parameters:
+                    inputFile	Input Fastq file
+                    outputFile	Output Fastq file
+                    windowSize	Width of the sliding window
+                    quality 	Minimum passing quality for the sliding window
+                    minLen	    Minimum passing length for a cleaned sequence
+    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
+    """
+    # "trimomatic":       "java -jar ~/ARMS/programs/Trimmomatic-0.33/trimmomatic-0.33.jar SE \
+    # -%phred %input %output SLIDINGWINDOW:%windowsize:%minAvgQuality MINLEN:%minLen"
+    try:
+        makeDir(args.outdir)
+        inputs = getInputs(args.input, "*_debarcoded.f*")
+        parallel(runInstance, args, [ProgramRunner("trimmomatic", [input,
+                                                    "%s/%s_cleaned.fastq" % (args.outdir, getFileName(input)),
+                                                    args.windowSize, args.quality, args.minLen],
+                                                    {"exists": [args.outdir, input],
+                                                    "positive": [args.windowSize, args.quality, args.minLen]})
+                                                    for input in inputs
+                                     ])
+
+        pool.close()
+        pool.join()
+    except KeyboardInterrupt:
+        pool.terminate()
+
+
+
+def dereplicate(args, pool=Pool(processes=1)):
+    """Uses a sliding window to identify and trim away areas of low quality.
+
+       :param args: An argparse object with the following parameters:
+                       inputFile	Input Fastq file
+                       outdir	    Output Fastq file
+       :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
+       """
+    #ls *cleaned.fasta  | parallel  "/ARMS/bin/usearch7.0.1090 -derep_fulllength {} -output {/.}_derep.fa -uc {/.}_uc.out"
+    try:
+        makeDir(args.outdir)
+        inputs = getInputs(args.input, "*_cleaned.f*")
+        print inputs
+        parallel(runInstance, args, [ProgramRunner("usearch", [input,
+                                                        "%s/%s_derep.fa" % (args.outdir, getFileName(input)),
+                                                        "%s/%s_uc.out" % (args.outdir, getFileName(input))],
+                                                        {"exists": [args.outdir, input]})
+                                                        for input in inputs])
+        pool.close()
+        pool.join()
+    except KeyboardInterrupt:
+        pool.terminate()
+
+
+
+
+
+
+
+
 
 
 # TODO decide whether to use this function or splitOnBarcodes.  This one uses SeqIO, the above users fastx
@@ -507,33 +569,6 @@ def makeFasta(args, pool=Pool(processes=1)):
         pool.terminate()
 
 
-def trimmomatic(args, pool=Pool(processes=1)):
-    """Uses a sliding window to identify and trim away areas of low quality.
-
-    :param args: An argparse object with the following parameters:
-                    phred	    A boolean toggle.  True for phred-33 scoring, False for phred-64 scoring.
-                    inputFile	Input Fastq file
-                    outputFile	Output Fastq file
-                    windowSize	Width of the sliding window
-                    quality 	Minimum passing quality for the sliding window
-                    minLen	    Minimum passing length for a cleaned sequence
-    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
-    """
-    # "trimomatic":       "java -jar ~/ARMS/programs/Trimmomatic-0.33/trimmomatic-0.33.jar SE \
-    # -%phred %input %output SLIDINGWINDOW:%windowsize:%minAvgQuality MINLEN:%minLen"
-    try:
-        qualScoring = "phrad64"
-        if args.phread:
-            qualScoring = "phred33"
-
-        parallel(runInstance, args, [ProgramRunner("trimmomatic",
-                                                   [qualScoring, args.inputFile, args.outputFile, args.windowSize,
-                                                    args.quality, args.minLen],
-                                                   {"exists": [args.outputFile, args.inputFile],
-                                                    "positive": [args.windowSize, args.quality, args.minLen]})
-                                     ])
-    except KeyboardInterrupt:
-        pool.terminate()
 
 def prescreen(args, pool=Pool(processes=1)):
     """Prescreens a file for sequences with frameshfits, and logs the frameshifts.

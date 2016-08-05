@@ -79,6 +79,16 @@ def main(argv):
     parser.add_argument('--dryRun', default=False)
     subparsers = parser.add_subparsers(dest='action', help='Available commands')
 
+
+    # Rename reads serially with Fastx
+    # "fastx_renamer":    programPaths["FASTX"] + "fastx_renamer -n COUNT -i \"%s\" -o \"%s\" -Q 33",
+    parser_serialize = subparsers.add_parser('rename')
+    parser_serialize.add_argument('-f', '--input_f', required=True, help="Forward Fastq Reads")
+    parser_serialize.add_argument('-r', '--input_r', required=True, help="Reverse Fastq Reads")
+    parser_serialize.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
+    parser_serialize.set_defaults(func=serialRename)
+
+
     # ===========================================
     # ==  Assemble Reads using mothur or pear  ==
     # ===========================================
@@ -104,37 +114,18 @@ def main(argv):
 
 
 
-    '''
-    # Assemble reads
-    # "pear":             programPaths["PEAR"] + " -f \"%s\" -r \"%s\" -o \"%s\" -j \"%s\" -m %d",
+    """
+    # Assembles forward and reverse fastq reads
     # "make.contigs": "mothur \'#make.contigs(ffastq=%s, rfastq=%s, bdiffs=1, pdiffs=2, oligos=%s, processors=%s)\'"
-    parser_assemble = subparsers.add_parser('assemble')
-    parser_assemble.add_argument('-p', '--program', type=int, required=True, help="The number of threads to use")
-    parser_assemble.add_argument('-f', '--input_f', required=True, help="Forward Fastq Reads")
-    parser_assemble.add_argument('-r', '--input_r', required=True, help="Reverse Fastq Reads")
-    parser_assemble.add_argument('-n', '--name', required=True, help="Assembled File Prefix")
-    parser_assemble.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
-    parser_assemble.add_argument('-t', '--threads', type=int, help="The number of threads to use")
-    # options
-    # for mothur
-    parser_assemble.add_argument('-g', '--oligos', required=True,
+    parser_makeContigs = subparsers.add_parser('makeContigs')
+    parser_makeContigs.add_argument('-f', '--forward', required=True, help="Forward read fastq file")
+    parser_makeContigs.add_argument('-r', '--reverse', required=False, help="Reverse read fastq file")
+    parser_makeContigs.add_argument('-g', '--oligos', required=True,
                                     help="Oligos file with barcode and primer sequences")
-    parser_assemble.add_argument('-bd', '--bdiffs', required=True, help="# of allowed barcode mismatches")
-    parser_assemble.add_argument('-pd', '--pdiffs', required=True, help="# of allowed primer mismatches")
-    # for pear
-    parser_assemble.add_argument('-m', '--maxLen', type=int,
-                                 help="Maximum length for assembled sequences")
-    parser_assemble.set_defaults(func=assemble)
-    '''
-
-    # Rename reads serially with Fastx
-    # "fastx_renamer":    programPaths["FASTX"] + "fastx_renamer -n COUNT -i \"%s\" -o \"%s\" -Q 33",
-    parser_serialize = subparsers.add_parser('rename')
-    parser_serialize.add_argument('-f', '--input_f', required=True, help="Forward Fastq Reads")
-    parser_serialize.add_argument('-r', '--input_r', required=True, help="Reverse Fastq Reads")
-    parser_serialize.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
-    parser_serialize.set_defaults(func=serialRename)
-
+    parser_makeContigs.add_argument('-bd', '--bdiffs', required=True, help="# of allowed barcode mismatches")
+    parser_makeContigs.add_argument('-pd', '--pdiffs', required=True, help="# of allowed primer mismatches")
+    parser_makeContigs.add_argument('-p', '--procs', required=True, help="Number of processors to use")
+    """
 
     # ===========================================================
     # ==  Trims barcodes and adapters using mothur or flexbar  ==
@@ -157,45 +148,45 @@ def main(argv):
 
 
 
-
-    """
-    # Assemble reads with Pear
-    # "pear":             programPaths["PEAR"] + " -f \"%s\" -r \"%s\" -o \"%s\" -j \"%s\" -m %d",
-    # "make.contigs": "mothur \'#make.contigs(ffastq=%s, rfastq=%s, bdiffs=1, pdiffs=2, oligos=%s, processors=%s)\'"
-    parser_assemble = subparsers.add_parser('assemble')
-    parser_assemble.add_argument('-n', '--name', required=True, help="Run Id")
-    parser_assemble.add_argument('-f', '--input_f', required=True, help="Forward Fastq Reads")
-    parser_assemble.add_argument('-r', '--input_r', required=True, help="Reverse Fastq Reads")
-    parser_assemble.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
-    parser_assemble.add_argument('-m', '--maxLen', type=int,
-                                    help="Maximum length for assembled sequences")
-    parser_assemble.add_argument('-t', '--threads', type=int, help="The number of threads to use")
-    parser_assemble.set_defaults(func=assembleReads)
-
-
-    # Assembles forward and reverse fastq reads
-    # "make.contigs": "mothur \'#make.contigs(ffastq=%s, rfastq=%s, bdiffs=1, pdiffs=2, oligos=%s, processors=%s)\'"
-    parser_makeContigs = subparsers.add_parser('makeContigs')
-    parser_makeContigs.add_argument('-f', '--forward', required=True, help="Forward read fastq file")
-    parser_makeContigs.add_argument('-r', '--reverse', required=False, help="Reverse read fastq file")
-    parser_makeContigs.add_argument('-g', '--oligos', required=True,
-                                    help="Oligos file with barcode and primer sequences")
-    parser_makeContigs.add_argument('-bd', '--bdiffs', required=True, help="# of allowed barcode mismatches")
-    parser_makeContigs.add_argument('-pd', '--pdiffs', required=True, help="# of allowed primer mismatches")
-    parser_makeContigs.add_argument('-p', '--procs', required=True, help="Number of processors to use")
-    """
+    # ====================================
+    # ==  Clean Reads with Trimmomatic  ==
+    # ====================================
+    # Clean low-quality reads with trimmomatic
+    # "trimomatic":       "java -jar ~/ARMS/programs/Trimmomatic-0.33/trimmomatic-0.33.jar SE \
+    # -phred33 input output_cleaned.fastq SLIDINGWINDOW:%windowsize:%minAvgQuality MINLEN:%minLen"
+    parser_trimmomatic = subparsers.add_parser('clean_seqs')
+    parser_trimmomatic.add_argument('-i', '--input', required=True, help="Run Id")
+    parser_trimmomatic.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
+    parser_trimmomatic.add_argument('-m', '--minLen', type=int, default=200,
+                                            help="Minimum length for cleaned sequences")
+    parser_trimmomatic.add_argument('-w', '--windowSize', type = int, default=5,
+                                            help="Size of the sliding window")
+    parser_trimmomatic.add_argument('-q', '--quality', type = int, default=25,
+                                            help="Minimum average quality for items in the sliding window")
+    parser_trimmomatic.set_defaults(func=trimmomatic)
 
 
-    # Split file by barcode with Fastx
+    # ====================================
+    # ==  Split by barcode with Fastxx  ==
+    # ====================================
     # "barcode.splitter": "cat \"%s\" | " + programPaths["FASTX"] + "fastx_barcode_splitter.pl  --bcfile \"%s\" \
     #                                    -prefix \"%s\" --suffix .fastq --bol --mismatches 1",
     parser_demux = subparsers.add_parser('demux_samples')
-    parser_demux.add_argument('-i', '--inputFile', required=True, help="Input fasta/fastq")
+    parser_demux.add_argument('-i', '--input', required=True, help="Input fasta/fastq")
     parser_demux.add_argument('-b', '--barcodes', required=True,
                               help="Tab delimted files of barcodes and their samples")
     parser_demux.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved")
     parser_demux.set_defaults(func=splitOnBarcodes)
 
+
+    # ==========================================
+    # ==  Dereplicate sequences with usearch  ==
+    # ==========================================
+    # "usearch": programPaths["USEARCH"] + " -derep_fulllength \"%s\" -output \"%s\" -uc \"%s\"",
+    parser_derep = subparsers.add_parser('dereplicate_fasta')
+    parser_derep.add_argument('-i', '--input', required=True, help="Input fasta/fastq")
+    parser_derep.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved")
+    parser_derep.set_defaults(func=dereplicate)
 
 
     # Split file by samples
@@ -229,7 +220,7 @@ def main(argv):
     parser_align.add_argument('-p', '--program', required=True,
                               help="Program name for cleaning. Available options are: ... ")
     parser_align.add_argument('-d', '--db', required=True, help="Database against which to align and filter reads")
-    parser_align.add_argument('-o', '--outdir', required=True, help=" Output directory")
+    parser_align.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
     parser_align.set_defaults(func=macseAlignSeqs)
 
 
@@ -240,25 +231,8 @@ def main(argv):
     parser_macseClean = subparsers.add_parser('macseClean')
     parser_macseClean.add_argument('-s', '--samplesDir', required=True,
                                             help="Directory containing the samples file required for clustering")
-    parser_macseClean.add_argument('-o', '--outdir', required=True, help=" Output directory")
+    parser_macseClean.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
     parser_macseClean.set_defaults(func=macseCleanAlignments)
-
-
-
-    # Clean low-quality reads with trimmomatic
-    # "trimomatic":       "java -jar ~/ARMS/programs/Trimmomatic-0.33/trimmomatic-0.33.jar SE \
-    # -phred33 input output_cleaned.fastq SLIDINGWINDOW:%windowsize:%minAvgQuality MINLEN:%minLen"
-    parser_trimmomatic = subparsers.add_parser('trimmomatic')
-    parser_trimmomatic.add_argument('-i', '--inputFile', required=True, help="Run Id")
-    parser_trimmomatic.add_argument('-o', '--outputFile', required=True, help="Forward Fastq Reads")
-    parser_trimmomatic.add_argument('-m', '--minLen', required=True, type=int,
-                                            help="Minimum length for cleaned sequences")
-    parser_trimmomatic.add_argument('-p', '--phred33', required=True, type=bool,
-                                            help="T for phred33, F for phred64 quality scores")
-    parser_trimmomatic.add_argument('-w', '--windowSize', required=True, help="Size of the sliding window")
-    parser_trimmomatic.add_argument('-q', '--quality', required=True,
-                                            help="Minimum average quality for items in the sliding window")
-    parser_trimmomatic.set_defaults(func=trimmomatic)
 
 
 
@@ -300,7 +274,6 @@ def main(argv):
     parser_screen.add_argument('-c', '--contigsReport', help="Contigs report to update")
     parser_screen.add_argument('-s', '--summaryFile', help="SummaryFile to update")
     parser_screen.set_defaults(func=screenSeqs)
-
 
 
     # Remove sequences with Mothur

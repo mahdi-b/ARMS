@@ -109,7 +109,18 @@ def getInputs(path, pattern="*", butNot=""):
         else:
             return patternMatch
     else:
-        return []
+        logging.error("Found no  matching inputs")
+        print "Error: Found no matching inputs"
+        exit()
+        #return []
+
+
+def getFileName(path):
+    """Returns the filename (no extension, no directory) in an absoloute filepath
+    :param path:
+    :return:
+    """
+    return os.path.splitext(os.path.basename(path))[0]
 
 def enumerateDir(dir, pattern="*"):
     hits = "%s/%s" % (dir, pattern)

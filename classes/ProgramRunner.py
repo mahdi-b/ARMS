@@ -27,7 +27,8 @@ class ProgramRunner(object):
     programPaths = {
         "MACSE": "/ARMS/programs/MACSE/macse_v1.01b.jar",
         "FASTX": "~/programs/fastx/bin/",
-        "PEAR": ""
+        "PEAR": "",
+        "USEARCH": "~/ARMS/bin/usearch7.0.1090"
     }
 
     def __init__(self, program, params, conditions={}, stdin=open(os.devnull, 'r'), stdout=open(os.devnull, 'w'),
@@ -176,7 +177,7 @@ class ProgramRunner(object):
                 "macse_format": "java -jar " + programPaths["MACSE"] + "  -prog exportAlignment -align \"%s\" \
                                             -charForRemainingFS - -gc_def 5 -out_AA \"%s\" -out_NT \"%s\" -statFile \
                                             \"%s\"",
-                "trimomatic": "java -jar ~/ARMS/programs/Trimmomatic-0.33/trimmomatic-0.33.jar SE -%s \"%s\" \"%s\" \
+                "trimmomatic": "java -jar ~/ARMS/programs/Trimmomatic-0.33/trimmomatic-0.33.jar SE -phred33 \"%s\" \"%s\" \
                                             SLIDINGWINDOW:%d:%d MINLEN:%d",
                 "chmimera.uchime": "mothur \'#chimera.uchime(fasta=%s, %s)\'",
                 "make.fastq": "mothur \'#make.fastq(fasta=%s,qfile=%s)\'",
@@ -184,6 +185,8 @@ class ProgramRunner(object):
                 "remove.seqs": "mothur \'#remove.seqs(accnos=%s, %s)\'",
                 "screen.seqs": "mothur \'#screen.seqs(fasta=%s, %s)\'",
                 "flexbar":  "flexbar -r \"%s\" -t \"%s\" -ae \"%s\" -a \"%s\"",
+                "usearch": programPaths["USEARCH"] + " -derep_fulllength \"%s\" -output \"%s\" -uc \"%s\"",
+
 
                 "align.seqs": "mothur \'#align.seqs(candidate=%s, template=%s, flip=t)\'",
                 "unique.seqs": "mothur \'#unique.seqs(fasta=%s)\'",

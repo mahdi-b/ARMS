@@ -14,13 +14,12 @@ def exists(files):
     return True
 
 
-def postive(values):
+def positive(values):
     """Returns True if each value in values is positive.
 
     :param values:  A list of numbers.
     :return:    True if all values are positive, raises an Exception if not.
     """
-
     for val in values:
         if val <= 0:
             raise Exception("Expected positive value.  Found %f." % val)
