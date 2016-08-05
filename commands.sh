@@ -54,6 +54,7 @@ python chewbacca.py demux_samples -i 1_assembled -b /home/greg/ARMS/testARMS/tes
 #     -r {/.}_temp_out.fastq -t {/.}_debarcoded \
 #     -ae RIGHT -a ../testData/adapters_RC.fa
 
+python chewbacca.py trim_adapters  -p flexbar -i 2_split -o 3_trim_ab -b ~/ARMS/testARMS/testData/adapters.fasta -a ~/ARMS/testARMS/testData/adapters_RC.fa
 #=================================================================================================
 # Step 4: clean the low quality of the reads using a sliding window
 # Params for this step need to be explored more

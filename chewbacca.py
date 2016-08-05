@@ -80,7 +80,9 @@ def main(argv):
     subparsers = parser.add_subparsers(dest='action', help='Available commands')
 
 
-    # Rename reads serially with Fastx
+    # =========================================
+    # ==  Rename reads serially with Fastx  ==
+    # =========================================
     # "fastx_renamer":    programPaths["FASTX"] + "fastx_renamer -n COUNT -i \"%s\" -o \"%s\" -Q 33",
     parser_serialize = subparsers.add_parser('rename')
     parser_serialize.add_argument('-f', '--input_f', required=True, help="Forward Fastq Reads")

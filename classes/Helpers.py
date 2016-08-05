@@ -24,6 +24,27 @@ class printVerbose(object):
                 print "\n"
             print msg
 
+
+def helpValidate(conditions):
+    """Validates all conditions using a Validator object, returning True if successful and raising an exception
+        if not.
+
+    :param conditions: A dictionary mapping <Validator>.function names to a list of parameters.  The dictionary
+                            key/function name is called on each parameter in the corresponding list of parameters.
+                            All parameters must satisfy their <Validator>.function in order for the specified
+                            program to execute.
+    :return: True if validation is successful, and raising an exception in <Validator.function> if not.
+    """
+    # if any of the conditions fail, an exception is raised in getattr
+    # TODO: The exception should be raised in this function, so users know that the error is in validation of their conditions, not the
+    #   accessing of properties.
+    for condition in conditions.iteritems():
+        getattr(Validator, condition[0])(condition[1])
+
+    # TODO sanitize inputs
+
+    return True
+
 class MissingMothurFilterException(Exception):
     def __str__(self):
         return "Expected a mothur filter parameter, but found none"
@@ -33,36 +54,36 @@ class MissingMothurFileException(Exception):
         return "Expected a mothur file to update, but found none."
 
 
-def runInstance(args, myInstance):
+def runInstance(myInstance):
     """Runs an instance of a ProgramRunner.  Calls ProgramRunner.run() for a ProgramRunner object.'
-        :param args:        Arguments from the argparse object.
         :param myInstance A fully initalized ProgramRunner object to run.
     """
     # Use the global version to facilitate calling workers
-    print "runinstance"
-    if args.dryRun:
-        logging.info(myInstance.dryRun())
-    else:
-        # logging.info(myInstance.dryRun())
-        myInstance.run()
+    #print "runinstance"
+    # logging.info(myInstance.dryRun())
+    myInstance.run()
+
+def pool_wrapper(params):
+    """Wraps a multi-parameter, local, python method, so that it can be run as a multiprocessing.Pool job.
+
+    :param params:  A tuple, where the first item is a function, and the remainder is a set of parameters
+    :return:        The output of params[0](*params[1:]
+    """
+    func = params[0]
+    args = params[1:]
+    return func(*args)
 
 
-
-
-def parallel(function, args, runners, pool=Pool(processes=1)):
+def parallel(function, data, pool=Pool(processes=1)):
     '''
     Executes one or more ProgramRunners in parallel.
-    :param function:    The function to call over ProgramRunners.  Generally runInstance().
-    :param args:        Arguments from the argparse object.
-    :param runners:     A list of fully initalized ProgramRunners to execute.
+    :param function:    The function to call.  Generally runInstance() for ProgramRunner objects, or a local python
+                            function.
+    :param data:        The arguments to run the function with.
     :param pool:        An initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
     :return:
     '''
-
-    data = [(args, runner) for runner in runners]
-    for arg, runner in data:
-        runInstance(arg, runner)
-        # pool.map(function, data)
+    pool.map(function, data)
 
 def makeDirOrdie(dirPath):
     """Creates a directory 'dirPath' or exits if the 'dirPath' directory already exists.  Prevents unnecessary execution.
@@ -143,25 +164,6 @@ def sanitize(inputs):
 
     return inputs
 
-def validate(conditions):
-    """Validates all conditions using a Validator object, returning True if successful and raising an exception
-        if not.
-
-    :param conditions: A dictionary mapping <Validator>.function names to a list of parameters.  The dictionary
-                            key/function name is called on each parameter in the corresponding list of parameters.
-                            All parameters must satisfy their <Validator>.function in order for the specified
-                            program to execute.
-    :return: True if validation is successful, and raising an exception in <Validator.function> if not.
-    """
-    # if any of the conditions fail, an exception is raised in getattr
-    # TODO: The exception should be raised in this function, so users know that the error is in validation of their conditions, not the
-    #   accessing of properties.
-    for condition in conditions.iteritems():
-        getattr(Validator, condition[0])(condition[1])
-
-    # TODO sanitize inputs
-
-    return True
 
 def bulk_move_to_dir(target_files, dest_dir_path):
     """Moves a file with a given filepath to a given directory.  Sanitizes inputs before execution.

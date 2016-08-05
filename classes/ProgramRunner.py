@@ -4,7 +4,7 @@ import os
 import re
 import subprocess
 import Validator  # fileExists, installed, etc..
-from Helpers import printVerbose, validate
+from Helpers import printVerbose, helpValidate
 from pipes import quote
 
 
@@ -24,6 +24,7 @@ class ProgramRunner(object):
     DEFAULT_CONFIG_FILEPATH = "chewbacca.cfg"
     configsLoaded = False
     commandTemplates = {}
+    dry_run = False
     programPaths = {
         "MACSE": "/ARMS/programs/MACSE/macse_v1.01b.jar",
         "FASTX": "~/programs/fastx/bin/",
@@ -69,7 +70,9 @@ class ProgramRunner(object):
 
         :return:            True if validation is successful, and raising an exception in <Validator.function> if not.
         """
-        return validate(conditions)
+        #return True
+        return helpValidate(conditions)
+
 
 
     def dryValidateConditions(self, conditions):
@@ -107,8 +110,9 @@ class ProgramRunner(object):
         """
         try:
             self.validateConditions(self.conditions)
-            if printVerbose.VERBOSE:
+            if printVerbose.VERBOSE or self.dry_run:
                 self.dryRun()
+
             # call and check_call are blocking, Popen is non-blocking
             print "running " + self.command
             subprocess.Popen(self.command, shell=True)
@@ -163,7 +167,7 @@ class ProgramRunner(object):
             programPaths = ProgramRunner.programPaths
             ProgramRunner.commandTemplates = {
                 "barcode.splitter": "cat \"%s\" | " + programPaths["FASTX"] + 'fastx_barcode_splitter.pl  --bcfile "%s" \
-                                    -prefix "%s" --suffix .fastq --bol --mismatches 1',
+                                    -prefix "%s" --suffix %s --bol --mismatches 1',
                 "fastx_renamer": programPaths["FASTX"] + "fastx_renamer -n COUNT -i \"%s\" -o \"%s\" -Q 33",
                 "pear": programPaths["PEAR"] + " -f \"%s\" -r \"%s\" -o \"%s\" -j %d ",
                 "make.contigs": "mothur \'#make.contigs(ffastq=%s, rfastq=%s, bdiffs=1, pdiffs=2, oligos=%s, \
@@ -186,7 +190,6 @@ class ProgramRunner(object):
                 "screen.seqs": "mothur \'#screen.seqs(fasta=%s, %s)\'",
                 "flexbar":  "flexbar -r \"%s\" -t \"%s\" -ae \"%s\" -a \"%s\"",
                 "usearch": programPaths["USEARCH"] + " -derep_fulllength \"%s\" -output \"%s\" -uc \"%s\"",
-
 
                 "align.seqs": "mothur \'#align.seqs(candidate=%s, template=%s, flip=t)\'",
                 "unique.seqs": "mothur \'#unique.seqs(fasta=%s)\'",
