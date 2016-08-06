@@ -29,7 +29,7 @@ class ProgramRunner(object):
         "MACSE": "/ARMS/programs/MACSE/macse_v1.01b.jar",
         "FASTX": "~/programs/fastx/bin/",
         "PEAR": "",
-        "USEARCH": "~/ARMS/bin/usearch7.0.1090"
+        "USEARCH": "~/ARMS/programs/usearch7.0.1090"
     }
 
     def __init__(self, program, params, conditions={}, stdin=open(os.devnull, 'r'), stdout=open(os.devnull, 'w'),
@@ -190,8 +190,8 @@ class ProgramRunner(object):
                 "screen.seqs": "mothur \'#screen.seqs(fasta=%s, %s)\'",
                 "flexbar":  "flexbar -r \"%s\" -t \"%s\" -ae \"%s\" -a \"%s\"",
                 "usearch": programPaths["USEARCH"] + " -derep_fulllength \"%s\" -output \"%s\" -uc \"%s\"",
-
                 "align.seqs": "mothur \'#align.seqs(candidate=%s, template=%s, flip=t)\'",
+
                 "unique.seqs": "mothur \'#unique.seqs(fasta=%s)\'",
                 "cluster-swarm": "",
             }

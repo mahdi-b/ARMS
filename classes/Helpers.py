@@ -111,6 +111,14 @@ def makeDir(dirPath):
     else:
         logging.warning("Split fasta directory %s already exists " % dirPath)
 
+def strip_ixes(path):
+    name = getFileName(path)
+    print name
+    ixes=["splitOut_", "_renamed", "_debarcoded", ".assembled", ".discarded", ".unassembled", "_cleaned", "_derep",
+          "_uc"]
+    for ix in ixes:
+        name = name.replace(ix, "")
+    return name
 
 def getInputs(path, pattern="*", butNot=""):
     """Checks if a path is a file or folder.  Optionally takes a pattern.  Returns a list of either a single file, or
@@ -172,8 +180,9 @@ def bulk_move_to_dir(target_files, dest_dir_path):
     :param dest_dir_path:
     :return:
     """
-    for target_file in target_files:
-        move_to_dir(target_file, dest_dir_path)
+    if target_files is not None:
+        for target_file in target_files:
+            move_to_dir(target_file, dest_dir_path)
 
 
 def move_to_dir(target_file_path, dest_dir_path):

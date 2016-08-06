@@ -1,6 +1,7 @@
 from Bio import SeqIO
 import sys
 import os
+from classes.Helpers import getFileName, strip_ixes
 
 """
 Takes in a fasta file and outputs a new fasta with the sequences renamed.  Renaming convention for sequences is
@@ -15,7 +16,7 @@ rename("a.b.c.fasta, "a_renamed.fasta", "fasta")
 
 """
 
-def serialRename(input_file, output_file, file_type):
+def serialRename(input_file, output_file, file_type, barcode_file=""):
     """Takes in a fasta file and outputs a new fasta with the sequences renamed.  Renaming convention is x.y.z<n> for
         x.y.z.fasta, where n is an integer in the range [0:n] where n is the position of the sequence in the input_file.
 
@@ -24,17 +25,31 @@ def serialRename(input_file, output_file, file_type):
     :param file_type:       "fasta" or "fastq"
     :return:
     """
-    prefix = os.path.splitext(input_file)
-    if input_file.split('.')[0]:
-        i = 0
-        with open(input_file, 'r') as input:
-            with open(output_file, 'w') as output:
-                for s in SeqIO.parse(input, file_type):
-                    s.id ="%sID%s" % (prefix, i)
-                    s.description = ""
-                    SeqIO.write(s, output, file_type)
-                    i += 1
-
+    names_file = "%s/%s.names" % (os.path.dirname(output_file), getFileName(input_file))
+    """
+    samples = {}
+    sample_ref = []
+    if barcode_file and os.path.isfile(barcode_file):
+        for line in open(barcode_file, 'r'):
+            sample_id = line.split("\t")[0]
+            samples[sample_id] = ""
+        sample_ref = samples.keys().sort(key=str.lower()).reverse()
+    else:
+        sample_ref = [getFileName(input_file)]
+"""
+    print "Running rename %s .... %s" % (input_file, output_file)
+    seqPrefix = strip_ixes(input_file)
+    i = 0
+    with open(output_file, 'w') as output:
+        with open(names_file,'w') as log:
+            for s in SeqIO.parse(input_file, file_type):
+                s.id ="%s_ID%s" % (seqPrefix, i)
+                log.write("%s\t%s\n" % (s.id, seqPrefix))
+                s.description = ""
+                SeqIO.write(s, output, file_type)
+                i += 1
+        log.close()
+    output.close()
 
 if __name__ == "__main__":
     if len(sys.argv) < 4:

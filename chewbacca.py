@@ -79,17 +79,28 @@ def main(argv):
     parser.add_argument('--dryRun', default=False)
     subparsers = parser.add_subparsers(dest='action', help='Available commands')
 
+    # ===================================================
+    # ==  Rename reads serially with rename_sequences  ==
+    # ===================================================
+    # renameSequences(input, output)
+    parser_rename = subparsers.add_parser('rename')
+    parser_rename.add_argument('-i', '--input', required=True, help="Input file or directory")
+    parser_rename.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
+    parser_rename.add_argument('-f', '--filetype', required=True, help="The filetype of the input files")
+    parser_rename.set_defaults(func=renameSequences)
 
+    """
     # =========================================
     # ==  Rename reads serially with Fastx  ==
     # =========================================
     # "fastx_renamer":    programPaths["FASTX"] + "fastx_renamer -n COUNT -i \"%s\" -o \"%s\" -Q 33",
+
     parser_serialize = subparsers.add_parser('rename')
     parser_serialize.add_argument('-f', '--input_f', required=True, help="Forward Fastq Reads")
     parser_serialize.add_argument('-r', '--input_r', required=True, help="Reverse Fastq Reads")
     parser_serialize.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
     parser_serialize.set_defaults(func=serialRename)
-
+    """
 
     # ===========================================
     # ==  Assemble Reads using mothur or pear  ==
@@ -203,12 +214,11 @@ def main(argv):
 
     # Align Reads wiht Mothur
     #"align.seqs": "mothur \'#align.seqs(candidate=%s, template=%s, flip=t)\'",
-    parser_mothuralign = subparsers.add_parser('mothurAlign')
-    parser_mothuralign.add_argument('-c', '--candidates', required=True,
-                              help="Fasta file containing the reads to align")
+    parser_mothuralign = subparsers.add_parser('align_seqs')
+    parser_mothuralign.add_argument('-i', '--input', required=True, help="Fasta file containing the reads to align")
     parser_mothuralign.add_argument('-r', '--ref', required=True, help="Reference file containing known sequences")
     parser_mothuralign.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
-    parser_mothuralign.set_defaults(func=alignSeqs)
+    parser_mothuralign.set_defaults(func=align_mothur)
     
 
     # Align Reads with MACSE
