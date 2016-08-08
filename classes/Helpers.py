@@ -1,6 +1,7 @@
 import glob
 import logging
 import os
+import re
 import sys
 import Validator
 from Bio import SeqIO
@@ -112,36 +113,41 @@ def makeDir(dirPath):
         logging.warning("Split fasta directory %s already exists " % dirPath)
 
 def strip_ixes(path):
-    name = getFileName(path)
-    print name
-    ixes=["splitOut_", "_renamed", "_debarcoded", ".assembled", ".discarded", ".unassembled", "_cleaned", "_derep",
-          "_uc"]
+    file_name = getFileName(path)
+    print file_name
+    name = re.sub(r'_splitOut_\d+', '', file_name)
+    ixes=[ "_renamed", "_debarcoded", ".assembled", ".discarded", ".unassembled", "_cleaned", "_derep", "_uc"]
     for ix in ixes:
         name = name.replace(ix, "")
     return name
 
 def getInputs(path, pattern="*", butNot=""):
     """Checks if a path is a file or folder.  Optionally takes a pattern.  Returns a list of either a single file, or
-        all files in a folder (matching pattern if it was provided).
+        all files in a folder (matching pattern if it was provided).  Returns only non-empty files
 
     :param path:        File path to a folder or file.
     :param pattern:     Optional pattern string. e.g. *.txt grabs all .txt files in path.
     :return:            A list of one or more files.
     """
+    rslt = ""
     if os.path.isfile(path):
-        return [path]
-    if os.path.isdir(path):
+        rslt = [path]
+    elif os.path.isdir(path):
         patternMatch = enumerateDir(path, pattern)
         if butNot:
             negativeMatch = enumerate(path,butNot)
-            return list(set(patternMatch) - set(negativeMatch))
+            rslt = list(set(patternMatch) - set(negativeMatch))
         else:
-            return patternMatch
+            rslt = patternMatch
+
     else:
         logging.error("Found no  matching inputs")
         print "Error: Found no matching inputs"
         exit()
         #return []
+    rslt = [path for path in rslt if os.path.getsize(path)]
+    print rslt
+    return rslt
 
 
 def getFileName(path):

@@ -4,7 +4,7 @@ import sys
 # Renames sequences for swarm
 
 
-def renameSequences(input_fasta, count_file, outfile):
+def renameSequencesWithCount(input_fasta, count_file, outfile):
     seeds ={}
     # collect the seed names, and the children sequence names
     for line in open(count_file, 'r'):
@@ -19,11 +19,12 @@ def renameSequences(input_fasta, count_file, outfile):
         i+=1
 
         if seeds.has_key(mySeq.id):
-            mySeq.id = "%i_%i" % (i, len(seeds[mySeq.id].split(" ")))
+            mySeq.id = "%s_%i" % (mySeq.id, len(seeds[mySeq.id].split(" ")))
         else:
-            mySeq.id = "%i_%i" % (i, 1)
+            mySeq.id = "%s_%i" % (mySeq.id, 1)
+        mySeq.name = ""
+        mySeq.description =""
         mySeqs.append(mySeq)
-
     # write a new fasta with only the seed sequences
     SeqIO.write(mySeqs, open(outfile, 'w'),'fasta')
 
@@ -31,4 +32,4 @@ if __name__ == "__main__":
     if len(sys.argv) < 4:
         print "Usage: fastaA fastaB outfile"
         exit()
-        renameSequences(sys.argv[1:4])
+        renameSequencesWithCount(sys.argv[1:4])

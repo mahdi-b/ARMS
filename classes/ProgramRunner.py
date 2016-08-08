@@ -32,8 +32,7 @@ class ProgramRunner(object):
         "USEARCH": "~/ARMS/programs/usearch7.0.1090"
     }
 
-    def __init__(self, program, params, conditions={}, stdin=open(os.devnull, 'r'), stdout=open(os.devnull, 'w'),
-                 stderr=open(os.devnull, 'w')):
+    def __init__(self, program, params, conditions={}, stdin="", stdout="", stderr=""):
         """Initalizes a ProgramRunner object.  Reads chewbacca.cfg and loads configuration settings, builds the command
         string, and configures stdIO pipes.
 
@@ -115,7 +114,7 @@ class ProgramRunner(object):
 
             # call and check_call are blocking, Popen is non-blocking
             print "running " + self.command
-            subprocess.Popen(self.command, shell=True)
+            proc = subprocess.check_call(self.command, shell=True)
             # commandList = self.splitCommand(self.command)
             # print commandList
             # print " ".join(commandList)

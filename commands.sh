@@ -3,22 +3,14 @@
 # time	2.0s
 # req	PEAR
 #=================================================================================================
-#mkdir 1_assembled && cd 1_assembled
+
+
 # assemble the forward and reverse reads. -o BALI is the prefix that will be assigned to the newly created files
-# pear -f ../testData/20K_R1.fq -r ../testData/20K_R2.fq -o BALI -j 10
+#mkdir 1_assembled && cd 1_assembled
+#pear -f ../testData/20K_R1.fq -r ../testData/20K_R2.fq -o BALI -j 10
 
-#multi file
-#python chewbacca.py assemble -p pear -f test/forward -r test/reverse -n BALI -o 1_assembled
-
-#test file
-python chewbacca.py assemble -p pear -f ~/ARMS/testARMS/testData/20K_forward.fq -r ~/ARMS/testARMS/testData/20K_reverse.fq -n BALI -o 1_assembled
-
-# raname the sequence as 1, 2, 3 ... rather the long Illumina names
-python ~/ARMS/bin/rename_sequences.py 1_assembled/BALI.assembled.fastq  1_assembled/BALI.assembled_renamed.fastq fastq
-
-#TODO add option to use unassembled reads (Which one to use -- forward or rever?)
-
-
+python chewbacca.py assemble -p pear -n BALI -f /home/greg/ARMS/testARMS/testData/20K_forward.fq  \
+    -r /home/greg/ARMS/testARMS/testData/20K_reverse.fq  -o 1_assembled -t 1 -m 550
 
 #=================================================================================================
 # Step 2: demux the file into independent samples
@@ -26,17 +18,17 @@ python ~/ARMS/bin/rename_sequences.py 1_assembled/BALI.assembled.fastq  1_assemb
 #=================================================================================================
 #cd ../
 #mkdir 2_split && cd 2_split
+
 # splits the assembled file based on the samples defined in the barcodes file.
 # see testData/barcodes.txt for an example
 # Note: this creates an unmatches file... those are the sequences that do not match any barcode.
 # In what follows, I ignore the unmatched sequences
-
 #cat ../1_assembled/BALI.assembled_renamed.fastq | fastx_barcode_splitter.pl \
 #    --bcfile ../testData/barcodes.txt --prefix out_ \
 #    	     --suffix .fastq --bol --mismatches 1
 
-python chewbacca.py demux_samples -i 1_assembled -b /home/greg/ARMS/testARMS/testData/barcodes.txt  -o 2_split
- python chewbacca.py rename -i 2_split -o 2_renamed -f fastq
+python chewbacca.py demux_samples -i 1_assembled -b ~/ARMS/testARMS/testData/barcodes.txt -o 2_split
+python chewbacca.py rename -i 2_split -o 3_renamed -f fastq
 
 #=================================================================================================
 # Step 3: Trim the (a)dapter and the (b)arcode sequences from thedata.
@@ -51,11 +43,12 @@ python chewbacca.py demux_samples -i 1_assembled -b /home/greg/ARMS/testARMS/tes
 #     -ae LEFT -a ../testData/adapters.fasta
 
 # then remove the adapter from the right side
-#ls ../2_split/*.fastq | grep -v unmatched | parallel flexbar \
+##ls ../2_split/*.fastq | grep -v unmatched | parallel flexbar \
 #     -r {/.}_temp_out.fastq -t {/.}_debarcoded \
 #     -ae RIGHT -a ../testData/adapters_RC.fa
 
-python chewbacca.py trim_adapters  -p flexbar -i 2_renamed -o 3_trim_ab -b ~/ARMS/testARMS/testData/adapters.fasta -a ~/ARMS/testARMS/testData/adapters_RC.fa
+python chewbacca.py trim_adapters  -p flexbar -i 3_renamed -o 4_trim_ab -b ~/ARMS/testARMS/testData/adapters.fasta -a ~/ARMS/testARMS/testData/adapters_RC.fa
+
 #=================================================================================================
 # Step 4: clean the low quality of the reads using a sliding window
 # Params for this step need to be explored more
@@ -64,10 +57,11 @@ python chewbacca.py trim_adapters  -p flexbar -i 2_renamed -o 3_trim_ab -b ~/ARM
 #=================================================================================================
 #cd ../
 #mkdir 4_cleaned && cd 4_cleaned
-#ls ../3_trim_ab/*debarcoded.fastq | parallel "java -jar ~/ARMS/programs/Trimmomatic-0.33/trimmomatic-0.33.jar \
-#   SE -phred33 {} {/.}_cleaned.fastq SLIDINGWINDOW:5:25 MINLEN:200"
 
-python chewbacca.py clean_seqs -i 3_trim_ab -o 4_cleaned
+#ls ../3_trim_ab/*debarcoded.fastq | parallel "java -jar ~/ARMS/programs/Trimmomatic-0.33/trimmomatic-0.33.jar \
+#   SE -phred33 {} {/.}_cleaned.fastq \
+#      SLIDINGWINDOW:5:25 MINLEN:200"
+python chewbacca.py clean_seqs -i 4_trim_ab -o 5_cleaned
 
 #=================================================================================================
 # Step 5: dereplicate the data set
@@ -76,6 +70,7 @@ python chewbacca.py clean_seqs -i 3_trim_ab -o 4_cleaned
 #=================================================================================================
 #cd ../
 #mkdir 5_dereplicate && cd 5_dereplicate
+
 # dereplication requires that we first convert the dataset to fasta
 #ls ../4_cleaned/out_*fastq  | parallel  seqret {} {/.}.fasta
 #ls *cleaned.fasta  | parallel  "~/ARMS/bin/usearch7.0.1090 -derep_fulllength {} -output {/.}_derep.fa -uc {/.}_uc.out"
@@ -86,11 +81,10 @@ python chewbacca.py clean_seqs -i 3_trim_ab -o 4_cleaned
 # rename the sequences to include the the number of identical reads. Ex. in the fasta file {sample_file}_derep_renamed.fa,
 # read 123_10 indicate that for sequence which id is 123, there 10 sequences that identical to it and
 # which were discarded.
-#ls *cleaned.fasta | parallel "python ~/ARMS/bin/renameSequences.py {/.}_derep.fa {/.}_uc_parsed.out {/.}_derep_renamed.fa"
+#ls *cleaned.fasta | parallel "python ~/ARMS/bin/renameWithCount.py {/.}_derep.fa {/.}_uc_parsed.out {/.}_derep_renamed.fa"
 python chewbacca.py dereplicate_fasta -i 5_cleaned/ -o 6_derep
 
-
-#/*
+#
 ##=================================================================================================
 ## Step 6: Align the reads against the reference to infer orientation
 ## this will be most likely change in the future since we don't need to align to
@@ -108,6 +102,8 @@ python chewbacca.py dereplicate_fasta -i 5_cleaned/ -o 6_derep
 #mv ../5_dereplicate/*align* .
 #mv ../5_dereplicate/*.flip.accnos .
 #
+python chewbacca.py align_seqs -i 6_derep -o 7_aligned -r ~/ARMS/data/BIOCODETEMPLATE
+
 ##=================================================================================================
 ## Step 7: Split the file to prepare to run MACSE
 ## NOTE: We split all the files into smaller chunks so that we can run them on
@@ -254,4 +250,3 @@ python chewbacca.py dereplicate_fasta -i 5_cleaned/ -o 6_derep
 ## .separator \t
 ## .import gi_taxid_nucl.dmp gi_taxid
 ## CREATE UNIQUE INDEX gi_idx_on_gi_taxid ON gi_taxid(gi);
-#*/

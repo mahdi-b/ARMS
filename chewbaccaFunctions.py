@@ -1,11 +1,12 @@
 import glob
 import re
+import rename_sequences
+import renameWithCount
 from Bio.Seq import Seq
 from classes.Helpers import *
 from classes.ProgramRunner import ProgramRunner
 from multiprocessing import Pool
 from prescreen import screen
-from rename_sequences import serialRename
 from translators.fastqToFasta import translateFastqToFasta
 from getSeedSequences import getSeedSequences
 from splitKperFasta import splitK
@@ -168,8 +169,8 @@ def splitOnBarcodes(args, pool=Pool(processes=1)):
         file_id_pairs = zip(files_to_split, file_id)
         printVerbose("Splitting based on barcodes")
         parallel(runProgramRunner, [ProgramRunner("barcode.splitter",
-                                                   [input, args.barcodes, "%s/splitOut_" %
-                                                    (args.outdir), "_%d.fastq" % id],
+                                                   [input, args.barcodes, "%s/" %
+                                                    (args.outdir), "_splitOut_%d.fastq" % id],
                                                    {"exists": [input]}) for input, id in file_id_pairs], pool)
 
         # wait for output files to be written
@@ -178,7 +179,7 @@ def splitOnBarcodes(args, pool=Pool(processes=1)):
         printVerbose("Demuxed sequences.")
 
         # gatehr output files and move them to their final destination
-        output_files = enumerateDir(".", "splitOut_*")
+        output_files = enumerateDir(".", "*_splitOut_")
         bulk_move_to_dir(output_files, args.outdir)
 
     except KeyboardInterrupt:
@@ -222,11 +223,10 @@ def trim_flexbar(args, pool=Pool(processes=1)):
     # "flexbar":  "flexbar -r \"%s\" -t \"%s\" -ae \"%s\" -a \"%s\"",
     try:
         makeDir(args.outdir)
-        input_file_name_format = "splitOut_*"
+        input_file_name_format = "*_splitOut_*"
         input_files = getInputs(args.input, input_file_name_format)
-
+        print("inputfiles:")
         print input_files
-        print getFileName(input_files[0])
         arg = [(input_file, "%s/temp_%s" % (args.outdir, getFileName(input_file)), "LEFT", args.barcodes )for input_file in input_files]
         print arg
 
@@ -241,7 +241,7 @@ def trim_flexbar(args, pool=Pool(processes=1)):
                            {"exists": [input_file]}) for input_file in input_files], pool)
 
         temp_files = getInputs(args.outdir, "temp_*")
-
+        print input_files
         # Trim the right
         parallel(runProgramRunner, [ProgramRunner("flexbar",
                            [input_file, "%s/%s_debarcoded" % (args.outdir,getFileName(input_file)[5:]), "RIGHT", args.adapters],
@@ -273,7 +273,7 @@ def trim_mothur(args, pool=Pool(processes=1)):
     """
     try:
         printVerbose("Trimming barcodes and adapters with mothur")
-        inputs = getInputs(args.input, "splitOut_*", "*unmatched.*")
+        inputs = getInputs(args.input, "*_splitOut_", "*unmatched.*")
         parallel(runProgramRunner, [ProgramRunner("trim.seqs", [input, args.oligos],
                                                    {"exists": [args.oligos]})
                                                     for input in inputs], pool)
@@ -334,7 +334,7 @@ def dereplicate(args, pool=Pool(processes=1)):
                 translateFastqToFasta(input, fastaName)
                 output_fas.append(fastaName)
 
-        # Zip those files
+        # zip those names to parallel array s
         fileArgs = zip(input_fqs, output_fas)
 
         # Translate fastq files in parallel
@@ -359,13 +359,13 @@ def dereplicate(args, pool=Pool(processes=1)):
         # Rename the sequences to include the the number of identical reads.
         #  Ex. in the fasta file {sample_file}_derep_renamed.fa, read 123_10 indicate that for sequence
         # which id is 123, there 10 sequences that identical to it and which were discarded.
-        #ls * cleaned.fasta | parallel "python ~/ARMS/bin/renameSequences.py {/.}_derep.fa {/.}_uc_parsed.out {/.}_derep_renamed.fa"
+        #ls * cleaned.fasta | parallel "python ~/ARMS/bin/renameWithCount.py {/.}_derep.fa {/.}_uc_parsed.out {/.}_derep_renamed.fa"
         input_fa = getInputs(args.input, "*_cleaned.fa")
         input_uc_parsed = getInputs(args.outdir, "*_uc_parsed.out")
         inputs = zip(input_fa, input_uc_parsed)
-        # renameSequences(input_fasta, count_file, outfile):
+        # renameSequencesWithCount(input_fasta, count_file, outfile):
         parallel(runPython,
-                 [(renameSequences,
+                 [(renameWithCount.renameSequencesWithCount,
                    fasta_file, count_file, "%s/%s_derep_renamed.fa" % (args.outdir, getFileName(fasta_file)))
                   for fasta_file, count_file in inputs], pool)
 
@@ -389,7 +389,7 @@ def renameSequences(args, pool=Pool(processes=1)):
 
         # Run renamer in parallel
         parallel(runPython,
-                 [(serialRename,
+                 [(rename_sequences.serialRename,
                    input, "%s/%s_renamed%s" % (args.outdir, getFileName(input), os.path.splitext(input)[1]),
                    args.filetype)
                   for input in inputs],

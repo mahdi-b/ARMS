@@ -36,7 +36,8 @@ def serialRename(input_file, output_file, file_type, barcode_file=""):
         sample_ref = samples.keys().sort(key=str.lower()).reverse()
     else:
         sample_ref = [getFileName(input_file)]
-"""
+    {sample_file}_derep_renamed.fa, read 123_10 indicate that for sequence
+        # which id is 123, there 10 sequences t"""
     print "Running rename %s .... %s" % (input_file, output_file)
     seqPrefix = strip_ixes(input_file)
     i = 0

@@ -8,9 +8,9 @@ def exists(files):
     :return: True if all files exist, raises an Exception if not.
     """
     for file_ in files:
-        print(str(file_))
-        #if not os.path.exists(file):
-        #    raise Exception("File %s does not exist, executions halted" % file_)
+        # print(str(file_))
+        if not os.path.exists(file_):
+            raise Exception("File %s does not exist, executions halted" % file_)
     return True
 
 
