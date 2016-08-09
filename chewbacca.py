@@ -79,32 +79,14 @@ def main(argv):
     parser.add_argument('--dryRun', default=False)
     subparsers = parser.add_subparsers(dest='action', help='Available commands')
 
-    # ===================================================
-    # ==  Rename reads serially with rename_sequences  ==
-    # ===================================================
-    # renameSequences(input, output)
-    parser_rename = subparsers.add_parser('rename')
-    parser_rename.add_argument('-i', '--input', required=True, help="Input file or directory")
-    parser_rename.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
-    parser_rename.add_argument('-f', '--filetype', required=True, help="The filetype of the input files")
-    parser_rename.set_defaults(func=renameSequences)
-
-    """
-    # =========================================
-    # ==  Rename reads serially with Fastx  ==
-    # =========================================
-    # "fastx_renamer":    programPaths["FASTX"] + "fastx_renamer -n COUNT -i \"%s\" -o \"%s\" -Q 33",
-
-    parser_serialize = subparsers.add_parser('rename')
-    parser_serialize.add_argument('-f', '--input_f', required=True, help="Forward Fastq Reads")
-    parser_serialize.add_argument('-r', '--input_r', required=True, help="Reverse Fastq Reads")
-    parser_serialize.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
-    parser_serialize.set_defaults(func=serialRename)
-    """
 
     # ===========================================
     # ==  Assemble Reads using mothur or pear  ==
     # ===========================================
+    # "pear": programPaths["PEAR"] + " -f \"%s\" -r \"%s\" -o \"%s\" -j %d ",
+    #
+    #"make.contigs": "mothur \'#make.contigs(ffastq=%s, rfastq=%s, bdiffs=1, pdiffs=2, oligos=%s, \
+    #                                 processors=%s)\'",
     parser_assemble = subparsers.add_parser('assemble')
     parser_assemble.add_argument('-p', '--program', required=True, help="The name of the program to use ")
     parser_assemble.add_argument('-f', '--input_f', required=True, help="Forward Fastq Reads (file or folder)")
@@ -125,20 +107,29 @@ def main(argv):
     pear_assembler.add_argument('-t', '--threads',   type=int, help="The number of threads to use (default is 1")
 
 
+    # ====================================
+    # ==  Split by barcode with Fastxx  ==
+    # ====================================
+    # "barcode.splitter": "cat \"%s\" | " + programPaths["FASTX"] + "fastx_barcode_splitter.pl  --bcfile \"%s\" \
+    #                                    -prefix \"%s\" --suffix .fastq --bol --mismatches 1",
+    parser_demux = subparsers.add_parser('demux_samples')
+    parser_demux.add_argument('-i', '--input', required=True, help="Input fasta/fastq")
+    parser_demux.add_argument('-b', '--barcodes', required=True,
+                              help="Tab delimted files of barcodes and their samples")
+    parser_demux.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
+    parser_demux.set_defaults(func=splitOnBarcodes)
 
 
-    """
-    # Assembles forward and reverse fastq reads
-    # "make.contigs": "mothur \'#make.contigs(ffastq=%s, rfastq=%s, bdiffs=1, pdiffs=2, oligos=%s, processors=%s)\'"
-    parser_makeContigs = subparsers.add_parser('makeContigs')
-    parser_makeContigs.add_argument('-f', '--forward', required=True, help="Forward read fastq file")
-    parser_makeContigs.add_argument('-r', '--reverse', required=False, help="Reverse read fastq file")
-    parser_makeContigs.add_argument('-g', '--oligos', required=True,
-                                    help="Oligos file with barcode and primer sequences")
-    parser_makeContigs.add_argument('-bd', '--bdiffs', required=True, help="# of allowed barcode mismatches")
-    parser_makeContigs.add_argument('-pd', '--pdiffs', required=True, help="# of allowed primer mismatches")
-    parser_makeContigs.add_argument('-p', '--procs', required=True, help="Number of processors to use")
-    """
+    # ===================================================
+    # ==  Rename reads serially with renameSequences  ==
+    # ===================================================
+    # renameSequences(input, output)
+    parser_rename = subparsers.add_parser('rename')
+    parser_rename.add_argument('-i', '--input', required=True, help="Input file or directory")
+    parser_rename.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
+    parser_rename.add_argument('-f', '--filetype', required=True, help="The filetype of the input files")
+    parser_rename.set_defaults(func=renameSequences)
+
 
     # ===========================================================
     # ==  Trims barcodes and adapters using mothur or flexbar  ==
@@ -160,7 +151,6 @@ def main(argv):
     flexbar_trim.add_argument('-a', '--adapters', help="Adapters file")
 
 
-
     # ====================================
     # ==  Clean Reads with Trimmomatic  ==
     # ====================================
@@ -179,19 +169,6 @@ def main(argv):
     parser_trimmomatic.set_defaults(func=trimmomatic)
 
 
-    # ====================================
-    # ==  Split by barcode with Fastxx  ==
-    # ====================================
-    # "barcode.splitter": "cat \"%s\" | " + programPaths["FASTX"] + "fastx_barcode_splitter.pl  --bcfile \"%s\" \
-    #                                    -prefix \"%s\" --suffix .fastq --bol --mismatches 1",
-    parser_demux = subparsers.add_parser('demux_samples')
-    parser_demux.add_argument('-i', '--input', required=True, help="Input fasta/fastq")
-    parser_demux.add_argument('-b', '--barcodes', required=True,
-                              help="Tab delimted files of barcodes and their samples")
-    parser_demux.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved")
-    parser_demux.set_defaults(func=splitOnBarcodes)
-
-
     # ==========================================
     # ==  Dereplicate sequences with usearch  ==
     # ==========================================
@@ -202,17 +179,20 @@ def main(argv):
     parser_derep.set_defaults(func=dereplicate)
 
 
-    # Split file by samples
+    # ============================================
+    # ==  Partition fastas with splitKperFasta  ==
+    # ============================================
+    # splitK(inputFasta, prefix, nbSeqsPerFile, filetype):
     parser_split = subparsers.add_parser('partition')
-    parser_split.add_argument('-n', '--name', required=True, help="Run Id")
-    parser_split.add_argument('-i', '--inputFasta', required=True, help="Input fasta file to split")
-    parser_split.add_argument('-g', '--groups', required=True,
-                              help=" Groups file in same format as that generated by mothur")
+    parser_split.add_argument('-i', '--input', required=True, help="Input fasta file to split")
     parser_split.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved")
-    parser_split.set_defaults(func=splitFile)
+    parser_split.add_argument('-c', '--chunksize', type=int, required=True, help="Chunksize.")
+    parser_split.add_argument('-f', '--filetype', required=True, help="Filetype of the files to be partitioned")
+    parser_split.set_defaults(func=partition)
 
-
-    # Align Reads wiht Mothur
+    # ===============================
+    # ==  Align Reads with Mothur  ==
+    # ===============================
     #"align.seqs": "mothur \'#align.seqs(candidate=%s, template=%s, flip=t)\'",
     parser_mothuralign = subparsers.add_parser('align_seqs')
     parser_mothuralign.add_argument('-i', '--input', required=True, help="Fasta file containing the reads to align")
@@ -221,18 +201,17 @@ def main(argv):
     parser_mothuralign.set_defaults(func=align_mothur)
     
 
-    # Align Reads with MACSE
+    # ==============================
+    # ==  Align Reads with MACSE  ==
+    # ==============================
     # "macse_align":      "java -jar " + programPaths["MACSE"] + " -prog enrichAlignment  -seq \"%s\" -align \
     #                                \"%s\" -seq_lr \"%s\" -maxFS_inSeq 0  -maxSTOP_inSeq 0  -maxINS_inSeq 0 \
     #                                -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 -out_NT \"%s\"_NT \
     #                                -out_AA \"%s\"_AA -seqToAdd_logFile \"%s\"_log.csv",
     parser_align = subparsers.add_parser('macseAlign')
-    parser_align.add_argument('-s', '--samplesDir', required=True,
-                              help="Directory containing the samples file required for clustering")
-    parser_align.add_argument('-p', '--program', required=True,
-                              help="Program name for cleaning. Available options are: ... ")
-    parser_align.add_argument('-d', '--db', required=True, help="Database against which to align and filter reads")
+    parser_align.add_argument('-i', '--input', required=True, help="Input fasta")
     parser_align.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
+    parser_align.add_argument('-d', '--db', required=True, help="Database against which to align and filter reads")
     parser_align.set_defaults(func=macseAlignSeqs)
 
 
@@ -241,8 +220,7 @@ def main(argv):
     # "macse_format":     "java -jar " + programPaths["MACSE"] + "  -prog exportAlignment -align \"%s\" \
     #                                -charForRemainingFS - -gc_def 5 -out_AA \"%s\" -out_NT \"%s\" -statFile \"%s\"",
     parser_macseClean = subparsers.add_parser('macseClean')
-    parser_macseClean.add_argument('-s', '--samplesDir', required=True,
-                                            help="Directory containing the samples file required for clustering")
+    parser_macseClean.add_argument('-s', '--input', required=True, help="Input fasta")
     parser_macseClean.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
     parser_macseClean.set_defaults(func=macseCleanAlignments)
 

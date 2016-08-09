@@ -121,6 +121,7 @@ python chewbacca.py align_seqs -i 6_derep -o 7_aligned -r ~/ARMS/data/BIOCODETEM
 ## note, the last parameter is the format
 #ls ../6_aligned/*renamed.align | parallel "python ~/ARMS/bin/splitKperFasta.py {} {/.} 1000 fasta"
 #
+python chewbacca.py partition -i 7_aligned -o 8_partitioned -c 200 -f fasta
 #
 ##=================================================================================================
 ## Step 8: run MACSE on all the chunks we created

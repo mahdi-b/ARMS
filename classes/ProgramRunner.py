@@ -26,13 +26,12 @@ class ProgramRunner(object):
     commandTemplates = {}
     dry_run = False
     programPaths = {
-        "MACSE": "/ARMS/programs/MACSE/macse_v1.01b.jar",
-        "FASTX": "~/programs/fastx/bin/",
-        "PEAR": "",
-        "USEARCH": "~/ARMS/programs/usearch7.0.1090"
+        "FASTX": os.path.expanduser("../../../programs/fastx/bin/"),
+        "PEAR": os.path.expanduser(""),
+        "USEARCH": os.path.expanduser("../../../programs/usearch7.0.1090")
     }
 
-    def __init__(self, program, params, conditions={}, stdin="", stdout="", stderr=""):
+    def __init__(self, program, params, conditions=None, stdin="", stdout="", stderr=""):
         """Initalizes a ProgramRunner object.  Reads chewbacca.cfg and loads configuration settings, builds the command
         string, and configures stdIO pipes.
 
@@ -46,7 +45,10 @@ class ProgramRunner(object):
         :param stdin:       A handle to the stdin pipe for the command.  Defaults to os.devnull.
         :param stdout:      A handle to the stdout pipe for the command.  Defaults to os.devnull.
         :param stderr:      A hande to the stderr pipe for the command.  Defaults to os.devnull.
+        :return             A list of output files to be moved to args.outdir.
         """
+        if conditions is None:
+            conditions = {}
         if not ProgramRunner.configsLoaded:
             ProgramRunner.loadConfigs(self)
             ProgramRunner.initalizeCommands(self)
@@ -95,12 +97,12 @@ class ProgramRunner(object):
         """
         # expand the ~ in the command line
         command = os.path.expanduser(command)
-        commandList = []
+        command_list = []
         if "mothur" in command:
-            commandList = ["mothur", re.sub(r'mothur\s+', "", command)]
+            command_list = ["mothur", re.sub(r'mothur\s+', "", command)]
         else:
-            commandList = command.split()
-        return commandList
+            command_list = command.split()
+        return command_list
 
     def run(self):
         """Validates conditions (or prints them for a dry run), sanitizes parameters, and then executes the command.
@@ -114,7 +116,7 @@ class ProgramRunner(object):
 
             # call and check_call are blocking, Popen is non-blocking
             print "running " + self.command
-            proc = subprocess.check_call(self.command, shell=True)
+            subprocess.check_call(self.command, shell=True)
             # commandList = self.splitCommand(self.command)
             # print commandList
             # print " ".join(commandList)
@@ -139,18 +141,18 @@ class ProgramRunner(object):
             default values of any found entries.  Currently loads the [Program  Paths] section, updating the
             programPaths dictionary.
         """
-        configFilePath = ProgramRunner.DEFAULT_CONFIG_FILEPATH
-        configSection = "Program Paths"
-        if os.path.isfile(configFilePath):
-            logging.debug("Loaded Chewbacca config files from %s" % configFilePath)
+        config_file_path = ProgramRunner.DEFAULT_CONFIG_FILEPATH
+        config_section = "Program Paths"
+        if os.path.isfile(config_file_path):
+            logging.debug("Loaded Chewbacca config files from %s" % config_file_path)
             config = ConfigParser.RawConfigParser()
-            config.read(configFilePath)
+            config.read(config_file_path)
 
             for program in ProgramRunner.programPaths.keys():
-                if config.has_option(configSection, program):
-                    configSetting = config.get(configSection, program)
-                    ProgramRunner.programPaths[program] = configSetting
-                    #logging.debug("Read %s filepath as %s" % (program, configSetting))
+                if config.has_option(config_section, program):
+                    config_setting = config.get(config_section, program)
+                    ProgramRunner.programPaths[program] = config_setting
+                    # logging.debug("Read %s filepath as %s" % (program, config_setting))
 
         else:
             logging.debug("Chewbacca config file not found.  Using defaults.")
@@ -162,22 +164,23 @@ class ProgramRunner(object):
         Provides the static definition of the commandTemplates dictionary.
         """
         # TODO: Mothur doesn't like quoted filenames.  Gross.
+        # TODO: Java jars can't be resolved if string concatenation is used.
         if not ProgramRunner.configsLoaded:
-            programPaths = ProgramRunner.programPaths
+            program_paths = ProgramRunner.programPaths
             ProgramRunner.commandTemplates = {
-                "barcode.splitter": "cat \"%s\" | " + programPaths["FASTX"] + 'fastx_barcode_splitter.pl  --bcfile "%s" \
+                "barcode.splitter": "cat \"%s\" | " + program_paths["FASTX"] + 'fastx_barcode_splitter.pl  --bcfile "%s" \
                                     -prefix "%s" --suffix %s --bol --mismatches 1',
-                "fastx_renamer": programPaths["FASTX"] + "fastx_renamer -n COUNT -i \"%s\" -o \"%s\" -Q 33",
-                "pear": programPaths["PEAR"] + " -f \"%s\" -r \"%s\" -o \"%s\" -j %d ",
+                "fastx_renamer": program_paths["FASTX"] + "fastx_renamer -n COUNT -i \"%s\" -o \"%s\" -Q 33",
+                "pear": program_paths["PEAR"] + " -f \"%s\" -r \"%s\" -o \"%s\" -v 20 -j %d ",
                 "make.contigs": "mothur \'#make.contigs(ffastq=%s, rfastq=%s, bdiffs=1, pdiffs=2, oligos=%s, \
                                     processors=%s)\'",
                 "trim.seqs": "mothur \'#trim.seqs(fasta=%s, oligos=%s, maxambig=1, maxhomop=8, \
                                     minlength=300, maxlength=550, bdiffs=1, pdiffs=7)\'",
-                "macse_align": "java -jar " + programPaths["MACSE"] + " -prog enrichAlignment  -seq \"%s\" -align \
+                "macse_align": "java -jar ./../../programs/MACSE/macse_v1.01b.jar -prog enrichAlignment  -seq \"%s\" -align \
                                             \"%s\" -seq_lr \"%s\" -maxFS_inSeq 0  -maxSTOP_inSeq 0  -maxINS_inSeq 0 \
                                             -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 -out_NT \"%s\"_NT \
                                             -out_AA \"%s\"_AA -seqToAdd_logFile \"%s\"_log.csv",
-                "macse_format": "java -jar " + programPaths["MACSE"] + "  -prog exportAlignment -align \"%s\" \
+                "macse_format": "java -jar ./../../programs/MACSE/macse_v1.01b.jar  -prog exportAlignment -align \"%s\" \
                                             -charForRemainingFS - -gc_def 5 -out_AA \"%s\" -out_NT \"%s\" -statFile \
                                             \"%s\"",
                 "trimmomatic": "java -jar ~/ARMS/programs/Trimmomatic-0.33/trimmomatic-0.33.jar SE -phred33 \"%s\" \"%s\" \
@@ -188,7 +191,7 @@ class ProgramRunner(object):
                 "remove.seqs": "mothur \'#remove.seqs(accnos=%s, %s)\'",
                 "screen.seqs": "mothur \'#screen.seqs(fasta=%s, %s)\'",
                 "flexbar":  "flexbar -r \"%s\" -t \"%s\" -ae \"%s\" -a \"%s\"",
-                "usearch": programPaths["USEARCH"] + " -derep_fulllength \"%s\" -output \"%s\" -uc \"%s\"",
+                "usearch": program_paths["USEARCH"] + " -derep_fulllength \"%s\" -output \"%s\" -uc \"%s\"",
                 "align.seqs": "mothur \'#align.seqs(candidate=%s, template=%s, flip=t)\'",
 
                 "unique.seqs": "mothur \'#unique.seqs(fasta=%s)\'",

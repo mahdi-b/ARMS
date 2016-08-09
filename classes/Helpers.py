@@ -116,6 +116,7 @@ def strip_ixes(path):
     file_name = getFileName(path)
     print file_name
     name = re.sub(r'_splitOut_\d+', '', file_name)
+    name = re.sub(r'_part_\d+', '', name)
     ixes=[ "_renamed", "_debarcoded", ".assembled", ".discarded", ".unassembled", "_cleaned", "_derep", "_uc"]
     for ix in ixes:
         name = name.replace(ix, "")
@@ -135,7 +136,7 @@ def getInputs(path, pattern="*", butNot=""):
     elif os.path.isdir(path):
         patternMatch = enumerateDir(path, pattern)
         if butNot:
-            negativeMatch = enumerate(path,butNot)
+            negativeMatch = enumerateDir(path,butNot)
             rslt = list(set(patternMatch) - set(negativeMatch))
         else:
             rslt = patternMatch
