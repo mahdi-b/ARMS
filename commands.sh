@@ -9,8 +9,8 @@
 #mkdir 1_assembled && cd 1_assembled
 #pear -f ../testData/20K_R1.fq -r ../testData/20K_R2.fq -o BALI -j 10
 
-python chewbacca.py assemble -p pear -n BALI -f /home/greg/ARMS/testARMS/testData/20K_forward.fq  \
-    -r /home/greg/ARMS/testARMS/testData/20K_reverse.fq  -o 1_assembled -t 1 -m 550
+python chewbacca.py assemble -p pear -n BALI -f ~/ARMS/testARMS/testData/20K_forward.fq  \
+    -r ~/ARMS/testARMS/testData/20K_reverse.fq  -o 1_assembled -t 1 -m 550
 
 #=================================================================================================
 # Step 2: demux the file into independent samples

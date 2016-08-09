@@ -328,7 +328,7 @@ def main(argv):
     group1.add_argument('-x', '--arg1', help="arg1 text")
     group2 = testParser.add_argument_group("group2", "G1help")
     group2.add_argument('-y', '--arg2', help="arg2 text")
-    testParser.set_defaults(func=doNothing)
+    testParser.set_defaults(func=test)
 
     global args, pool
     args, unknown = parser.parse_known_args()

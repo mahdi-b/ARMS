@@ -26,9 +26,11 @@ class ProgramRunner(object):
     commandTemplates = {}
     dry_run = False
     programPaths = {
-        "FASTX": os.path.expanduser("../../../programs/fastx/bin/"),
-        "PEAR": os.path.expanduser(""),
-        "USEARCH": os.path.expanduser("../../../programs/usearch7.0.1090")
+        "FASTX":   os.path.expanduser("~/ARMS/programs/fastx/bin/"),
+        "PEAR":    os.path.expanduser("~/ARMS/programs/pear/bin/pear-0.9.5-bin-64"),
+        "USEARCH": os.path.expanduser("~/ARMS/programs/usearch/usearch7.0.1090"),
+        "MOTHUR" : os.path.expanduser("~/ARMS/programs/mothur/mothur"),
+        "FLEXBAR": os.path.expanduser("~/ARMS/programs/flexbar/flexbar")
     }
 
     def __init__(self, program, params, conditions=None, stdin="", stdout="", stderr=""):
@@ -53,7 +55,7 @@ class ProgramRunner(object):
             ProgramRunner.loadConfigs(self)
             ProgramRunner.initalizeCommands(self)
             ProgramRunner.configsLoaded = True
-        logging.debug(params)
+        logging.error(params)
         self.program = program
         self.command = self.commandTemplates[program] % tuple(params)
         self.conditions = conditions
@@ -90,19 +92,6 @@ class ProgramRunner(object):
             print "\t\tvalidating that %s, %s" % (str(condition[1]), condition[0])
             # TODO: add code
 
-    def splitCommand(self, command):
-        """Splits a string on whitespace.  If it is a mothur command, split only on the first space.
-        :param command: A fully paramaterized command string
-        :return: A command string split on white space (or only on the first white space if it is a mothur command.)
-        """
-        # expand the ~ in the command line
-        command = os.path.expanduser(command)
-        command_list = []
-        if "mothur" in command:
-            command_list = ["mothur", re.sub(r'mothur\s+', "", command)]
-        else:
-            command_list = command.split()
-        return command_list
 
     def run(self):
         """Validates conditions (or prints them for a dry run), sanitizes parameters, and then executes the command.
@@ -115,8 +104,8 @@ class ProgramRunner(object):
                 self.dryRun()
 
             # call and check_call are blocking, Popen is non-blocking
-            print "running " + self.command
-            subprocess.check_call(self.command, shell=True)
+            print( "running " + self.command)
+            subprocess.check_call(os.path.expanduser(self.command), shell=True)
             # commandList = self.splitCommand(self.command)
             # print commandList
             # print " ".join(commandList)
@@ -151,7 +140,7 @@ class ProgramRunner(object):
             for program in ProgramRunner.programPaths.keys():
                 if config.has_option(config_section, program):
                     config_setting = config.get(config_section, program)
-                    ProgramRunner.programPaths[program] = config_setting
+                    ProgramRunner.programPaths[program] = os.path.expanduser(config_setting)
                     # logging.debug("Read %s filepath as %s" % (program, config_setting))
 
         else:
@@ -172,9 +161,9 @@ class ProgramRunner(object):
                                     -prefix "%s" --suffix %s --bol --mismatches 1',
                 "fastx_renamer": program_paths["FASTX"] + "fastx_renamer -n COUNT -i \"%s\" -o \"%s\" -Q 33",
                 "pear": program_paths["PEAR"] + " -f \"%s\" -r \"%s\" -o \"%s\" -v 20 -j %d ",
-                "make.contigs": "mothur \'#make.contigs(ffastq=%s, rfastq=%s, bdiffs=1, pdiffs=2, oligos=%s, \
+                "make.contigs": program_paths["MOTHUR"] + " \'#make.contigs(ffastq=%s, rfastq=%s, bdiffs=1, pdiffs=2, oligos=%s, \
                                     processors=%s)\'",
-                "trim.seqs": "mothur \'#trim.seqs(fasta=%s, oligos=%s, maxambig=1, maxhomop=8, \
+                "trim.seqs": program_paths["MOTHUR"] + " \'#trim.seqs(fasta=%s, oligos=%s, maxambig=1, maxhomop=8, \
                                     minlength=300, maxlength=550, bdiffs=1, pdiffs=7)\'",
                 "macse_align": "java -jar ./../../programs/MACSE/macse_v1.01b.jar -prog enrichAlignment  -seq \"%s\" -align \
                                             \"%s\" -seq_lr \"%s\" -maxFS_inSeq 0  -maxSTOP_inSeq 0  -maxINS_inSeq 0 \
@@ -185,15 +174,15 @@ class ProgramRunner(object):
                                             \"%s\"",
                 "trimmomatic": "java -jar ~/ARMS/programs/Trimmomatic-0.33/trimmomatic-0.33.jar SE -phred33 \"%s\" \"%s\" \
                                             SLIDINGWINDOW:%d:%d MINLEN:%d",
-                "chmimera.uchime": "mothur \'#chimera.uchime(fasta=%s, %s)\'",
-                "make.fastq": "mothur \'#make.fastq(fasta=%s,qfile=%s)\'",
-                "make.fasta": "mothur \'#fastq.info(fastq=%s)\'",
-                "remove.seqs": "mothur \'#remove.seqs(accnos=%s, %s)\'",
-                "screen.seqs": "mothur \'#screen.seqs(fasta=%s, %s)\'",
-                "flexbar":  "flexbar -r \"%s\" -t \"%s\" -ae \"%s\" -a \"%s\"",
+                "chmimera.uchime": program_paths["MOTHUR"] + " \'#chimera.uchime(fasta=%s, %s)\'",
+                "make.fastq": program_paths["MOTHUR"] + " \'#make.fastq(fasta=%s,qfile=%s)\'",
+                "make.fasta": program_paths["MOTHUR"] + " \'#fastq.info(fastq=%s)\'",
+                "remove.seqs": program_paths["MOTHUR"] + " \'#remove.seqs(accnos=%s, %s)\'",
+                "screen.seqs": program_paths["MOTHUR"] + " \'#screen.seqs(fasta=%s, %s)\'",
+                "flexbar":  program_paths["FLEXBAR"] + " -r \"%s\" -t \"%s\" -ae \"%s\" -a \"%s\"",
                 "usearch": program_paths["USEARCH"] + " -derep_fulllength \"%s\" -output \"%s\" -uc \"%s\"",
-                "align.seqs": "mothur \'#align.seqs(candidate=%s, template=%s, flip=t)\'",
+                "align.seqs": program_paths["MOTHUR"] + " \'#align.seqs(candidate=%s, template=%s, flip=t)\'",
 
-                "unique.seqs": "mothur \'#unique.seqs(fasta=%s)\'",
+                "unique.seqs": program_paths["MOTHUR"] + " \'#unique.seqs(fasta=%s)\'",
                 "cluster-swarm": "",
             }

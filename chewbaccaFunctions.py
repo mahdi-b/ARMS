@@ -1,4 +1,5 @@
 from Bio.Seq import Seq
+import  subprocess
 from classes.Helpers import *
 from classes.ProgramRunner import ProgramRunner
 from translators.fastqToFasta import translateFastqToFasta
@@ -190,7 +191,9 @@ def trim(args, pool=Pool(processes=1)):
     """Trims the adapter and barcode from each sequence.
     """
     try:
-        supported_programs = dict(flexbar=trim_flexbar, mothur=trim_mothur)
+        supported_programs = {
+            "flexbar":trim_flexbar,
+            "mothur":trim_mothur}
         keys = supported_programs.keys()
         prog = args.program
         if args.program in keys:
@@ -208,7 +211,7 @@ def trim(args, pool=Pool(processes=1)):
             # Make the output directory
             makeDir(args.outdir)
             # Run and get a list of output files
-            # outputs = supported_programs[prog](args, pool)
+            outputs = supported_programs[prog](args, pool)
             # Relocate all output files
             # bulk_move_to_dir(outputs, args.outdir)
         else:
@@ -755,7 +758,7 @@ def fastxRename(args, pool=Pool(processes=1)):
 
 
 # Todo remove this
-def doNothing(args, pool=Pool(processes=1)):
-    if args.program == "1" and args.arg1 == None:
-        print "Error, option 1 requires arg1"
-    pass
+def test(args, pool=Pool(processes=1)):
+    path = ProgramRunner.programPaths[args.program]
+    print "PATH: " + path
+    subprocess.call(os.path.expanduser(path))
