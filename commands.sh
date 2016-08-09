@@ -136,7 +136,7 @@ python chewbacca.py partition -i 7_aligned -o 8_partitioned -c 200 -f fasta
 #python ~/ARMS/SRC/ARMS/chewbacca.py -t 20 clean -n BALI -s ../7_split_aligned \
 #       -p macse -o . --db ~/ARMS/data/BIOCODE_MACSE_VR.fasta
 #
-#
+python chewbacca.py macseAlign -i 8_partitioned -o 9_macseAligned -d ../../data/BIOCODETEMPLATE
 #
 #
 #
