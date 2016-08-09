@@ -10,7 +10,7 @@ input_file.
 
 e.g.
 # generates a_renamed.fasta, with sequence names as aID0, aID1, aID2 ...
-python rename_sequences.py a.b.c.fasta a_renamed.fasta fasta
+python renameSequences.py a.b.c.fasta a_renamed.fasta fasta
 
 rename("a.b.c.fasta, "a_renamed.fasta", "fasta")
 

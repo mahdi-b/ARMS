@@ -72,7 +72,7 @@ def runPython(params):
     """
     func = params[0]
     args = params[1:]
-    return func(*args)
+    func(*args)
 
 
 def parallel(function, data, pool=Pool(processes=1)):
@@ -85,6 +85,7 @@ def parallel(function, data, pool=Pool(processes=1)):
     :return:
     '''
     pool.map(function, data)
+    return True
 
 def makeDirOrdie(dirPath):
     """Creates a directory 'dirPath' or exits if the 'dirPath' directory already exists.  Prevents unnecessary execution.

@@ -18,8 +18,8 @@ DATEFMT = "%m/%d %H:%M:%S"
 """
 Supported operations:
     1. assemble
-        pear + rename_sequences.py
-        mothur make.contigs + rename_sequences.py
+        pear + renameSequences.py
+        mothur make.contigs + renameSequences.py
 
     2 demux
         fastx barcode splitter
@@ -222,7 +222,7 @@ def main(argv):
     parser_macseClean = subparsers.add_parser('macseClean')
     parser_macseClean.add_argument('-s', '--input', required=True, help="Input fasta")
     parser_macseClean.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
-    parser_macseClean.set_defaults(func=macseCleanAlignments)
+    parser_macseClean.set_defaults(func=macseAlignSeqs)
 
 
 

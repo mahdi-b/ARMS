@@ -1,13 +1,14 @@
-from Bio.Seq import Seq
 import  subprocess
+import time
+from Bio.Seq import Seq
+from multiprocessing import Pool
 from classes.Helpers import *
 from classes.ProgramRunner import ProgramRunner
 from translators.fastqToFasta import translateFastqToFasta
 from getSeedSequences import getSeedSequences
-from rename_sequences import serialRename
-from renameWithCount import renameSequencesWithCount
-from splitKperFasta import splitK
-from multiprocessing import Pool
+from renamers.renameSequences import serialRename
+from renamers.renameWithCount import renameSequencesWithCount
+from utils.splitKperFasta import splitK
 from prescreen import screen
 
 
@@ -68,29 +69,27 @@ def assemble_pear(args, pool=Pool(processes=1)):
     # Making the contigs using Pear
     # "~/programs/pear-0.9.4-bin-64/pear-0.9.4-64 -f %s -r %s -o %s -j %s -m %d"
     try:
+        name_error_text = "Forwards reads should include the filename suffix \"_forward.fq\" "\
+                    + "or \"R1.fq\".  Reverse reads should include the filename suffix \"_reverse\" or \"R2.fq\"."
         printVerbose("\tAssembling reads with pear")
         threads = 1
         ids = []
         forwards_reads = getInputs(args.input_f, "*_forward.f*")
+        forwards_reads += getInputs(args.input_f, "*_R1.f*")
         reverse_reads = getInputs(args.input_r, "*_reverse.f*")
+        reverse_reads += getInputs(args.input_r, "*_R2.f*")
 
         if len(forwards_reads) != len(reverse_reads):
             print "Error: Unequal number of forwards/reverse reads."
             exit()
 
         if len(forwards_reads) == 0:
-            print "Error: No read files found"
+            print "Error: No read files found."
+            print name_error_text
             exit()
 
-        # read the file names from the front of the sequence prefix
-        regex_matches = [re.search(r'(.*)_forward\..*', filename.split("/")[-1]) for filename in forwards_reads]
-        for match in regex_matches:
-            if match is not None:
-                print(match)
-                ids.append(match.groups(0)[0])
-            else:
-                print "Error: Read files must be named <name>_forward.<filetype> or <name>_reverse.<filetype>"
-                exit()
+        for file_ in forwards_reads:
+            ids += getFileName(file_)
 
         inputs = zip(forwards_reads, reverse_reads, ids)
 
@@ -101,24 +100,9 @@ def assemble_pear(args, pool=Pool(processes=1)):
                                                            "%s/%s.%s" % (args.outdir, args.name, id_), threads],
                                                   {"exists": [forwards, reverse]})
                                     for forwards, reverse, id_ in inputs], pool)
-        '''
-        # wait for the programs to finish writing output
-        pool.close()
-        pool.join()
-
-        # collect output files
-
-        out_files = []
-        out_file_patterns = ["assembled", "discarded", "unassembled.forward", "unassembled.reverse"]
-        for forwards, reverse, id in inputs:
-            for file_pattern in out_file_patterns:
-                out_files.append(glob.glob("%s.%s.%s.%s" % (args.name, id, file_pattern, '*'))[0])
-        #return out_files
-        # printVerbose("\t%s sequences assembled, %s contigs discarded, %s sequences discarded" % (-1, -1, -1))
-        '''
     except KeyboardInterrupt:
         pool.terminate()
-
+        pool.join()
 
 def assemble_mothur(args, pool=Pool(processes=1)):
     """Finds chimeric sequences from a fasta file and writes them to an accons file.
@@ -488,57 +472,54 @@ def macseAlignSeqs(args, pool=Pool(processes=1)):
                     outdir              Directory where outputs will be saved
      :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
     """
-    # "macse_align":      "java -jar " + programPaths["MACSE"] + " -prog enrichAlignment  -seq \"%s\" -align \
-    #                                    \"%s\" -seq_lr \"%s\" -maxFS_inSeq 0  -maxSTOP_inSeq 0  -maxINS_inSeq 0 \
-    #                                    -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 -out_NT \"%s\"_NT \
-    #                                    -out_AA \"%s\"_AA -seqToAdd_logFile \"%s\"_log.csv",
-    makeDir(args.outdir)
     try:
-        printVerbose("\t %s Aligning reads using MACSE")
+        pool_size = pool._processes
+        makeDir(args.outdir)
         inputs = getInputs(args.input)
-        parallel(runProgramRunner, [ProgramRunner("macse_align",
-                                                  [args.db, args.db, input] +
-                                                  ["%s/%s" % (args.outdir, getFileName(input))] * 3
-                                                  , {"exists": [input, args.db]}) for input in inputs], pool)
-
-    except KeyboardInterrupt:
-        pool.terminate()
-
-
-def macseCleanAlignments(args, pool=Pool(processes=1)):
-    """Removes non-nucleotide characters in MACSE aligned sequences for all fasta files in the samples directory
-        (the samplesDir argument).
-    :param args: An argparse object with the following parameters:
-                    samplesDir          Directory containig the samples to be cleaned
-                    outdir              Directory where outputs will be saved
-    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
-    """
-    # "macse_format":     "java -jar " + programPaths["MACSE"] + "  -prog exportAlignment -align \"%s\" \
-    #
-    #                                  -charForRemainingFS - -gc_def 5 -out_AA \"%s\" -out_NT \"%s\" -statFile \"%s\""
-    try:
+        printVerbose("\t %s Aligning reads using MACSE")
+        #Aligns sequences by iteratively adding them to a known good alignment.
+        #
+        # "macse_align":      "java -jar " + programPaths["MACSE"] + " -prog enrichAlignment  -seq \"%s\" -align \
+        #                                    \"%s\" -seq_lr \"%s\" -maxFS_inSeq 0  -maxSTOP_inSeq 0  -maxINS_inSeq 0 \
+        #                                    -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 -out_NT \"%s\"_NT \
+        #                                    -out_AA \"%s\"_AA -seqToAdd_logFile \"%s\"_log.csv",
+        done = False
+        rslt = parallel(runProgramRunner, [ProgramRunner("macse_align",
+                                                  [args.db, args.db, input_] +
+                                                  ["%s/%s" % (args.outdir, getFileName(input_))] * 3
+                                                  , {"exists": [input_, args.db]}) for input_ in inputs], pool)
+        print("Done writing")
+        while not done:
+            time.sleep(1000)
+        done = False
         printVerbose("\t %s Processing MACSE alignments")
+        # Removes non-nucleotide characters in MACSE aligned sequences for all fasta files in the samples directory
+        #
+        #    (the samplesDir argument).
+        # "macse_format":     "java -jar " + programPaths["MACSE"] + "  -prog exportAlignment -align \"%s\" \
+        #       -charForRemainingFS - -gc_def 5 -out_AA \"%s\" -out_NT \"%s\" -statFile \"%s\""
         parallel(runProgramRunner, [ProgramRunner("macse_format",
-                                                  [os.path.join(args.outdir, sample + "_NT"),
-                                                   os.path.join(args.outdir, sample + "_AA_macse.fasta"),
-                                                   os.path.join(args.outdir, sample + "_NT_macse.fasta"),
-                                                   os.path.join(args.outdir, sample + "_macse.csv")],
-                                                  {"exists": []}) for sample in os.listdir(args.input)], pool)
+                                                  ["%s/%s_NT" % (args.outdir, getFileName(input)),
+                                                   "%s/%s_AA_macse.fasta" % (args.outdir, getFileName(input)),
+                                                   "%s/%s_NT_macse.fasta" % (args.outdir, getFileName(input)),
+                                                   "%s/%s_macse.csv" % (args.outdir, getFileName(input))],
+                                                  {"exists": []}) for input_ in os.listdir(args.inputs)], pool)
+        while not done:
+            time.sleep(1000)
 
+        pool = Pool(pool_size)
         printVerbose("\tCleaning MACSE alignments")
-        # TODO Ask Mahdi what to do with this.  Is this separate step?
         # Remove the reference sequences from the MACSE files and remove the non nucleotide characters from the sequences.
-        # we need the datbase seq. names to remove them from the results files
-
+        #       we need the datbase seq. names to remove them from the results files
         # TODO:IMPORTANT: Merge the files before doing this.
-
-        dbSeqNames = SeqIO.to_dict(SeqIO.parse(args.db, "fasta")).keys()
         good_seqs = []
-        samplesList = os.listdir(args.samplesDir)
-        print "Will be processing %s samples " % len(samplesList)
+        dbSeqNames = SeqIO.to_dict(SeqIO.parse(args.db, "fasta")).keys()
+        print "Will be processing %s samples " % len(inputs)
         i = 0
-        for sample in samplesList:
-            nt_macse_out = os.path.join(args.outdir, sample + "_NT_macse.fasta")
+
+        # TODO: write parallel script for this
+        for sample in inputs:
+            nt_macse_out = "%s/%s_NT_macse.fasta" % (args.outdir, sample)
             for mySeq in SeqIO.parse(nt_macse_out, 'fasta'):
                 if mySeq.id not in dbSeqNames:
                     mySeq.seq = Seq(str(mySeq.seq[2:]).replace("-", ""))  # remove the !! from the beginning
@@ -547,7 +528,7 @@ def macseCleanAlignments(args, pool=Pool(processes=1)):
             i += 1
         SeqIO.write(good_seqs, open(os.path.join(args.outdir, "MACSE_OUT_MERGED.fasta"), 'w'), 'fasta')
 
-        printVerbose("\t%s sequences cleaned, %s sequences retained, %s sequences discarded" % (1, 1, 1))
+        #printVerbose("\t%s sequences cleaned, %s sequences retained, %s sequences discarded" % (1, 1, 1))
 
         pool.join()
     except KeyboardInterrupt:

@@ -1,9 +1,7 @@
 import ConfigParser
 import logging
 import os
-import re
 import subprocess
-import Validator  # fileExists, installed, etc..
 from Helpers import printVerbose, helpValidate
 from pipes import quote
 
@@ -26,11 +24,12 @@ class ProgramRunner(object):
     commandTemplates = {}
     dry_run = False
     programPaths = {
-        "FASTX":   os.path.expanduser("~/ARMS/programs/fastx/bin/"),
+        "FASTX":   os.path.expanduser("/usr/bin/fastx_barcode_splitter.pl"),
         "PEAR":    os.path.expanduser("~/ARMS/programs/pear/bin/pear-0.9.5-bin-64"),
         "USEARCH": os.path.expanduser("~/ARMS/programs/usearch/usearch7.0.1090"),
         "MOTHUR" : os.path.expanduser("~/ARMS/programs/mothur/mothur"),
-        "FLEXBAR": os.path.expanduser("~/ARMS/programs/flexbar/flexbar")
+        "FLEXBAR": os.path.expanduser("~/ARMS/programs/flexbar/flexbar"),
+        "MACSE":   ""
     }
 
     def __init__(self, program, params, conditions=None, stdin="", stdout="", stderr=""):
@@ -157,7 +156,7 @@ class ProgramRunner(object):
         if not ProgramRunner.configsLoaded:
             program_paths = ProgramRunner.programPaths
             ProgramRunner.commandTemplates = {
-                "barcode.splitter": "cat \"%s\" | " + program_paths["FASTX"] + 'fastx_barcode_splitter.pl  --bcfile "%s" \
+                "barcode.splitter": "cat \"%s\" | " + program_paths["FASTX"] + '  --bcfile "%s" \
                                     -prefix "%s" --suffix %s --bol --mismatches 1',
                 "fastx_renamer": program_paths["FASTX"] + "fastx_renamer -n COUNT -i \"%s\" -o \"%s\" -Q 33",
                 "pear": program_paths["PEAR"] + " -f \"%s\" -r \"%s\" -o \"%s\" -v 20 -j %d ",
@@ -165,11 +164,11 @@ class ProgramRunner(object):
                                     processors=%s)\'",
                 "trim.seqs": program_paths["MOTHUR"] + " \'#trim.seqs(fasta=%s, oligos=%s, maxambig=1, maxhomop=8, \
                                     minlength=300, maxlength=550, bdiffs=1, pdiffs=7)\'",
-                "macse_align": "java -jar ./../../programs/MACSE/macse_v1.01b.jar -prog enrichAlignment  -seq \"%s\" -align \
+                "macse_align": "java -jar ~/ARMS/programs/macse/macse_v1.01b.jar -prog enrichAlignment  -seq \"%s\" -align \
                                             \"%s\" -seq_lr \"%s\" -maxFS_inSeq 0  -maxSTOP_inSeq 0  -maxINS_inSeq 0 \
                                             -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 -out_NT \"%s\"_NT \
                                             -out_AA \"%s\"_AA -seqToAdd_logFile \"%s\"_log.csv",
-                "macse_format": "java -jar ./../../programs/MACSE/macse_v1.01b.jar  -prog exportAlignment -align \"%s\" \
+                "macse_format": "java -jar ~/ARMS/programs/macse/macse_v1.01b.jar  -prog exportAlignment -align \"%s\" \
                                             -charForRemainingFS - -gc_def 5 -out_AA \"%s\" -out_NT \"%s\" -statFile \
                                             \"%s\"",
                 "trimmomatic": "java -jar ~/ARMS/programs/Trimmomatic-0.33/trimmomatic-0.33.jar SE -phred33 \"%s\" \"%s\" \
