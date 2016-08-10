@@ -212,7 +212,7 @@ def main(argv):
     parser_align.add_argument('-i', '--input', required=True, help="Input fasta")
     parser_align.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
     parser_align.add_argument('-d', '--db', required=True, help="Database against which to align and filter reads")
-    parser_align.set_defaults(func=macseAlignSeqs)
+    parser_align.set_defaults(func=align_macse)
 
 
 
@@ -222,7 +222,7 @@ def main(argv):
     parser_macseClean = subparsers.add_parser('macseClean')
     parser_macseClean.add_argument('-s', '--input', required=True, help="Input fasta")
     parser_macseClean.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
-    parser_macseClean.set_defaults(func=macseAlignSeqs)
+    parser_macseClean.set_defaults(func=align_macse)
 
 
 

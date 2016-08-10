@@ -143,8 +143,8 @@ def getInputs(path, pattern="*", butNot=""):
             rslt = patternMatch
 
     else:
-        logging.error("Found no  matching inputs")
-        print "Error: Found no matching inputs"
+        logging.error("Found no  matching inputs matching %s at %s" % (pattern, path))
+        print "Error: Found no matching inputs matching %s at %s" % (pattern, path)
         exit()
         #return []
     rslt = [path for path in rslt if os.path.getsize(path)]

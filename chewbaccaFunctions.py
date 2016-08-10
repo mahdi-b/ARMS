@@ -4,7 +4,7 @@ from Bio.Seq import Seq
 from multiprocessing import Pool
 from classes.Helpers import *
 from classes.ProgramRunner import ProgramRunner
-from translators.fastqToFasta import translateFastqToFasta
+from converters.fastqToFasta import translateFastqToFasta
 from getSeedSequences import getSeedSequences
 from renamers.renameSequences import serialRename
 from renamers.renameWithCount import renameSequencesWithCount
@@ -88,18 +88,15 @@ def assemble_pear(args, pool=Pool(processes=1)):
             print name_error_text
             exit()
 
-        for file_ in forwards_reads:
-            ids += getFileName(file_)
-
-        inputs = zip(forwards_reads, reverse_reads, ids)
+        inputs = zip(forwards_reads, reverse_reads)
 
         if args.threads is not None and args.threads > 1:
             threads = args.threads
 
         parallel(runProgramRunner, [ProgramRunner("pear", [forwards, reverse,
-                                                           "%s/%s.%s" % (args.outdir, args.name, id_), threads],
+                                                           "%s/%s_%s" % (args.outdir, args.name, getFileName(forwards)), threads],
                                                   {"exists": [forwards, reverse]})
-                                    for forwards, reverse, id_ in inputs], pool)
+                                    for forwards, reverse in inputs], pool)
     except KeyboardInterrupt:
         pool.terminate()
         pool.join()
@@ -463,7 +460,7 @@ def align_mothur(args, pool=Pool(processes=1)):
         pool.terminate()
 
 
-def macseAlignSeqs(args, pool=Pool(processes=1)):
+def align_macse(args, pool=Pool(processes=1)):
     """Aligns sequences by iteratively adding them to a known good alignment.
 
      :param args: An argparse object with the following parameters:
@@ -484,7 +481,7 @@ def macseAlignSeqs(args, pool=Pool(processes=1)):
         #                                    -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 -out_NT \"%s\"_NT \
         #                                    -out_AA \"%s\"_AA -seqToAdd_logFile \"%s\"_log.csv",
         done = False
-        rslt = parallel(runProgramRunner, [ProgramRunner("macse_align",
+        done = parallel(runProgramRunner, [ProgramRunner("macse_align",
                                                   [args.db, args.db, input_] +
                                                   ["%s/%s" % (args.outdir, getFileName(input_))] * 3
                                                   , {"exists": [input_, args.db]}) for input_ in inputs], pool)
