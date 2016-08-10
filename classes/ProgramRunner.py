@@ -29,7 +29,7 @@ class ProgramRunner(object):
         "USEARCH": os.path.expanduser("~/ARMS/programs/usearch/usearch7.0.1090"),
         "MOTHUR" : os.path.expanduser("~/ARMS/programs/mothur/mothur"),
         "FLEXBAR": os.path.expanduser("~/ARMS/programs/flexbar/flexbar"),
-        "MACSE":   ""
+        "VSEARCH": os.path.expanduser("~/ARMS/programs/vsearch/vsearch")
     }
 
     def __init__(self, program, params, conditions=None, stdin="", stdout="", stderr=""):
@@ -181,6 +181,8 @@ class ProgramRunner(object):
                 "flexbar":  program_paths["FLEXBAR"] + " -r \"%s\" -t \"%s\" -ae \"%s\" -a \"%s\"",
                 "usearch": program_paths["USEARCH"] + " -derep_fulllength \"%s\" -output \"%s\" -uc \"%s\"",
                 "align.seqs": program_paths["MOTHUR"] + " \'#align.seqs(candidate=%s, template=%s, flip=t)\'",
+                "vsearch": program_paths["VSEARCH"] + "--derep_fulllength \"%s\" --sizeout --fasta_width 0 --output \
+                                            amplicons_linearized_dereplicated.fasta -uc uc.out",
 
                 "unique.seqs": program_paths["MOTHUR"] + " \'#unique.seqs(fasta=%s)\'",
                 "cluster-swarm": "",

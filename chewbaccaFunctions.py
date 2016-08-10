@@ -50,7 +50,7 @@ def assemble(args, pool=Pool(processes=1)):
         else:
             "Invalid program choice.  Supported programs are " + str(keys)
     except KeyboardInterrupt:
-        pool.terminate()
+        cleanupPool(pool)
 
 
 def assemble_pear(args, pool=Pool(processes=1)):
@@ -98,8 +98,7 @@ def assemble_pear(args, pool=Pool(processes=1)):
                                                   {"exists": [forwards, reverse]})
                                     for forwards, reverse in inputs], pool)
     except KeyboardInterrupt:
-        pool.terminate()
-        pool.join()
+        cleanupPool(pool)
 
 def assemble_mothur(args, pool=Pool(processes=1)):
     """Finds chimeric sequences from a fasta file and writes them to an accons file.
@@ -123,7 +122,7 @@ def assemble_mothur(args, pool=Pool(processes=1)):
                                     ])
         return ["%s.trim"]
     except KeyboardInterrupt:
-        pool.terminate()
+        cleanupPool(pool)
 
 
 # TODO Document that if samples from site A occur in more than one file, then they will overwrite eachother when you run
@@ -155,9 +154,7 @@ def splitOnBarcodes(args, pool=Pool(processes=1)):
                                                    "_splitOut_%d.fastq" % id_],
                                                   {"exists": [input_]}) for input_, id_ in file_id_pairs], pool)
 
-        # wait for output files to be written
-        pool.close()
-        pool.join()
+        # wait for output files to be writtenfpool
         printVerbose("Demuxed sequences.")
 
         # gatehr output files and move them to their final destination
@@ -165,7 +162,7 @@ def splitOnBarcodes(args, pool=Pool(processes=1)):
         bulk_move_to_dir(output_files, args.outdir)
 
     except KeyboardInterrupt:
-        pool.terminate()
+        cleanupPool(pool)
 
 
 def trim(args, pool=Pool(processes=1)):
@@ -198,7 +195,7 @@ def trim(args, pool=Pool(processes=1)):
         else:
             print "Invalid program choice.  Supported programs are " + str(keys)
     except KeyboardInterrupt:
-        pool.terminate()
+        cleanupPool(pool)
 
 
 def trim_flexbar(args, pool=Pool(processes=1)):
@@ -241,7 +238,7 @@ def trim_flexbar(args, pool=Pool(processes=1)):
 
         return output_files
     except KeyboardInterrupt:
-        pool.terminate()
+        cleanupPool(pool)
 
 
 def trim_mothur(args, pool=Pool(processes=1)):
@@ -261,7 +258,7 @@ def trim_mothur(args, pool=Pool(processes=1)):
                                     for input_ in inputs], pool)
         printVerbose("Trimmed sequences.")
     except KeyboardInterrupt:
-        pool.terminate()
+        cleanupPool(pool)
 
 
 def trimmomatic(args, pool=Pool(processes=1)):
@@ -288,7 +285,7 @@ def trimmomatic(args, pool=Pool(processes=1)):
                                                    "positive": [args.windowSize, args.quality, args.minLen]})
                                     for input_ in inputs], pool)
     except KeyboardInterrupt:
-        pool.terminate()
+        cleanupPool(pool)
 
 
 def dereplicate(args, pool=Pool(processes=1)):
@@ -361,7 +358,7 @@ def dereplicate(args, pool=Pool(processes=1)):
 
 
     except KeyboardInterrupt:
-        pool.terminate()
+        cleanupPool(pool)
 
 
 def renameSequences(args, pool=Pool(processes=1)):
@@ -389,7 +386,7 @@ def renameSequences(args, pool=Pool(processes=1)):
         pool.join()
 
     except KeyboardInterrupt:
-        pool.terminate()
+        cleanupPool(pool)
 
 
 # TODO decide whether to use this function or splitOnBarcodes.  This one uses SeqIO, the above users fastx
@@ -415,7 +412,7 @@ def partition(args, pool=Pool(processes=1)):
             (splitK, input, "%s/%s" % (args.outdir, strip_ixes(getFileName(input))), args.chunksize, args.filetype)
             for input in inputs], pool)
     except KeyboardInterrupt:
-        pool.terminate()
+        cleanupPool(pool)
 
 
 def align_mothur(args, pool=Pool(processes=1)):
@@ -455,9 +452,10 @@ def align_mothur(args, pool=Pool(processes=1)):
             for ext in out_exts:
                 out_files += getInputs(indir, ext)
             bulk_move_to_dir(out_files, args.outdir)
+            bulk_move_to_dir(getInputs(".","mothur.*.logfile"), args.outdir)
 
     except KeyboardInterrupt:
-        pool.terminate()
+        cleanupPool(pool)
 
 
 def align_macse(args, pool=Pool(processes=1)):
@@ -473,6 +471,7 @@ def align_macse(args, pool=Pool(processes=1)):
         pool_size = pool._processes
         makeDir(args.outdir)
         inputs = getInputs(args.input)
+
         printVerbose("\t %s Aligning reads using MACSE")
         #Aligns sequences by iteratively adding them to a known good alignment.
         #
@@ -486,8 +485,7 @@ def align_macse(args, pool=Pool(processes=1)):
                                                   ["%s/%s" % (args.outdir, getFileName(input_))] * 3
                                                   , {"exists": [input_, args.db]}) for input_ in inputs], pool)
         print("Done writing")
-        while not done:
-            time.sleep(1000)
+
         done = False
         printVerbose("\t %s Processing MACSE alignments")
         # Removes non-nucleotide characters in MACSE aligned sequences for all fasta files in the samples directory
@@ -496,41 +494,54 @@ def align_macse(args, pool=Pool(processes=1)):
         # "macse_format":     "java -jar " + programPaths["MACSE"] + "  -prog exportAlignment -align \"%s\" \
         #       -charForRemainingFS - -gc_def 5 -out_AA \"%s\" -out_NT \"%s\" -statFile \"%s\""
         parallel(runProgramRunner, [ProgramRunner("macse_format",
-                                                  ["%s/%s_NT" % (args.outdir, getFileName(input)),
-                                                   "%s/%s_AA_macse.fasta" % (args.outdir, getFileName(input)),
-                                                   "%s/%s_NT_macse.fasta" % (args.outdir, getFileName(input)),
-                                                   "%s/%s_macse.csv" % (args.outdir, getFileName(input))],
-                                                  {"exists": []}) for input_ in os.listdir(args.inputs)], pool)
-        while not done:
-            time.sleep(1000)
+                                                  ["%s/%s_NT" % (args.outdir, getFileName(input_)),
+                                                   "%s/%s_AA_macse.fasta" % (args.outdir, getFileName(input_)),
+                                                   "%s/%s_NT_macse.fasta" % (args.outdir, getFileName(input_)),
+                                                   "%s/%s_macse.csv" % (args.outdir, getFileName(input_))],
+                                                  {"exists": [input_]}) for input_ in inputs], pool)
+
 
         pool = Pool(pool_size)
+
         printVerbose("\tCleaning MACSE alignments")
         # Remove the reference sequences from the MACSE files and remove the non nucleotide characters from the sequences.
         #       we need the datbase seq. names to remove them from the results files
         # TODO:IMPORTANT: Merge the files before doing this.
         good_seqs = []
+        print "Parsing the DB"
         dbSeqNames = SeqIO.to_dict(SeqIO.parse(args.db, "fasta")).keys()
         print "Will be processing %s samples " % len(inputs)
         i = 0
 
         # TODO: write parallel script for this
-        for sample in inputs:
-            nt_macse_out = "%s/%s_NT_macse.fasta" % (args.outdir, sample)
+        print "Filtering reference seuences"
+        for input_ in inputs:
+            nt_macse_out = "%s/%s_NT_macse.fasta" % (args.outdir, getFileName(input_))
             for mySeq in SeqIO.parse(nt_macse_out, 'fasta'):
                 if mySeq.id not in dbSeqNames:
                     mySeq.seq = Seq(str(mySeq.seq[2:]).replace("-", ""))  # remove the !! from the beginning
                     good_seqs.append(mySeq)
             print "completed %s samples" % i
             i += 1
-        SeqIO.write(good_seqs, open(os.path.join(args.outdir, "MACSE_OUT_MERGED.fasta"), 'w'), 'fasta')
+        SeqIO.write(good_seqs, open("%s/MACSE_OUT_MERGED.fasta" % args.outdir, 'w'), 'fasta')
 
-        #printVerbose("\t%s sequences cleaned, %s sequences retained, %s sequences discarded" % (1, 1, 1))
-
-        pool.join()
     except KeyboardInterrupt:
-        pool.terminate()
+        cleanupPool(pool)
 
+def cluster(args, pool=Pool(processes=1)):
+    """Clusters sequences.
+    :param args: An argparse object with the following parameters:
+                    inputFasta	Cleaned inputs File
+                    program     Program for detecting and removing chimeras. Default is uchime
+                    ...and exactly one of the following:
+                    namesFile	Reference .names file. See <http://www.mothur.org/wiki/Name_file>
+                    refDB       Reference database file.
+    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
+    """
+    try:
+        pass
+    except KeyboardInterrupt:
+        cleanupPool(pool)
 
 def findChimeras(args, pool=Pool(processes=1)):
     """Finds chimeric sequences in a fasta file and writes them to a .accons file.
@@ -563,7 +574,7 @@ def findChimeras(args, pool=Pool(processes=1)):
             raise Exception("unknown program %s for chimera detection or removal" % args.program)
 
     except KeyboardInterrupt:
-        pool.terminate()
+        cleanupPool(pool)
 
 
 def removeSeqs(args, pool=Pool(processes=1)):
@@ -602,7 +613,7 @@ def removeSeqs(args, pool=Pool(processes=1)):
         printVerbose("\t Removed %s target sequences")
 
     except KeyboardInterrupt:
-        pool.terminate()
+        cleanupPool(pool)
 
 
 def screenSeqs(args, pool=Pool(processes=1)):
@@ -638,7 +649,7 @@ def screenSeqs(args, pool=Pool(processes=1)):
                                     ])
 
     except KeyboardInterrupt:
-        pool.terminate()
+        cleanupPool(pool)
 
 
 def makeFastq(args, pool=Pool(processes=1)):
@@ -654,7 +665,7 @@ def makeFastq(args, pool=Pool(processes=1)):
                                     ])
 
     except KeyboardInterrupt:
-        pool.terminate()
+        cleanupPool(pool)
 
 
 def makeFasta(args, pool=Pool(processes=1)):
@@ -669,7 +680,7 @@ def makeFasta(args, pool=Pool(processes=1)):
 
 
     except KeyboardInterrupt:
-        pool.terminate()
+        cleanupPool(pool)
 
 
 def prescreen(args, pool=Pool(processes=1)):
@@ -694,7 +705,7 @@ def prescreen(args, pool=Pool(processes=1)):
         flagged_seqs_file = "%s.bad" % args.aln_out_file
         move_to_dir(flagged_seqs_file, args.outdir)
     except KeyboardInterrupt:
-        pool.terminate()
+        cleanupPool(pool)
 
 
 # Orphaned code
@@ -732,7 +743,7 @@ def fastxRename(args, pool=Pool(processes=1)):
         ], pool)
         printVerbose("\tRenamed %s sequences")
     except KeyboardInterrupt:
-        pool.terminate()
+        cleanupPool(pool)
 
 
 # Todo remove this

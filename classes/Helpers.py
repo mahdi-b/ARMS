@@ -113,6 +113,12 @@ def makeDir(dirPath):
     else:
         logging.warning("Split fasta directory %s already exists " % dirPath)
 
+
+def cleanupPool(pool):
+    pool.terminate()
+    pool.join()
+    exit()
+
 def strip_ixes(path):
     file_name = getFileName(path)
     print file_name
