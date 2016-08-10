@@ -350,7 +350,7 @@ def dereplicate(args, pool=Pool(processes=1)):
         # which id is 123, there 10 sequences that identical to it and which were discarded.
         # ls * cleaned.fasta | parallel "python ~/ARMS/bin/renameWithCount.py {/.}_derep.fa {/.}_uc_parsed.out {/.}_derep_renamed.fa"
         input_fa = getInputs(args.input, "*_cleaned.fa")
-        input_uc_parsed = getInputs(args.outdir, "*_uc_parsed.out")
+        input_uc_parsed = getInputs(args.outdir, "*_parsed.out")
         inputs = zip(input_fa, input_uc_parsed)
         # renameSequencesWithCount(input_fasta, count_file, outfile):
         parallel(runPython,
