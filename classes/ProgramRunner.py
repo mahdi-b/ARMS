@@ -25,7 +25,7 @@ class ProgramRunner(object):
     dry_run = False
     programPaths = {
         "FASTX":   os.path.expanduser("/usr/bin/fastx_barcode_splitter.pl"),
-        "PEAR":    os.path.expanduser("~/ARMS/programs/pear/bin/pear-0.9.5-bin-64"),
+        "PEAR":    os.path.expanduser("~/ARMS/programs/pear/pear-0.9.5-bin-64"),
         "USEARCH": os.path.expanduser("~/ARMS/programs/usearch/usearch7.0.1090"),
         "MOTHUR" : os.path.expanduser("~/ARMS/programs/mothur/mothur"),
         "FLEXBAR": os.path.expanduser("~/ARMS/programs/flexbar/flexbar"),
