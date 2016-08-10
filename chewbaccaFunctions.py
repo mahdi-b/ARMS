@@ -88,7 +88,7 @@ def assemble_pear(args, pool=Pool(processes=1)):
             print name_error_text
             exit()
 
-        inputs = zip(forwards_reads, reverse_reads)
+        inputs = zip(set(forwards_reads), set(reverse_reads))
 
         if args.threads is not None and args.threads > 1:
             threads = args.threads
@@ -97,6 +97,7 @@ def assemble_pear(args, pool=Pool(processes=1)):
                                                            "%s/%s_%s" % (args.outdir, args.name, getFileName(forwards)), threads],
                                                   {"exists": [forwards, reverse]})
                                     for forwards, reverse in inputs], pool)
+
     except KeyboardInterrupt:
         cleanupPool(pool)
 
@@ -451,8 +452,9 @@ def align_mothur(args, pool=Pool(processes=1)):
             out_files = []
             for ext in out_exts:
                 out_files += getInputs(indir, ext)
+            out_files += getInputs(os.getcwd(), "mothur.*.logfile")
+            out_files += getInputs(os.getcwd(), "8mer")
             bulk_move_to_dir(out_files, args.outdir)
-            bulk_move_to_dir(getInputs(os.getcwd(),"mothur.*.logfile"), args.outdir)
 
     except KeyboardInterrupt:
         cleanupPool(pool)
