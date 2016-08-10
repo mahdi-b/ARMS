@@ -215,14 +215,15 @@ def main(argv):
     parser_align.set_defaults(func=align_macse)
 
 
-
-    # Clean Aligned Reads with MACSE
-    # "macse_format":     "java -jar " + programPaths["MACSE"] + "  -prog exportAlignment -align \"%s\" \
-    #                                -charForRemainingFS - -gc_def 5 -out_AA \"%s\" -out_NT \"%s\" -statFile \"%s\"",
-    parser_macseClean = subparsers.add_parser('macseClean')
-    parser_macseClean.add_argument('-s', '--input', required=True, help="Input fasta")
-    parser_macseClean.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
-    parser_macseClean.set_defaults(func=align_macse)
+    # =======================================
+    # ==  Cluster using vsearch and swarm  ==
+    # =======================================
+    # "vsearch": program_paths["VSEARCH"] + "--derep_fulllength \"%s\" --sizeout --fasta_width 0  \
+    #
+    parser_align = subparsers.add_parser('cluster_seqs')
+    parser_align.add_argument('-i', '--input', required=True, help="Input fasta")
+    parser_align.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
+    parser_align.set_defaults(func=cluster)
 
 
 

@@ -21,4 +21,4 @@ if __name__ == "__main__":
     if len(sys.argv) < 3:
         print "Usage: fastaA fastaB outfile"
         exit()
-        getSeedSequences(sys.argv[1:3])
+    getSeedSequences(sys.argv[1:3])

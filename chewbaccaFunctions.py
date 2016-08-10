@@ -8,6 +8,7 @@ from converters.fastqToFasta import translateFastqToFasta
 from getSeedSequences import getSeedSequences
 from renamers.renameSequences import serialRename
 from renamers.renameWithCount import renameSequencesWithCount
+from renamers.formatReadWithCountsForSwarm import formatReadsWithCounts
 from utils.splitKperFasta import splitK
 from prescreen import screen
 
@@ -525,6 +526,7 @@ def align_macse(args, pool=Pool(processes=1)):
                     good_seqs.append(mySeq)
             print "completed %s samples" % i
             i += 1
+        # TODO: dumping this much data into buffered memory seems bad... write incrementally?
         SeqIO.write(good_seqs, open("%s/MACSE_OUT_MERGED.fasta" % args.outdir, 'w'), 'fasta')
 
     except KeyboardInterrupt:
@@ -541,7 +543,45 @@ def cluster(args, pool=Pool(processes=1)):
     :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
     """
     try:
-        pass
+        makeDir(args.outdir)
+        ## prepare the file for clustering. Dereplicates across smaples and renames the resulting sequences with hashes
+        # "vsearch": program_paths["VSEARCH"] + "--derep_fulllength \"%s\" --sizeout --fasta_width 0  \
+        #                                    --output amplicons_linearized_dereplicated.fasta -uc ",
+        inputs = getInputs(args.input, "*MACSE_OUT_MERGED*")
+        parallel(runProgramRunner, [ProgramRunner("vsearch",
+                                                  [input_, "%s/%s.fa" % (args.outdir, getFileName(input_)),
+                                                      "%s/%s_uc.out" % (args.outdir, getFileName(input_))],
+                                                  {"exists": [input_]}) for input_ in inputs], pool)
+
+        # python getSeedSequences.py uc.out uc_parsed.out
+        input_ucs = getInputs(args.outdir, "*_uc.out")
+        parallel(runPython,
+                 [(getSeedSequences, input_, "%s/%s_parsed.out" % (args.outdir, getFileName(input_))) for
+                  input_ in input_ucs], pool)
+
+        # python formatReadWithCountsForSwarm.py
+        #                                   8_macse_out/MACSEOUT_MERGED.fasta uc_parsed.out dereplicated_renamed.fasta
+        parallel(runPython,
+                 [(formatReadsWithCounts, input_, "%s/%s_uc_parsed.out" % (args.outdir, getFileName(input_)),
+                   "%s/%s_dereplicated_renamed.fasta" % (args.outdir, getFileName(input_))) for
+                  input_ in inputs], pool)
+        # TODO IMPORTANT: make sure that the abundances in dereplicated_renamed.fasta are sorted in decreasing order
+        ## We need to explore this more. Run by default for now....
+        ## Nore that any program can be used here as long as two files
+        ## 1- seeds: contains the cluster centroids. This file contains the updates counts for each cluster.
+        ## ex. a seq 97_2 from the cluster, if selected as a seed, would not be for example 97_100. This indicates
+        ## that 98 sequences are now assigned to the cluster for which 97 is a seed.
+        ## 2-clustering.out: contains the clustering results. (see file for sample format)
+
+        # ~/bin/swarm/src/swarm dereplicated_renamed.fasta \
+        #  		      				       --output-file clustering.out -u uclust_file -w seeds
+
+        ## We convert the seeds files to uppercase (strangely, it is output in lowercase by swarm)
+        ## this might not be necessary with other clustering programs
+
+        # tr  '[:lower:]' '[:upper:]' < seeds > seeds.fasta
+        # rm seeds
+
     except KeyboardInterrupt:
         cleanupPool(pool)
 

@@ -24,12 +24,13 @@ class ProgramRunner(object):
     commandTemplates = {}
     dry_run = False
     programPaths = {
-        "FASTX":   os.path.expanduser("/usr/bin/fastx_barcode_splitter.pl"),
-        "PEAR":    os.path.expanduser("~/ARMS/programs/pear/pear-0.9.5-bin-64"),
+        "FASTX"  : os.path.expanduser("/usr/bin/fastx_barcode_splitter.pl"),
+        "PEAR"   : os.path.expanduser("~/ARMS/programs/pear/pear-0.9.5-bin-64"),
         "USEARCH": os.path.expanduser("~/ARMS/programs/usearch/usearch7.0.1090"),
         "MOTHUR" : os.path.expanduser("~/ARMS/programs/mothur/mothur"),
         "FLEXBAR": os.path.expanduser("~/ARMS/programs/flexbar/flexbar"),
-        "VSEARCH": os.path.expanduser("~/ARMS/programs/vsearch/vsearch")
+        "VSEARCH": os.path.expanduser("~/ARMS/programs/vsearch/vsearch"),
+        "SWARM"  : os.path.expanduser("~/ARMS/programs/swarm/swarm-2.1.9-linux-x86_64")
     }
 
     def __init__(self, program, params, conditions=None, stdin="", stdout="", stderr=""):
@@ -157,22 +158,22 @@ class ProgramRunner(object):
             program_paths = ProgramRunner.programPaths
             ProgramRunner.commandTemplates = {
                 "barcode.splitter": "cat \"%s\" | " + program_paths["FASTX"] + '  --bcfile "%s" \
-                                    -prefix "%s" --suffix %s --bol --mismatches 1',
+                                            -prefix "%s" --suffix %s --bol --mismatches 1',
                 "fastx_renamer": program_paths["FASTX"] + "fastx_renamer -n COUNT -i \"%s\" -o \"%s\" -Q 33",
                 "pear": program_paths["PEAR"] + " -f \"%s\" -r \"%s\" -o \"%s\" -v 20 -j %d ",
-                "make.contigs": program_paths["MOTHUR"] + " \'#make.contigs(ffastq=%s, rfastq=%s, bdiffs=1, pdiffs=2, oligos=%s, \
-                                    processors=%s)\'",
+                "make.contigs": program_paths["MOTHUR"] + " \'#make.contigs(ffastq=%s, rfastq=%s, bdiffs=1, pdiffs=2, \
+                                            oligos=%s, processors=%s)\'",
                 "trim.seqs": program_paths["MOTHUR"] + " \'#trim.seqs(fasta=%s, oligos=%s, maxambig=1, maxhomop=8, \
                                     minlength=300, maxlength=550, bdiffs=1, pdiffs=7)\'",
-                "macse_align": "java -jar ~/ARMS/programs/macse/macse_v1.01b.jar -prog enrichAlignment  -seq \"%s\" -align \
-                                            \"%s\" -seq_lr \"%s\" -maxFS_inSeq 0  -maxSTOP_inSeq 0  -maxINS_inSeq 0 \
-                                            -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 -out_NT \"%s\"_NT \
-                                            -out_AA \"%s\"_AA -seqToAdd_logFile \"%s\"_log.csv",
+                "macse_align": "java -jar ~/ARMS/programs/macse/macse_v1.01b.jar -prog enrichAlignment  -seq \"%s\" \
+                                            -align \"%s\" -seq_lr \"%s\" -maxFS_inSeq 0  -maxSTOP_inSeq 0  \
+                                            -maxINS_inSeq 0 -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 \
+                                            -out_NT \"%s\"_NT -out_AA \"%s\"_AA -seqToAdd_logFile \"%s\"_log.csv",
                 "macse_format": "java -jar ~/ARMS/programs/macse/macse_v1.01b.jar  -prog exportAlignment -align \"%s\" \
                                             -charForRemainingFS - -gc_def 5 -out_AA \"%s\" -out_NT \"%s\" -statFile \
                                             \"%s\"",
-                "trimmomatic": "java -jar ~/ARMS/programs/Trimmomatic-0.33/trimmomatic-0.33.jar SE -phred33 \"%s\" \"%s\" \
-                                            SLIDINGWINDOW:%d:%d MINLEN:%d",
+                "trimmomatic": "java -jar ~/ARMS/programs/Trimmomatic-0.33/trimmomatic-0.33.jar SE -phred33 \
+                                            \"%s\" \"%s\" SLIDINGWINDOW:%d:%d MINLEN:%d",
                 "chmimera.uchime": program_paths["MOTHUR"] + " \'#chimera.uchime(fasta=%s, %s)\'",
                 "make.fastq": program_paths["MOTHUR"] + " \'#make.fastq(fasta=%s,qfile=%s)\'",
                 "make.fasta": program_paths["MOTHUR"] + " \'#fastq.info(fastq=%s)\'",
@@ -181,8 +182,9 @@ class ProgramRunner(object):
                 "flexbar":  program_paths["FLEXBAR"] + " -r \"%s\" -t \"%s\" -ae \"%s\" -a \"%s\"",
                 "usearch": program_paths["USEARCH"] + " -derep_fulllength \"%s\" -output \"%s\" -uc \"%s\"",
                 "align.seqs": program_paths["MOTHUR"] + " \'#align.seqs(candidate=%s, template=%s, flip=t)\'",
-                "vsearch": program_paths["VSEARCH"] + "--derep_fulllength \"%s\" --sizeout --fasta_width 0 --output \
-                                            amplicons_linearized_dereplicated.fasta -uc uc.out",
+                "vsearch": program_paths["VSEARCH"] + " --derep_fulllength \"%s\" --sizeout --fasta_width 0 --output \
+                                            \"%s\" -uc \"%s\"",
+                "swarm": program_paths["SWARM"] + " ",
 
                 "unique.seqs": program_paths["MOTHUR"] + " \'#unique.seqs(fasta=%s)\'",
                 "cluster-swarm": "",

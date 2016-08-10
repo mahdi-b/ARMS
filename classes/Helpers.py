@@ -84,7 +84,7 @@ def parallel(function, data, pool=Pool(processes=1)):
     :param pool:        An initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
     :return:
     '''
-    pool.map(function, data)
+    pool.map_async(function, data).get(999999999)
     return True
 
 def makeDirOrdie(dirPath):
