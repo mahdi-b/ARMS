@@ -452,7 +452,7 @@ def align_mothur(args, pool=Pool(processes=1)):
             for ext in out_exts:
                 out_files += getInputs(indir, ext)
             bulk_move_to_dir(out_files, args.outdir)
-            bulk_move_to_dir(getInputs(".","mothur.*.logfile"), args.outdir)
+            bulk_move_to_dir(getInputs(os.getcwd(),"mothur.*.logfile"), args.outdir)
 
     except KeyboardInterrupt:
         cleanupPool(pool)
