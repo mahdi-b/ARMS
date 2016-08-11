@@ -70,6 +70,7 @@ def runPython(params):
     :param params:  A tuple, where the first item is a function, and the remainder is a set of parameters
     :return:        The output of params[0](*params[1:]
     """
+    print params
     func = params[0]
     args = params[1:]
     func(*args)
@@ -121,7 +122,6 @@ def cleanupPool(pool):
 
 def strip_ixes(path):
     file_name = getFileName(path)
-    print file_name
     name = re.sub(r'_splitOut_\d+', '', file_name)
     name = re.sub(r'_part_\d+', '', name)
     ixes=[ "_renamed", "_debarcoded", ".assembled", ".discarded", ".unassembled", "_cleaned", "_derep", "_uc"]

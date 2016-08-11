@@ -1,19 +1,14 @@
-from Bio import SeqIO
 import sys
+from Bio import SeqIO
+from countToDict import parseCountFileToDict
 
-# Renames sequences for swarm
 
-
+# Renames sequences by looking up their count in a global count file.
 def renameSequencesWithCount(input_fasta, count_file, outfile):
-    seeds ={}
-    # collect the seed names, and the children sequence names
-    for line in open(count_file, 'r'):
-        line = line.rstrip()
-        seeds[line.split("\t")[0]] = line.split("\t")[1]
+    seeds = parseCountFileToDict(count_file)
 
     i=0
     mySeqs=[]
-
     # pull the sequence data for each seed from the input fasta
     for mySeq in SeqIO.parse(input_fasta, 'fasta'):
         i+=1

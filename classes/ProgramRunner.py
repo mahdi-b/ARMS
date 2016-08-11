@@ -184,7 +184,8 @@ class ProgramRunner(object):
                 "align.seqs": program_paths["MOTHUR"] + " \'#align.seqs(candidate=%s, template=%s, flip=t)\'",
                 "vsearch": program_paths["VSEARCH"] + " --derep_fulllength \"%s\" --sizeout --fasta_width 0 --output \
                                             \"%s\" -uc \"%s\"",
-                "swarm": program_paths["SWARM"] + " ",
+                "swarm": program_paths["SWARM"] + " \"%s\" --output-file \"%s\" \
+                                            -u \"%s\" -w \"%s\"",
 
                 "unique.seqs": program_paths["MOTHUR"] + " \'#unique.seqs(fasta=%s)\'",
                 "cluster-swarm": "",

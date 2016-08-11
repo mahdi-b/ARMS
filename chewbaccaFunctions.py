@@ -5,10 +5,11 @@ from multiprocessing import Pool
 from classes.Helpers import *
 from classes.ProgramRunner import ProgramRunner
 from converters.fastqToFasta import translateFastqToFasta
+from converters.capitalizeSeqs import capitalizeSeqs
 from getSeedSequences import getSeedSequences
 from renamers.renameSequences import serialRename
 from renamers.renameWithCount import renameSequencesWithCount
-from renamers.formatReadWithCountsForSwarm import formatReadsWithCounts
+from renamers.formatWithSwarmCounts import formatWithSwarmCounts
 from utils.splitKperFasta import splitK
 from prescreen import screen
 
@@ -548,6 +549,7 @@ def cluster(args, pool=Pool(processes=1)):
         # "vsearch": program_paths["VSEARCH"] + "--derep_fulllength \"%s\" --sizeout --fasta_width 0  \
         #                                    --output amplicons_linearized_dereplicated.fasta -uc ",
         inputs = getInputs(args.input, "*MACSE_OUT_MERGED*")
+
         parallel(runProgramRunner, [ProgramRunner("vsearch",
                                                   [input_, "%s/%s.fa" % (args.outdir, getFileName(input_)),
                                                       "%s/%s_uc.out" % (args.outdir, getFileName(input_))],
@@ -559,11 +561,11 @@ def cluster(args, pool=Pool(processes=1)):
                  [(getSeedSequences, input_, "%s/%s_parsed.out" % (args.outdir, getFileName(input_))) for
                   input_ in input_ucs], pool)
 
-        # python formatReadWithCountsForSwarm.py
+        # python formatWithSwarmCounts.py
         #                                   8_macse_out/MACSEOUT_MERGED.fasta uc_parsed.out dereplicated_renamed.fasta
         parallel(runPython,
-                 [(formatReadsWithCounts, input_, "%s/%s_uc_parsed.out" % (args.outdir, getFileName(input_)),
-                   "%s/%s_dereplicated_renamed.fasta" % (args.outdir, getFileName(input_))) for
+                 [(formatWithSwarmCounts, input_, "%s/%s_uc_parsed.out" % (args.outdir, getFileName(input_)),
+                   "%s/%s_derep_renamed.fasta" % (args.outdir, getFileName(input_))) for
                   input_ in inputs], pool)
         # TODO IMPORTANT: make sure that the abundances in dereplicated_renamed.fasta are sorted in decreasing order
         ## We need to explore this more. Run by default for now....
@@ -575,13 +577,24 @@ def cluster(args, pool=Pool(processes=1)):
 
         # ~/bin/swarm/src/swarm dereplicated_renamed.fasta \
         #  		      				       --output-file clustering.out -u uclust_file -w seeds
-
+        #"swarm": program_paths["SWARM"] + " \"%s\" --output-file \"%s\" \
+        #                                            -u \"%s\" -w \"%s\"",
+        inputs = getInputs(args.outdir, "*_derep_renamed.fasta")
+        parallel(runProgramRunner, [ProgramRunner("swarm", [input_,
+                                                            "%s/%s_clustering.out" % (args.outdir, strip_ixes(input_)),
+                                                            "%s/%s_uclust" % (args.outdir, strip_ixes(input_)),
+                                                            "%s/%s_seeds" % (args.outdir, strip_ixes(input_))],
+                                                  {"exists": [input_]}) for input_ in inputs], pool)
         ## We convert the seeds files to uppercase (strangely, it is output in lowercase by swarm)
         ## this might not be necessary with other clustering programs
 
         # tr  '[:lower:]' '[:upper:]' < seeds > seeds.fasta
         # rm seeds
-
+        inputs = getInputs(args.outdir, "*_seeds")
+        parallel(runPython,
+                 [(capitalizeSeqs, input_, "%s.fasta" % input_) for input_ in inputs], pool)
+        for input_ in inputs:
+            os.remove(input_)
     except KeyboardInterrupt:
         cleanupPool(pool)
 
