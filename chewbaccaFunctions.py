@@ -495,7 +495,7 @@ def align_macse(args, pool=Pool(processes=1)):
         #                                    \"%s\" -seq_lr \"%s\" -maxFS_inSeq 0  -maxSTOP_inSeq 0  -maxINS_inSeq 0 \
         #                                    -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 -out_NT \"%s\"_NT \
         #                                    -out_AA \"%s\"_AA -seqToAdd_logFile \"%s\"_log.csv",
-        """
+        
         parallel(runProgramRunner, [ProgramRunner("macse_align",
                                                   [args.db, args.db, input_] +
                                                   ["%s/%s" % (args.outdir, getFileName(input_))] * 3,
@@ -515,7 +515,7 @@ def align_macse(args, pool=Pool(processes=1)):
                                                    "%s/%s_NT_macse.fasta" % (args.outdir, getFileName(input_)),
                                                    "%s/%s_macse.csv" % (args.outdir, getFileName(input_))],
                                                   {"exists": [input_]}) for input_ in inputs], pool)
-        """
+
         # Remove the reference sequences from the MACSE files and remove the non nucleotide characters from the sequences.
         printVerbose("\tCleaning MACSE alignments")
 
