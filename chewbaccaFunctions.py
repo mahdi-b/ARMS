@@ -1,14 +1,12 @@
 import subprocess
-from Bio.Seq import Seq
-
-from ARMS.filters.prescreen import screen
-from ARMS.parsers.getSeedSequences import getSeedSequences
 from classes.Helpers import *
 from classes.ProgramRunner import ProgramRunner
 from converters.capitalizeSeqs import capitalizeSeqs
 from converters.fastqToFasta import translateFastqToFasta
 from converters.seedToNames import seedToNames
+from filters.prescreen import screen
 from filters.removeMacseRefs import removeMacseRefs
+from parsers.getSeedSequences import getSeedSequences
 from parsers.getTaxFromId import parseVSearchToTaxa
 from parsers.parseVSearchout import parseVSearchout
 from renamers.formatWithSwarmCounts import formatWithSwarmCounts
@@ -497,7 +495,7 @@ def align_macse(args, pool=Pool(processes=1)):
         #                                    \"%s\" -seq_lr \"%s\" -maxFS_inSeq 0  -maxSTOP_inSeq 0  -maxINS_inSeq 0 \
         #                                    -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 -out_NT \"%s\"_NT \
         #                                    -out_AA \"%s\"_AA -seqToAdd_logFile \"%s\"_log.csv",
-
+        """
         parallel(runProgramRunner, [ProgramRunner("macse_align",
                                                   [args.db, args.db, input_] +
                                                   ["%s/%s" % (args.outdir, getFileName(input_))] * 3,
@@ -510,25 +508,27 @@ def align_macse(args, pool=Pool(processes=1)):
         #    (the samplesDir argument).
         # "macse_format":     "java -jar " + programPaths["MACSE"] + "  -prog exportAlignment -align \"%s\" \
         #       -charForRemainingFS - -gc_def 5 -out_AA \"%s\" -out_NT \"%s\" -statFile \"%s\""
+
         parallel(runProgramRunner, [ProgramRunner("macse_format",
                                                   ["%s/%s_NT" % (args.outdir, getFileName(input_)),
                                                    "%s/%s_AA_macse.fasta" % (args.outdir, getFileName(input_)),
                                                    "%s/%s_NT_macse.fasta" % (args.outdir, getFileName(input_)),
                                                    "%s/%s_macse.csv" % (args.outdir, getFileName(input_))],
                                                   {"exists": [input_]}) for input_ in inputs], pool)
-
+        """
         # Remove the reference sequences from the MACSE files and remove the non nucleotide characters from the sequences.
         printVerbose("\tCleaning MACSE alignments")
 
         macse_outputs = ["%s/%s_NT_macse.fasta" % (args.outdir, getFileName(input_)) for input_ in inputs]
-        cleaned_output_files = ["%s/MACSE_OUT_.part%d" % args.outdir % i for i in range(len(macse_outputs))]
+        cleaned_output_files = ["%s/MACSE_OUT_.part%d" % (args.outdir , i) for i in range(len(macse_outputs))]
         input_pairs = zip(macse_outputs, cleaned_output_files)
         # TODO removeMacseRefs reads the database with each process, perhpas pass a list of names instead?
         # removeMacseRefs(file_to_clean, reference_file, output_file_name):
-        parallel(runPython, [(macse_output, args.db, output_name) for macse_output, output_name in input_pairs], pool)
+        parallel(runPython, [(removeMacseRefs, macse_output, args.db, output_name)
+                             for macse_output, output_name in input_pairs], pool)
 
         # cat the files
-        joinFiles(cleaned_output_files, "%s/MACSE_OUT_MERGED.fasta" % args.outdir)
+        joinFile_(cleaned_output_files, "%s/MACSE_OUT_MERGED.fasta" % args.outdir)
 
     except KeyboardInterrupt:
         cleanupPool(pool)

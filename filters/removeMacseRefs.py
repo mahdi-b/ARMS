@@ -1,11 +1,11 @@
 import os
-from Bio import Seq, SeqIO
+import sys
+from Bio import SeqIO
+from Bio.Seq import Seq
 
-# Remove the reference sequences from the MACSE files and remove the non nucleotide characters from the sequences.
-#       we need the datbase seq. names to remove them from the results files
-
-def removeMacseRefs(file_to_clean, reference_fie, output_file_name):
-    """
+def removeRefs(file_to_clean, reference_fie, output_file_name):
+    """Remove the reference sequences from the MACSE files and remove the non nucleotide characters from the sequences.
+       we need the database seq. names to remove them from the results files
 
     :param file_to_clean: Filepath to the list of sequences to clean.
     :param reference_fie: The file containing all reference sequences used to align file_to_clean.
@@ -32,3 +32,9 @@ def removeMacseRefs(file_to_clean, reference_fie, output_file_name):
                 good_seqs = []
 
     SeqIO.write(good_seqs, output, 'fasta')
+
+if __name__ == "__main__":
+    if len(sys.argv) < 4:
+        print "Usage: MACSE_output_file reference_file output_file "
+        exit()
+        removeRefs(sys.argv[1], sys.argv[2], sys.argv[3])
