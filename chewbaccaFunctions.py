@@ -1,15 +1,14 @@
 import subprocess
 import time
 from Bio.Seq import Seq
-from multiprocessing import Pool
-
-
 from classes.Helpers import *
 from classes.ProgramRunner import ProgramRunner
 from converters.fastqToFasta import translateFastqToFasta
 from converters.capitalizeSeqs import capitalizeSeqs
 from converters.seedToNames import seedToNames
 from getSeedSequences import getSeedSequences
+from multiprocessing import Pool
+from parsers.getTaxFromId import parseVSearchToTaxa
 from parsers.parseVSearchout import parseVSearchout
 from prescreen import screen
 from renamers.renameSequences import serialRename
@@ -734,20 +733,59 @@ def queryBiocode(args, pool=Pool(processes=1)):
     :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
     """
     try:
+        DB_STRING = os.path.expanduser("~/ARMS/data/BiocodePASSED_SAP.txt")
+        ALN_USER_STRING = ""
         makeDir(args.outdir)
+
         # vsearch --usearch_global %s seeds.pick.fasta  --db ../data/BiocodePASSED_SAP.txt --id 0.9 \
         #		--userfields query+target+id+alnlen+qcov --userout %sout --alnout %s alnout.txt
         inputs = getInputs(args.input, "*.pick.fasta")
-        """
-        parallel(runProgramRunner, [ProgramRunner("vsearch.biocode",
-                                                  [input_, "%s/%s.out" % (args.outdir, strip_ixes(input_)),
-                                                   "%s/%s.alnout" % (args.outdir, strip_ixes(input_))],
+        # input, db, userout, alnout, aln_userfield
+        parallel(runProgramRunner, [ProgramRunner("vsearch.usearch_global",
+                                                  [input_, DB_STRING, "%s/%s.out" % (args.outdir, strip_ixes(input_)),
+                                                   "%s/%s.alnout" % (args.outdir, strip_ixes(input_)), ALN_USER_STRING],
                                                   {"exists": [input_]}) for input_ in inputs], pool)
-        """
-        # parseVSearchout.py.. / data / BiocodePASSED_SAP_tax_info.txt out 97 85> parsed_BIOCODE.out
+        # Parse the alignment results and put those that pass the criterion (97 similarity, 85 coverage) in
+        # parsed_BIOCODE.out.  Parameters can be changed and this command can be rerun as many times as necessary
+        #
+        # parseVSearchout.py ~/ARMS/data/BiocodePASSED_SAP_tax_info.txt vsearch_out  parsed_BIOCODE.out 97 85
         parallel(runPython, [(parseVSearchout, os.path.expanduser("~/ARMS/data/BiocodePASSED_SAP_tax_info.txt"),
                                                        "%s/%s.out" % (args.outdir, strip_ixes(input_)),
                                                         "%s/%s_parsed_BIOCODE.out" % (args.outdir, strip_ixes(input_)),
+                                                        97, 85) for input_ in inputs], pool)
+
+    except KeyboardInterrupt:
+        cleanupPool(pool)
+
+
+def queryNCBI(args, pool=Pool(processes=1)):
+    """Compare reference sequences to the fasta-formatted query sequences, using global pairwise alignment.
+
+    :param args: An argparse object with the following parameters:
+                    accnosFile  List of sequence names to remove
+                    outdir      Directory to put the output files
+    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
+    """
+    try:
+        COI_DB_STRING = os.path.expanduser("~/ARMS/refs/COI.fasta")
+        NCBI_DB_STRING = os.path.expanduser("~/ARMS/refs/ncbi.db")
+        ALN_USER_STRING = "--userfields query+target+id+alnlen+qcov"
+        makeDir(args.outdir)
+
+        # vsearch --usearch_global %s seeds.pick.fasta  --db ../data/BiocodePASSED_SAP.txt --id 0.9 \
+        #		--userfields query+target+id+alnlen+qcov --userout %sout --alnout %s alnout.txt
+        inputs = getInputs(args.input, "*.pick.fasta")
+        # input, db, userout, alnout, aln_userfield
+        parallel(runProgramRunner, [ProgramRunner("vsearch.usearch_global",
+                                              [input_, COI_DB_STRING, "%s/%s.out" % (args.outdir, strip_ixes(input_)),
+                                               "%s/%s.alnout" % (args.outdir, strip_ixes(input_)), ALN_USER_STRING],
+                                              {"exists": [input_]}) for input_ in inputs], pool)
+        # Parse the alignment results and put those that pass the criterion (97 similarity, 85 coverage) in
+        # parsed_BIOCODE.out.  Parameters can be changed and this command can be rerun as many times as necessary
+        #
+        # parseVSearchToTaxa(vsearch_out, ncbi_db, min_coverage, min_similarity)> parsed_nt.out
+        parallel(runPython, [(parseVSearchToTaxa, "%s/%s.out" % (args.outdir, strip_ixes(input_)),NCBI_DB_STRING,
+                                                        "%s/%s_parsed_nt.out" % (args.outdir, strip_ixes(input_)),
                                                         97, 85) for input_ in inputs], pool)
 
     except KeyboardInterrupt:

@@ -43,6 +43,6 @@ def parseVSearchout(taxInfo, vsearch_outfile, output_file, min_simmilarity, min_
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print "Usage: Biocode_tax_info   vsearch_5_field_output outfile [min_similarity min_coverage]"
+        print "Usage: Biocode_tax_info   vsearch_5_field_output   outfile    min_similarity   min_coverage"
         exit()
-        parseVSearchout(sys.argv[1], sys.argv[2])
+    parseVSearchout(sys.argv[1], sys.argv[2])

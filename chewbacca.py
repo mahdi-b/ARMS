@@ -244,12 +244,23 @@ def main(argv):
     # ==========================================
     # ==  12 Closed Ref Picking with BIOCODE  ==
     # ==========================================
-    #-usearch_global  ../9_p_uchime/seeds.pick.fasta  --db ../data/BiocodePASSED_SAP.txt --id 0.9 \
+    # --usearch_global  ../9_p_uchime/seeds.pick.fasta  --db ../data/BiocodePASSED_SAP.txt --id 0.9 \
     #	--userfields query+target+id+alnlen+qcov --userout out  --alnout alnout.txt
-    parser_chimera = subparsers.add_parser('query_biocode')
-    parser_chimera.add_argument('-i', '--input', required=True, help="Input Fasta File to clean")
-    parser_chimera.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
-    parser_chimera.set_defaults(func=queryBiocode)
+    parser_biocode = subparsers.add_parser('query_biocode')
+    parser_biocode.add_argument('-i', '--input', required=True, help="Input Fasta File to clean")
+    parser_biocode.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
+    parser_biocode.set_defaults(func=queryBiocode)
+
+
+    # =======================================
+    # ==  13 Closed Ref Picking with NCBI  ==
+    # =======================================
+    # --usearch_global ../9_p_uchime/seeds.pick.fasta  --db /home/mahdi/refs/COI_DOWNLOADED/COI.fasta -id 0.9 \
+    #          --userfields query+target+id+alnlen+qcov --userout out --alnout alnout.txt --userfields query+target+id+alnlen+qcov
+    parcer_ncbi = subparsers.add_parser('query_ncbi')
+    parcer_ncbi.add_argument('-i', '--input', required=True, help="Input Fasta File to clean")
+    parcer_ncbi.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
+    parcer_ncbi.set_defaults(func=queryNCBI)
 
 
     # =======================================

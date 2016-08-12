@@ -186,11 +186,9 @@ class ProgramRunner(object):
                                             "--output \"%s\" -uc \"%s\"",
                 "swarm": program_paths["SWARM"] + " \"%s\" --output-file \"%s\" \
                                             -u \"%s\" -w \"%s\"",
-                "vsearch.biocode": program_paths["VSEARCH"] + " --usearch_global \"%s\"  \
-                                            --db ~/ARMS/data/BiocodePASSED_SAP.txt --id 0.9 \
-                                            --userfields query+target+id+alnlen+qcov --userout %s \
-                                            --alnout \"%s\"",
-
+                "vsearch.usearch_global": program_paths["VSEARCH"] + " --usearch_global \"%s\" --db \"%s\" --id 0.9 \
+                                            --userfields query+target+id+alnlen+qcov --userout \"%s\" --alnout \"%s\"\
+                                             %s",
 
                 "unique.seqs": program_paths["MOTHUR"] + " \'#unique.seqs(fasta=%s)\'",
                 "cluster-swarm": "",
