@@ -45,17 +45,16 @@ Supported operations:
 
     8 macsealign
         macse
+        macse
 
     9 cluster
-        macse
-        ~/bin/vsearch/bin/vsearch
+        vsearch derep_full_length
 
     9.5 chimeras
         mothur uchime.chimeras
 
-
     10 biocode (closed ref)
-        ~/bin/vsearch/bin/vsearch-1.1.1-linux-x86_64
+        vsearch usearch_global
 
     11 NCBI    (closed ref)
         ~/bin/vsearch/bin/vsearch-1.1.1-linux-x86_64
@@ -80,9 +79,9 @@ def main(argv):
     subparsers = parser.add_subparsers(dest='action', help='Available commands')
 
 
-    # ===========================================
-    # ==  Assemble Reads using mothur or pear  ==
-    # ===========================================
+    # =============================================
+    # ==  1 Assemble Reads using mothur or pear  ==
+    # =============================================
     # "pear": programPaths["PEAR"] + " -f \"%s\" -r \"%s\" -o \"%s\" -j %d ",
     #
     #"make.contigs": "mothur \'#make.contigs(ffastq=%s, rfastq=%s, bdiffs=1, pdiffs=2, oligos=%s, \
@@ -107,9 +106,9 @@ def main(argv):
     pear_assembler.add_argument('-t', '--threads',   type=int, help="The number of threads to use (default is 1")
 
 
-    # ====================================
-    # ==  Split by barcode with Fastxx  ==
-    # ====================================
+    # ======================================
+    # ==  2  Split by barcode with FastX  ==
+    # ======================================
     # "barcode.splitter": "cat \"%s\" | " + programPaths["FASTX"] + "fastx_barcode_splitter.pl  --bcfile \"%s\" \
     #                                    -prefix \"%s\" --suffix .fastq --bol --mismatches 1",
     parser_demux = subparsers.add_parser('demux_samples')
@@ -121,7 +120,7 @@ def main(argv):
 
 
     # ===================================================
-    # ==  Rename reads serially with renameSequences  ==
+    # ==  3 Rename reads serially with renameSequences  ==
     # ===================================================
     # renameSequences(input, output)
     parser_rename = subparsers.add_parser('rename')
@@ -131,9 +130,9 @@ def main(argv):
     parser_rename.set_defaults(func=renameSequences)
 
 
-    # ===========================================================
-    # ==  Trims barcodes and adapters using mothur or flexbar  ==
-    # ===========================================================
+    # =============================================================
+    # ==  4 Trims barcodes and adapters using mothur or flexbar  ==
+    # =============================================================
     parser_trim = subparsers.add_parser('trim_adapters')
     parser_trim.add_argument('-i', '--input', required=True, help="Input Fasta/Fastq File")
     parser_trim.add_argument('-p', '--program', required=True, help="The name of the program to use")
@@ -151,9 +150,9 @@ def main(argv):
     flexbar_trim.add_argument('-a', '--adapters', help="Adapters file")
 
 
-    # ====================================
-    # ==  Clean Reads with Trimmomatic  ==
-    # ====================================
+    # ======================================
+    # ==  5 Clean Reads with Trimmomatic  ==
+    # ======================================
     # Clean low-quality reads with trimmomatic
     # "trimomatic":       "java -jar ~/ARMS/programs/Trimmomatic-0.33/trimmomatic-0.33.jar SE \
     # -phred33 input output_cleaned.fastq SLIDINGWINDOW:%windowsize:%minAvgQuality MINLEN:%minLen"
@@ -169,9 +168,9 @@ def main(argv):
     parser_trimmomatic.set_defaults(func=trimmomatic)
 
 
-    # ==========================================
-    # ==  Dereplicate sequences with usearch  ==
-    # ==========================================
+    # ============================================
+    # ==  6 Dereplicate sequences with usearch  ==
+    # ============================================
     # "usearch": programPaths["USEARCH"] + " -derep_fulllength \"%s\" -output \"%s\" -uc \"%s\"",
     parser_derep = subparsers.add_parser('dereplicate_fasta')
     parser_derep.add_argument('-i', '--input', required=True, help="Input fasta/fastq")
@@ -179,9 +178,9 @@ def main(argv):
     parser_derep.set_defaults(func=dereplicate)
 
 
-    # ============================================
-    # ==  Partition fastas with splitKperFasta  ==
-    # ============================================
+    # ==============================================
+    # ==  7 Partition fastas with splitKperFasta  ==
+    # ==============================================
     # splitK(inputFasta, prefix, nbSeqsPerFile, filetype):
     parser_split = subparsers.add_parser('partition')
     parser_split.add_argument('-i', '--input', required=True, help="Input fasta file to split")
@@ -190,9 +189,10 @@ def main(argv):
     parser_split.add_argument('-f', '--filetype', required=True, help="Filetype of the files to be partitioned")
     parser_split.set_defaults(func=partition)
 
-    # ===============================
-    # ==  Align Reads with Mothur  ==
-    # ===============================
+
+    # =================================
+    # ==  8 Align Reads with Mothur  ==
+    # =================================
     #"align.seqs": "mothur \'#align.seqs(candidate=%s, template=%s, flip=t)\'",
     parser_mothuralign = subparsers.add_parser('align_seqs')
     parser_mothuralign.add_argument('-i', '--input', required=True, help="Fasta file containing the reads to align")
@@ -201,9 +201,9 @@ def main(argv):
     parser_mothuralign.set_defaults(func=align_mothur)
     
 
-    # ==============================
-    # ==  Align Reads with MACSE  ==
-    # ==============================
+    # ================================
+    # ==  9 Align Reads with MACSE  ==
+    # ================================
     # "macse_align":      "java -jar " + programPaths["MACSE"] + " -prog enrichAlignment  -seq \"%s\" -align \
     #                                \"%s\" -seq_lr \"%s\" -maxFS_inSeq 0  -maxSTOP_inSeq 0  -maxINS_inSeq 0 \
     #                                -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 -out_NT \"%s\"_NT \
@@ -215,9 +215,9 @@ def main(argv):
     parser_align.set_defaults(func=align_macse)
 
 
-    # =======================================
-    # ==  Cluster using vsearch and swarm  ==
-    # =======================================
+    # ==========================================
+    # ==  10 Cluster using vsearch and swarm  ==
+    # ==========================================
     # "vsearch": program_paths["VSEARCH"] + "--derep_fulllength \"%s\" --sizeout --fasta_width 0  \
     #
     parser_align = subparsers.add_parser('cluster_seqs')
@@ -226,10 +226,9 @@ def main(argv):
     parser_align.set_defaults(func=cluster)
 
 
-
-    # =================================
-    # ==  Find Chimeras with Mothur  ==
-    # =================================
+    # ====================================
+    # ==  11 Find Chimeras with Mothur  ==
+    # ====================================
     # "chmimera.uchime":  "mothur \'#chimera.uchime(fasta=\"%s\", name=\"%s\")\'",
     parser_chimera = subparsers.add_parser('uchime')
     parser_chimera.add_argument('-i', '--input', required=True, help="Input Fasta File to clean")
@@ -242,9 +241,20 @@ def main(argv):
     parser_chimera.set_defaults(func=findChimeras)
 
 
-    # ====================================
-    # ==  Remove sequences with Mothur  ==
-    # ====================================
+    # ==========================================
+    # ==  12 Closed Ref Picking with BIOCODE  ==
+    # ==========================================
+    #-usearch_global  ../9_p_uchime/seeds.pick.fasta  --db ../data/BiocodePASSED_SAP.txt --id 0.9 \
+    #	--userfields query+target+id+alnlen+qcov --userout out  --alnout alnout.txt
+    parser_chimera = subparsers.add_parser('query_biocode')
+    parser_chimera.add_argument('-i', '--input', required=True, help="Input Fasta File to clean")
+    parser_chimera.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
+    parser_chimera.set_defaults(func=queryBiocode)
+
+
+    # =======================================
+    # ==  xx Remove sequences with Mothur  ==
+    # =======================================
     # "remove.seqs": "mothur \'#remove.seqs(accnos=%s, %s)\'",
     parser_chimera = subparsers.add_parser('removeSeqs')
     parser_chimera.add_argument('-i', '--input', required=True, help="Input to clean")
@@ -280,8 +290,6 @@ def main(argv):
     parser_screen.set_defaults(func=screenSeqs)
 
 
-
-
     # Drop short reads
     parser_dropShort = subparsers.add_parser('dropShort')
     parser_dropShort.add_argument('-n', '--name', required=True, help="Run Id")
@@ -295,25 +303,19 @@ def main(argv):
 
 
 
-    # Drop short reads
-    parser_cluster = subparsers.add_parser('cluster-swarm')
-    # parser_cluster.set_defaults(func=clusterReads)
-
     # Prescreen sequences for frameshifts (which will get fed to MACSE)
     # screen(aln, caln)
-    parser_chimera = subparsers.add_parser('prescreen')
-    parser_chimera.add_argument('-a', '--aln_out_file', required=True, help=".aln output file from vsearch")
-    parser_chimera.add_argument('-c', '--caln_userout_file', required=True, help="caln output file from vsearch.")
-    parser_chimera.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved")
-    parser_chimera.set_defaults(func=prescreen)
+    parser_prescreeen = subparsers.add_parser('prescreen')
+    parser_prescreeen.add_argument('-a', '--aln_out_file', required=True, help=".aln output file from vsearch")
+    parser_prescreeen.add_argument('-c', '--caln_userout_file', required=True, help="caln output file from vsearch.")
+    parser_prescreeen.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved")
+    parser_prescreeen.set_defaults(func=prescreen)
 
     # Convert fastq to fasta
     # "make.fasta":       "mothur \'#fastq.info(fastq=%s,fasta=T)\'"
     parser_toFasta = subparsers.add_parser('makeFasta')
     parser_toFasta.add_argument('-i', '--inputFastq', required=True, help="Input Fastq File")
     parser_toFasta.set_defaults(func=makeFasta)
-
-
 
     # Convert fasta to fastq
     # "make.fastq":       "mothur \'#make.fastq(fasta=%s,qfile=%s)\'",

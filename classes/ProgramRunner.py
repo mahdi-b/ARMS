@@ -182,10 +182,15 @@ class ProgramRunner(object):
                 "flexbar":  program_paths["FLEXBAR"] + " -r \"%s\" -t \"%s\" -ae \"%s\" -a \"%s\"",
                 "usearch": program_paths["USEARCH"] + " -derep_fulllength \"%s\" -output \"%s\" -uc \"%s\"",
                 "align.seqs": program_paths["MOTHUR"] + " \'#align.seqs(candidate=%s, template=%s, flip=t)\'",
-                "vsearch": program_paths["VSEARCH"] + " --derep_fulllength \"%s\" --sizeout --fasta_width 0 --output \
-                                            \"%s\" -uc \"%s\"",
+                "vsearch.derep": program_paths["VSEARCH"] + " --derep_fulllength \"%s\" --sizeout --fasta_width 0 "
+                                            "--output \"%s\" -uc \"%s\"",
                 "swarm": program_paths["SWARM"] + " \"%s\" --output-file \"%s\" \
                                             -u \"%s\" -w \"%s\"",
+                "vsearch.biocode": program_paths["VSEARCH"] + " --usearch_global \"%s\"  \
+                                            --db ~/ARMS/data/BiocodePASSED_SAP.txt --id 0.9 \
+                                            --userfields query+target+id+alnlen+qcov --userout %s \
+                                            --alnout \"%s\"",
+
 
                 "unique.seqs": program_paths["MOTHUR"] + " \'#unique.seqs(fasta=%s)\'",
                 "cluster-swarm": "",
