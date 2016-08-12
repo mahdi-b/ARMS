@@ -124,12 +124,13 @@ def strip_ixes(path):
     file_name = getFileName(path)
     name = re.sub(r'_splitOut_\d+', '', file_name)
     name = re.sub(r'_part_\d+', '', name)
-    ixes=[ "_renamed", "_debarcoded", ".assembled", ".discarded", ".unassembled", "_cleaned", "_derep", "_uc"]
+    ixes=[ "_renamed", "_debarcoded", ".assembled", ".discarded", ".unassembled", "_cleaned", "_derep", "_uc",
+           ".denovo.uchime"]
     for ix in ixes:
         name = name.replace(ix, "")
     return name
 
-def getInputs(path, pattern="*", butNot=""):
+def getInputs(path, pattern="*", butNot="", critical=True, ignoreEmptyFiles=True):
     """Checks if a path is a file or folder.  Optionally takes a pattern.  Returns a list of either a single file, or
         all files in a folder (matching pattern if it was provided).  Returns only non-empty files
 
@@ -150,12 +151,25 @@ def getInputs(path, pattern="*", butNot=""):
 
     else:
         logging.error("Found no  matching inputs matching %s at %s" % (pattern, path))
-        print "Error: Found no matching inputs matching %s at %s" % (pattern, path)
-        exit()
+        if critical:
+            print "Error: Found no matching inputs matching %s at %s" % (pattern, path)
+            exit()
         #return []
-    rslt = [path for path in rslt if os.path.getsize(path)]
+    if ignoreEmptyFiles:
+        rslt = [path for path in rslt if os.path.getsize(path)]
     print rslt
     return rslt
+
+
+def getDir(path):
+    """Returns the last directory name in path"""
+    if os.path.isfile(path):
+        return os.path.dirname(path)
+    elif os.path.isdir(path):
+        return path
+    else:
+        print "Error: Invalid path."
+        raise Exception
 
 
 def getFileName(path):

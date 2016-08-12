@@ -227,19 +227,32 @@ def main(argv):
 
 
 
-
-    # Find Chimeras with Mothur
+    # =================================
+    # ==  Find Chimeras with Mothur  ==
+    # =================================
     # "chmimera.uchime":  "mothur \'#chimera.uchime(fasta=\"%s\", name=\"%s\")\'",
-    parser_chimera = subparsers.add_parser('findChimeras')
-    parser_chimera.add_argument('-i', '--inputFasta', required=True, help="Input Fasta File to clean")
+    parser_chimera = subparsers.add_parser('uchime')
+    parser_chimera.add_argument('-i', '--input', required=True, help="Input Fasta File to clean")
     parser_chimera.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved")
     parser_chimera.add_argument('-p', '--program', required=False, default="uchime",
                                 help="Program for detecting and removing chimeras. Default is uchime")
     refType = parser_chimera.add_mutually_exclusive_group(required=True)
-    refType.add_argument('-n', '--namesFile', help="Names file to reference")
-    refType.add_argument('-r', '--refDB', help="Database file to reference")
+    refType.add_argument('-n', '--names', help="Names file to reference")
+    refType.add_argument('-d', '--refdb', help="Database file to reference")
     parser_chimera.set_defaults(func=findChimeras)
 
+
+    # ====================================
+    # ==  Remove sequences with Mothur  ==
+    # ====================================
+    # "remove.seqs": "mothur \'#remove.seqs(accnos=%s, %s)\'",
+    parser_chimera = subparsers.add_parser('removeSeqs')
+    parser_chimera.add_argument('-i', '--input', required=True, help="Input to clean")
+    parser_chimera.add_argument('-a', '--accnos', required=True, help="Accnos listing sequences to remove")
+    parser_chimera.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved")
+    parser_chimera.add_argument('-f', '--filetype', required=True, help="Input file type.  Can be 'fasta', 'list',\
+                                'groups','names','count', or 'alnReport'")
+    parser_chimera.set_defaults(func=removeSeqs)
 
 
     # Screen seqs with Mothur
@@ -267,19 +280,6 @@ def main(argv):
     parser_screen.set_defaults(func=screenSeqs)
 
 
-    # Remove sequences with Mothur
-    # "remove.seqs": "mothur \'#remove.seqs(accnos=%s, %s)\'",
-    parser_chimera = subparsers.add_parser('removeSeqs')
-    parser_chimera.add_argument('-a', '--accnosFile', required=True, help="Accnos File listing sequences to remove")
-    parser_chimera.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved")
-    refType = parser_chimera.add_mutually_exclusive_group(required=True)
-    refType.add_argument('-f', '--fasta', help="Fasta/Fastq file to clean")
-    refType.add_argument('-l', '--list', help="List file to clean")
-    refType.add_argument('-g', '--groups', help="Groups file to clean")
-    refType.add_argument('-n', '--names', help="Names file to clean")
-    refType.add_argument('-c', '--count', help="Count file to clean")
-    refType.add_argument('-r', '--alnReport', help="Alignment report to clean")
-    parser_chimera.set_defaults(func=removeSeqs)
 
 
     # Drop short reads

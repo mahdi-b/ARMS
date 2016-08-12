@@ -174,10 +174,10 @@ class ProgramRunner(object):
                                             \"%s\"",
                 "trimmomatic": "java -jar ~/ARMS/programs/Trimmomatic-0.33/trimmomatic-0.33.jar SE -phred33 \
                                             \"%s\" \"%s\" SLIDINGWINDOW:%d:%d MINLEN:%d",
-                "chmimera.uchime": program_paths["MOTHUR"] + " \'#chimera.uchime(fasta=%s, %s)\'",
+                "chmimera.uchime": program_paths["MOTHUR"] + " \'#chimera.uchime(fasta=%s, %s=%s)\'",
                 "make.fastq": program_paths["MOTHUR"] + " \'#make.fastq(fasta=%s,qfile=%s)\'",
                 "make.fasta": program_paths["MOTHUR"] + " \'#fastq.info(fastq=%s)\'",
-                "remove.seqs": program_paths["MOTHUR"] + " \'#remove.seqs(accnos=%s, %s)\'",
+                "remove.seqs": program_paths["MOTHUR"] + " \'#remove.seqs(accnos=%s, %s=%s)\'",
                 "screen.seqs": program_paths["MOTHUR"] + " \'#screen.seqs(fasta=%s, %s)\'",
                 "flexbar":  program_paths["FLEXBAR"] + " -r \"%s\" -t \"%s\" -ae \"%s\" -a \"%s\"",
                 "usearch": program_paths["USEARCH"] + " -derep_fulllength \"%s\" -output \"%s\" -uc \"%s\"",

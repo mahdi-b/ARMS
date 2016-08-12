@@ -6,6 +6,7 @@ from classes.Helpers import *
 from classes.ProgramRunner import ProgramRunner
 from converters.fastqToFasta import translateFastqToFasta
 from converters.capitalizeSeqs import capitalizeSeqs
+from converters.seedToNames import  seedToNames
 from getSeedSequences import getSeedSequences
 from renamers.renameSequences import serialRename
 from renamers.renameWithCount import renameSequencesWithCount
@@ -580,6 +581,7 @@ def cluster(args, pool=Pool(processes=1)):
         #"swarm": program_paths["SWARM"] + " \"%s\" --output-file \"%s\" \
         #                                            -u \"%s\" -w \"%s\"",
         inputs = getInputs(args.outdir, "*_derep_renamed.fasta")
+
         parallel(runProgramRunner, [ProgramRunner("swarm", [input_,
                                                             "%s/%s_clustering.out" % (args.outdir, strip_ixes(input_)),
                                                             "%s/%s_uclust" % (args.outdir, strip_ixes(input_)),
@@ -588,13 +590,19 @@ def cluster(args, pool=Pool(processes=1)):
         ## We convert the seeds files to uppercase (strangely, it is output in lowercase by swarm)
         ## this might not be necessary with other clustering programs
 
-        # tr  '[:lower:]' '[:upper:]' < seeds > seeds.fasta
-        # rm seeds
+        # write upppercase seeds fasta
         inputs = getInputs(args.outdir, "*_seeds")
         parallel(runPython,
                  [(capitalizeSeqs, input_, "%s.fasta" % input_) for input_ in inputs], pool)
+        # delete seeds file
         for input_ in inputs:
             os.remove(input_)
+            inputs = getInputs(args.outdir, "*_seeds.fasta")
+            parallel(runPython,
+                     [(seedToNames, input_, "%s/%s.names" % (args.outdir, getFileName(input_))) for input_ in inputs], pool)
+        #generate names file
+
+
     except KeyboardInterrupt:
         cleanupPool(pool)
 
@@ -604,30 +612,66 @@ def findChimeras(args, pool=Pool(processes=1)):
                     inputFasta	Cleaned inputs File
                     program     Program for detecting and removing chimeras. Default is uchime
                     ...and exactly one of the following:
-                    namesFile	Reference .names file. See <http://www.mothur.org/wiki/Name_file>
-                    refDB       Reference database file.
+                    namesFile	.names file to update. See <http://www.mothur.org/wiki/Name_file>
+                    refDB       database file to update.
     :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
     """
     try:
-        if args.program == "uchime":
-            # find the chimeras (but don't remove them yet)
-            # "chmimera.uchime": "mothur #chimera.uchime(fasta=%s, (name=%s | reference=%s) )",
-            referenceString = ""
-            refFile = ""
-            if args.namesFile:
-                referenceString = "names=%s" % args.namesFile
-                refFile = args.namesFile
+        supported_programs =["uchime"]
+        if args.program in supported_programs:
+            makeDir(args.outdir)
+            if args.program == "uchime":
+
+                # find the chimeras (but don't remove them yet)
+                # "chmimera.uchime": "mothur #chimera.uchime(fasta=%s[, name=%s] )"
+                reference_string = ""
+                refs = []
+                ref_type = "database"
+                if args.refdb is None:
+                    ref_type = "name"
+                    refs = getInputs(args.names, "*.names")
+                else:
+                    refs = getInputs(args.refdb)
+
+                inputs = getInputs(args.input, "*_seeds.fasta")
+                """
+                # expect a 1:1 or 1:n mapping from reference files to input files
+                if len(refs) != len(inputs) or len(refs) != 1:
+                    print "Error: Did not find correct number of reference files."
+                    print "You must provide either exactly one reference file for all inputs,"
+                    print "or one reference file per input"
+                    exit()
+
+                # if a 1:n mapping from reference files to input files, replicate the reference file name
+                if len(refs) == 1:
+                    ref_file = refs[0]
+                    refs = [ref_file] * len(inputs)
+
+                arg_strings = zip(inputs, refs)
+
+                # mothur "#chimera.uchime(fasta=seeds.fasta, name=seeds.names)"
+                parallel(runProgramRunner, [ProgramRunner("chmimera.uchime", [input_, ref_type, ref], {"exists": [input_]})
+                                            for input_, ref in arg_strings], pool)
+
             else:
-                referenceString = "reference=%s" % args.refDB
-                refFile = args.refDB
+                raise Exception("Unknown program %s for chimera detection or removal" % args.program)
+                exit()
+            """
+            # Remove from the accon sequences from the input file
+            accnos = ["%s/%s.denovo.uchime.accnos" % (getDir(input_), getFileName(input_)) for input_ in inputs]
 
-            parallel(runProgramRunner, [ProgramRunner("chmimera.uchime",
-                                                      [args.inputFile, referenceString],
-                                                      {"exists": [args.inputFasta, refFile]})], pool)
-
-        else:
-            raise Exception("unknown program %s for chimera detection or removal" % args.program)
-
+            # Remove from the accon sequences from the input file
+            # removeChimeras.py  seeds.fasta seeds.uchime.accnos
+            parallel(runProgramRunner, [ProgramRunner("remove.seqs", [accnos_file, "fasta",
+                                                                      "%s.fasta" % ".".join(accnos_file.split(".")[:-3])],
+                                                                      {"exists": [input_, accnos_file]})
+                                                                    for  accnos_file in accnos
+                                                                    if os.path.getsize(accnos_file)], pool)
+        out_files = getInputs(os.path.dirname(args.input), "*.accnos", critical=False)
+        out_files += getInputs(os.path.dirname(args.input), "*.chimeras", critical=False)
+        out_files += getInputs(os.path.dirname(args.input), "*.pick.fasta", critical=False)
+        out_files += getInputs(".", "mothur.*.logfile", critical=False)
+        bulk_move_to_dir(out_files, args.outdir)
     except KeyboardInterrupt:
         cleanupPool(pool)
 
@@ -649,15 +693,30 @@ def removeSeqs(args, pool=Pool(processes=1)):
     # "chmimera.uchime":  "mothur \'#remove.seqs(accnos=%s, (fasta=%s|list=%s|groups=%s|names=%s|count=%s|
     #                                                           alignreport=%s)\'",
     # identify the input file type
-    inputFileType = ""
-    inputFile = ""
+    supported_file_types = ['fasta', 'list', 'groups', 'names', 'count', 'alnReport']
+    if args.filetype not in supported_file_types:
+        print "Error: Unsupported input filetype.  Supported types are:"
+        for file_type in supported_file_types:
+            print file_type
+        exit()
+
     try:
+        accnos = getInputs(args.accnos, "*.accnos", ignoreEmptyFiles=False)
+        inputs = getInputs(args.input, "*.%s" % args.filetype, ignoreEmptyFiles=False)
+        if len(inputs) != len(accnos):
+            print "ERROR: The number of input and .ACCNOS files do not match."
+            exit()
+
         # Remove from the accon sequences from the input file
-        parallel(runProgramRunner, [ProgramRunner("remove.seqs", [args.accnosFile, args.inputFile],
-                                                  {"exists": [args.accnosFile, inputFile]}, pool)
-                                    ])
+        zipped_pairs_ = zip(inputs, accnos)
+        parallel(runProgramRunner, [ProgramRunner("remove.seqs", [accnos_, args.filetype, input_],
+                                                  {"exists": [input_, accnos_]}, pool)
+                                    for input_, accnos_ in zipped_pairs_])
+
         # Get the output file name with no directory prefix
-        inputFileName = os.path.basename(inputFile)
+        output_files = getInputs("*.pick")
+        bulk_move_to_dir(output_files, args.outdir)
+        """inputFileName = os.path.basename(inputFile)
         splitInputFileName = inputFileName.split(".")
         splitInputFileName.insert(-1, "pick")
         pickOutFile = (".").join(splitInputFileName)
@@ -665,8 +724,7 @@ def removeSeqs(args, pool=Pool(processes=1)):
         # TODO move output '*.pick.filetype' file to 'outputDir/*.pick.filetype'
         move("%s/%s" % (os.path.dirname(inputFile), pickOutFile),
              "%s/%s" % (args.outdir, pickOutFile))
-        printVerbose("\t Removed %s target sequences")
-
+        """
     except KeyboardInterrupt:
         cleanupPool(pool)
 
