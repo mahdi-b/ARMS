@@ -26,19 +26,6 @@ def serialRename(input_file, output_file, file_type, barcode_file=""):
     :return:
     """
     names_file = "%s/%s.names" % (os.path.dirname(output_file), getFileName(input_file))
-    """
-    samples = {}
-    sample_ref = []
-    if barcode_file and os.path.isfile(barcode_file):
-        for line in open(barcode_file, 'r'):
-            sample_id = line.split("\t")[0]
-            samples[sample_id] = ""
-        sample_ref = samples.keys().sort(key=str.lower()).reverse()
-    else:
-        sample_ref = [getFileName(input_file)]
-    {sample_file}_derep_renamed.fa, read 123_10 indicate that for sequence
-        # which id is 123, there 10 sequences t"""
-    print "Running rename %s .... %s" % (input_file, output_file)
     seqPrefix = strip_ixes(input_file)
     i = 0
     with open(output_file, 'w') as output:

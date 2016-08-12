@@ -87,12 +87,12 @@ def main(argv):
     #"make.contigs": "mothur \'#make.contigs(ffastq=%s, rfastq=%s, bdiffs=1, pdiffs=2, oligos=%s, \
     #                                 processors=%s)\'",
     parser_assemble = subparsers.add_parser('assemble')
-    parser_assemble.add_argument('-p', '--program', required=True, help="The name of the program to use ")
     parser_assemble.add_argument('-f', '--input_f', required=True, help="Forward Fastq Reads (file or folder)")
     parser_assemble.add_argument('-r', '--input_r', required=True, help="Reverse Fastq Reads (file or folder)")
     parser_assemble.add_argument('-n', '--name',    required=True, help="Assembled File Prefix")
     parser_assemble.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved")
-    parser_assemble.add_argument('-d', '--folder',  help="If T, -f and -r are folders")
+    parser_assemble.add_argument('-p', '--program', required=True, help="The name of the program to use.  \
+                                                                        Either 'mothur' or 'pear' ")
     parser_assemble.set_defaults(func=assemble)
 
     # for mothur assembler
@@ -275,12 +275,13 @@ def main(argv):
                                 'groups','names','count', or 'alnReport'")
     parser_chimera.set_defaults(func=removeSeqs)
 
-
-    # Screen seqs with Mothur
+    # ===============================
+    # ==  Screen seqs with Mothur  ==
+    # ===============================
     # outputs: *.good.fasta and *.bad.accnos
     # "screen.seqs": "mothur \'#screen.seqs(fasta=%s, %s)\'",
     parser_screen= subparsers.add_parser('screen')
-    parser_screen.add_argument('-i', '--inputfile', required=True, action ='store',
+    parser_screen.add_argument('-i', '--input', required=True, action ='store',
                                help="File path to the file to clean")
     parser_screen.add_argument('-o', '--outdir', help="File path to your output directory")
     # optional filters
@@ -300,6 +301,35 @@ def main(argv):
     parser_screen.add_argument('-s', '--summaryFile', help="SummaryFile to update")
     parser_screen.set_defaults(func=screenSeqs)
 
+    # ============================================
+    # ==   Prescreen sequences for frameshifts  ==
+    # ============================================
+    # screen(aln, caln)
+    parser_prescreeen = subparsers.add_parser('prescreen')
+    parser_prescreeen.add_argument('-a', '--aln_out_file', required=True, help=".aln output file from vsearch")
+    parser_prescreeen.add_argument('-c', '--caln_userout_file', required=True, help="caln output file from vsearch.")
+    parser_prescreeen.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved")
+    parser_prescreeen.set_defaults(func=prescreen)
+
+
+    # ==============================
+    # ==  Convert fastq to fasta  ==
+    # ==============================
+    # "make.fasta":       "mothur \'#fastq.info(fastq=%s,fasta=T)\'"
+    parser_toFasta = subparsers.add_parser('makeFasta')
+    parser_toFasta.add_argument('-i', '--inputFastq', required=True, help="Input Fastq File")
+    parser_toFasta.set_defaults(func=makeFasta)
+
+
+    # ==============================
+    # ==  Convert fasta to fastq  ==
+    # ==============================
+    # "make.fastq":       "mothur \'#make.fastq(fasta=%s,qfile=%s)\'",
+    parser_toFastq = subparsers.add_parser('makeFastq')
+    parser_toFastq.add_argument('-i', '--inputFasta', required=True, help="Input Fasta File")
+    parser_toFastq.add_argument('-q', '--inputQual', required=True, help="Input qual File")
+    parser_toFastq.set_defaults(func=makeFastq)
+
 
     # Drop short reads
     parser_dropShort = subparsers.add_parser('dropShort')
@@ -312,28 +342,6 @@ def main(argv):
     parser_dropShort.add_argument('-s', '--outNames', required=True, help="Updated names file")
     parser_dropShort.set_defaults(func=dropShort)
 
-
-
-    # Prescreen sequences for frameshifts (which will get fed to MACSE)
-    # screen(aln, caln)
-    parser_prescreeen = subparsers.add_parser('prescreen')
-    parser_prescreeen.add_argument('-a', '--aln_out_file', required=True, help=".aln output file from vsearch")
-    parser_prescreeen.add_argument('-c', '--caln_userout_file', required=True, help="caln output file from vsearch.")
-    parser_prescreeen.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved")
-    parser_prescreeen.set_defaults(func=prescreen)
-
-    # Convert fastq to fasta
-    # "make.fasta":       "mothur \'#fastq.info(fastq=%s,fasta=T)\'"
-    parser_toFasta = subparsers.add_parser('makeFasta')
-    parser_toFasta.add_argument('-i', '--inputFastq', required=True, help="Input Fastq File")
-    parser_toFasta.set_defaults(func=makeFasta)
-
-    # Convert fasta to fastq
-    # "make.fastq":       "mothur \'#make.fastq(fasta=%s,qfile=%s)\'",
-    parser_toFastq = subparsers.add_parser('makeFastq')
-    parser_toFastq.add_argument('-i', '--inputFasta', required=True, help="Input Fasta File")
-    parser_toFastq.add_argument('-q', '--inputQual', required=True, help="Input qual File")
-    parser_toFastq.set_defaults(func=makeFastq)
 
     # Todo remove this
     testParser = subparsers.add_parser('test')
