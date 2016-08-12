@@ -3,7 +3,7 @@ import sys
 from Bio import SeqIO
 from Bio.Seq import Seq
 
-def removeRefs(file_to_clean, reference_fie, output_file_name):
+def removeMacseRefs(file_to_clean, reference_fie, output_file_name):
     """Remove the reference sequences from the MACSE files and remove the non nucleotide characters from the sequences.
        we need the database seq. names to remove them from the results files
 
@@ -20,7 +20,7 @@ def removeRefs(file_to_clean, reference_fie, output_file_name):
     print "Parsing the DB"
     db_seq_names = SeqIO.to_dict(SeqIO.parse(reference_fie, "fasta")).keys()
 
-    print "Filtering reference seuences"
+    print "Filtering reference sequences"
     i = 0
     for mySeq in SeqIO.parse(file_to_clean, 'fasta'):
         if mySeq.id not in db_seq_names:
@@ -37,4 +37,4 @@ if __name__ == "__main__":
     if len(sys.argv) < 4:
         print "Usage: MACSE_output_file reference_file output_file "
         exit()
-        removeRefs(sys.argv[1], sys.argv[2], sys.argv[3])
+        removeMacseRefs(sys.argv[1], sys.argv[2], sys.argv[3])

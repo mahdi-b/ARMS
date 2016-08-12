@@ -528,7 +528,7 @@ def align_macse(args, pool=Pool(processes=1)):
                              for macse_output, output_name in input_pairs], pool)
 
         # cat the files
-        joinFile_(cleaned_output_files, "%s/MACSE_OUT_MERGED.fasta" % args.outdir)
+        joinFiles(cleaned_output_files, "%s/MACSE_OUT_MERGED.fasta" % args.outdir)
 
     except KeyboardInterrupt:
         cleanupPool(pool)
