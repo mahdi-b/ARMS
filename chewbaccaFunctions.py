@@ -94,13 +94,18 @@ def assemble_pear(args, pool=Pool(processes=1)):
 
         if args.threads is not None and args.threads > 1:
             threads = args.threads
-
+        """
         parallel(runProgramRunner, [ProgramRunner("pear", [forwards, reverse,
                                                            "%s/%s_%s" % (args.outdir, args.name, getFileName(forwards)),
                                                            threads],
                                                   {"exists": [forwards, reverse]})
                                     for forwards, reverse in inputs], pool)
-
+        """
+        pool.map_async(runProgramRunner, [ProgramRunner("pear", [forwards, reverse,
+                                                           "%s/%s_%s" % (args.outdir, args.name, getFileName(forwards)),
+                                                           threads],
+                                                  {"exists": [forwards, reverse]})
+                                    for forwards, reverse in inputs], pool).get(9999)
     except KeyboardInterrupt:
         cleanupPool(pool)
 
@@ -392,7 +397,7 @@ def dereplicate(args, pool=Pool(processes=1)):
         #  Ex. in the fasta file {sample_file}_derep_renamed.fa, read 123_10 indicate that for sequence
         # which id is 123, there 10 sequences that identical to it and which were discarded.
         # ls * cleaned.fasta | parallel "python ~/ARMS/bin/renameWithCount.py {/.}_derep.fa {/.}_uc_parsed.out {/.}_derep_renamed.fa"
-        input_fa = getInputs(args.input, "*_cleaned.fa")
+        input_fa = getInputs(args.outdir, "*_derep.fa")
         input_uc_parsed = getInputs(args.outdir, "*_parsed.out")
         inputs = zip(input_fa, input_uc_parsed)
         # renameSequencesWithCount(input_fasta, count_file, outfile):
@@ -495,7 +500,7 @@ def align_macse(args, pool=Pool(processes=1)):
         #                                    \"%s\" -seq_lr \"%s\" -maxFS_inSeq 0  -maxSTOP_inSeq 0  -maxINS_inSeq 0 \
         #                                    -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 -out_NT \"%s\"_NT \
         #                                    -out_AA \"%s\"_AA -seqToAdd_logFile \"%s\"_log.csv",
-        
+
         parallel(runProgramRunner, [ProgramRunner("macse_align",
                                                   [args.db, args.db, input_] +
                                                   ["%s/%s" % (args.outdir, getFileName(input_))] * 3,

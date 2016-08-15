@@ -230,6 +230,7 @@ def main(argv):
     # ==  11 Find Chimeras with Mothur  ==
     # ====================================
     # "chmimera.uchime":  "mothur \'#chimera.uchime(fasta=\"%s\", name=\"%s\")\'",
+    '''
     parser_chimera = subparsers.add_parser('uchime')
     parser_chimera.add_argument('-i', '--input', required=True, help="Input Fasta File to clean")
     parser_chimera.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved")
@@ -239,7 +240,7 @@ def main(argv):
     refType.add_argument('-n', '--names', help="Names file to reference")
     refType.add_argument('-d', '--refdb', help="Database file to reference")
     parser_chimera.set_defaults(func=findChimeras)
-
+    '''
 
     # ==========================================
     # ==  12 Closed Ref Picking with BIOCODE  ==
