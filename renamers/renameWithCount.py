@@ -1,11 +1,11 @@
 import sys
 from Bio import SeqIO
-from countToDict import parseCountFileToDict
+from countToDict import parseCountFileToCountDict
 
 
 # Renames sequences by looking up their count in a global count file.
 def renameSequencesWithCount(input_fasta, count_file, outfile):
-    seeds = parseCountFileToDict(count_file)
+    seeds = parseCountFileToCountDict(count_file)
     print "Parsed countfile to dict"
     i=0
     mySeqs=[]

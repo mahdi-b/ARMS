@@ -1,13 +1,13 @@
 import operator
 import sys
 from Bio import SeqIO
-from countToDict import parseCountFileToDict
+from countToDict import parseCountFileToCountDict
 
 
 def formatWithSwarmCounts(input_fasta, uc_parsed_out_file, output_fasta):
     # Covnerts a fasta and a dereplicated global count file to a sorted, dereplicated, fasta named by abundance
     seeds = []
-    seedSizes = parseCountFileToDict(uc_parsed_out_file)
+    seedSizes = parseCountFileToCountDict(uc_parsed_out_file)
 
     print "Indexing reads"
     reads = SeqIO.index(input_fasta, "fasta")

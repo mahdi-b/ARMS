@@ -103,7 +103,7 @@ def main(argv):
 
     # for pear assembler
     pear_assembler = parser_assemble.add_argument_group('pear', 'Pear options')
-    pear_assembler.add_argument('-t', '--threads',   type=int, help="The number of threads to use (default is 1")
+    pear_assembler.add_argument('-t', '--threads',   type=int, default=1, help="The number of threads to use (default is 1")
 
 
     # ======================================
@@ -126,7 +126,8 @@ def main(argv):
     parser_rename = subparsers.add_parser('rename')
     parser_rename.add_argument('-i', '--input', required=True, help="Input file or directory")
     parser_rename.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
-    parser_rename.add_argument('-f', '--filetype', required=True, help="The filetype of the input files")
+    parser_rename.add_argument('-f', '--filetype', required=True, help="The filetype of the input files.  Either \
+                                            'fasta' or 'fastq'")
     parser_rename.set_defaults(func=renameSequences)
 
 
@@ -175,6 +176,8 @@ def main(argv):
     parser_derep = subparsers.add_parser('dereplicate_fasta')
     parser_derep.add_argument('-i', '--input', required=True, help="Input fasta/fastq")
     parser_derep.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved")
+    parser_derep.add_argument('-f', '--filetype', required=True, help="The filetype of the input files.  Either \
+                                            'fasta' or 'fastq'")
     parser_derep.set_defaults(func=dereplicate)
 
 
@@ -186,7 +189,8 @@ def main(argv):
     parser_split.add_argument('-i', '--input', required=True, help="Input fasta file to split")
     parser_split.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved")
     parser_split.add_argument('-c', '--chunksize', type=int, required=True, help="Chunksize.")
-    parser_split.add_argument('-f', '--filetype', required=True, help="Filetype of the files to be partitioned")
+    parser_split.add_argument('-f', '--filetype', required=True, help="The filetype of the input files.  Either \
+                                            'fasta' or 'fastq'")
     parser_split.set_defaults(func=partition)
 
 
@@ -200,7 +204,7 @@ def main(argv):
     parser_mothuralign.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
     parser_mothuralign.set_defaults(func=align_mothur)
     
-
+    """
     # ================================
     # ==  9 Align Reads with MACSE  ==
     # ================================
@@ -213,7 +217,28 @@ def main(argv):
     parser_align.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
     parser_align.add_argument('-d', '--db', required=True, help="Database against which to align and filter reads")
     parser_align.set_defaults(func=align_macse)
+    """
+    # =======================
+    # ==  9 Cat the files  ==
+    # =======================
+    parser_cat = subparsers.add_parser('merge_fasta')
+    parser_cat.add_argument('-i', '--input', required=True, help="Input directory containing files to concatenate")
+    parser_cat.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
+    parser_cat.add_argument('-n', '--name', required=True, help="Prfix name for the merged file")
+    parser_cat.add_argument('-f', '--fileext', required=True, help="File extension for the output file.  Either \
+                                    'fasta', or 'fastq'.")
+    parser_cat.set_defaults(func=merge)
 
+    # ===========================
+    # ==  9.5 ungap the files  ==
+    # ===========================
+    parser_cat = subparsers.add_parser('ungap_fasta')
+    parser_cat.add_argument('-i', '--input', required=True, help="Input directory containing files to concatenate")
+    parser_cat.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
+    parser_cat.add_argument('-f', '--fileext', required=True, help="File extension for the output file.  Either \
+                                    'fasta', or 'fastq'.")
+    parser_cat.add_argument('-g', '--gapchar', required=True, help="Character to filter from sequences.")
+    parser_cat.set_defaults(func=ungapFasta)
 
     # ==========================================
     # ==  10 Cluster using vsearch and swarm  ==

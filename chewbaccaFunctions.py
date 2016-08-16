@@ -6,6 +6,7 @@ from converters.fastqToFasta import translateFastqToFasta
 from converters.seedToNames import seedToNames
 from filters.prescreen import screen
 from filters.removeMacseRefs import removeMacseRefs
+from filters.ungap import ungap
 from parsers.getSeedSequences import getSeedSequences
 from parsers.getTaxFromId import parseVSearchToTaxa
 from parsers.parseVSearchout import parseVSearchout
@@ -49,8 +50,7 @@ def assemble(args, pool=Pool(processes=1)):
             makeDir(args.outdir)
             # Run and get a list of output files
             outputs = supported_programs[args.program](args, pool)
-            # Relocate all output files
-            bulk_move_to_dir(outputs, args.outdir)
+
         else:
             "Invalid program choice.  Supported programs are " + str(keys)
     except KeyboardInterrupt:
@@ -68,48 +68,48 @@ def assemble_pear(args, pool=Pool(processes=1)):
     :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
     """
 
-    # *****************************************************************************************
-    # Making the contigs using Pear
+
     # "~/programs/pear-0.9.4-bin-64/pear-0.9.4-64 -f %s -r %s -o %s -j %s -m %d"
     try:
-        name_error_text = "Forwards reads should include the filename suffix \"_forward.fq\" " \
-                          + "or \"R1.fq\".  Reverse reads should include the filename suffix \"_reverse\" or \"R2.fq\"."
-        printVerbose("\tAssembling reads with pear")
-        threads = 1
-        forwards_reads = getInputs(args.input_f, "*_forward.f*")
-        forwards_reads += getInputs(args.input_f, "*_R1.f*")
-        reverse_reads = getInputs(args.input_r, "*_reverse.f*")
-        reverse_reads += getInputs(args.input_r, "*_R2.f*")
 
+        name_error_text = "Forwards reads should include the filename suffix \"_forward\" " \
+                          + "or \"R1\".  Reverse reads should include the filename suffix \"_reverse\" or \"R2\"."
+
+        forwards_reads = getInputs(args.input_f, "*_forward*")
+        forwards_reads += getInputs(args.input_f, "*_R1*")
+        reverse_reads = getInputs(args.input_r, "*_reverse*")
+        reverse_reads += getInputs(args.input_r, "*_R2*")
+
+        # Ensure that we have matching left and right reads
         if len(forwards_reads) != len(reverse_reads):
             print "Error: Unequal number of forwards/reverse reads."
             exit()
 
-        if len(forwards_reads) == 0:
-            print "Error: No read files found."
-            print name_error_text
-            exit()
-
         inputs = zip(set(forwards_reads), set(reverse_reads))
 
-        if args.threads is not None and args.threads > 1:
-            threads = args.threads
-        """
+        logging.debug("%d Input files to assemble:" % len(inputs))
+        logging.debug(str(inputs))
+
+        printVerbose("\tAssembling reads with pear")
         parallel(runProgramRunner, [ProgramRunner("pear", [forwards, reverse,
                                                            "%s/%s_%s" % (args.outdir, args.name, getFileName(forwards)),
-                                                           threads],
+                                                           args.threads],
                                                   {"exists": [forwards, reverse]})
                                     for forwards, reverse in inputs], pool)
-        """
-        pool.map_async(runProgramRunner, [ProgramRunner("pear", [forwards, reverse,
-                                                           "%s/%s_%s" % (args.outdir, args.name, getFileName(forwards)),
-                                                           threads],
-                                                  {"exists": [forwards, reverse]})
-                                    for forwards, reverse in inputs], pool).get(9999)
+
+        printVerbose("Done assembling sequences...")
+
+        # Grab all the auxillary files (everything not containing ".assembled."
+        aux_files = getInputs(args.outdir, "*", "*.assembled.*", ignoreEmptyFiles=False)
+        # make aux dir for extraneous files and move them there
+        bulk_move_to_dir(aux_files, makeAuxDir(args.outdir))
+
     except KeyboardInterrupt:
         cleanupPool(pool)
 
 
+#TODO handle file cleanup
+# TODO handle debug/verbose printing
 def assemble_mothur(args, pool=Pool(processes=1)):
     """Assembles reads with Mothur's make.contigs command.
     :param args: An argparse object with the following parameters:
@@ -135,7 +135,6 @@ def assemble_mothur(args, pool=Pool(processes=1)):
         cleanupPool(pool)
 
 
-# TODO fix: if a sample file exists, do sample_1, sample_2 etc..
 def splitOnBarcodes(args, pool=Pool(processes=1)):
     """Splits a fasta/fastq file on a set of barcodes.  For a set of k input files, each input file is assigned a file_id.
     Then, each file is split into a set of subfiles, where each subfile named <sample>_splitOut_<k> contains the sequences belonging to <sample> from file <k>.
@@ -163,20 +162,28 @@ def splitOnBarcodes(args, pool=Pool(processes=1)):
     #                                    -prefix "%s" --suffix %s --bol --mismatches 1',
     try:
         makeDir(args.outdir)
-        files_to_split = getInputs(args.input, "*.assembled.f*")
-        print files_to_split
+
+        files_to_split = getInputs(args.input)
+        logging.debug("%d Input files to demux:" % len(files_to_split))
+        logging.debug(files_to_split)
+
         file_id = range(len(files_to_split))
         file_id_pairs = zip(files_to_split, file_id)
-        printVerbose("Splitting based on barcodes")
+        printVerbose("Demuxing sequences...")
         parallel(runProgramRunner, [ProgramRunner("barcode.splitter",
                                                   [input_, args.barcodes, "%s/" % args.outdir,
-                                                   "_splitOut_%d.fastq" % id_],
+                                                   "_%d_splitOut.fastq" % id_],
                                                   {"exists": [input_]}) for input_, id_ in file_id_pairs], pool)
         printVerbose("Demuxed sequences.")
 
         # gather output files and move them to their final destination
         output_files = enumerateDir(".", "*_splitOut_")
         bulk_move_to_dir(output_files, args.outdir)
+
+        # Grab all the auxillary files
+        aux_files = getInputs(args.outdir, "unmatched_*")
+        # make aux dir for extraneous files and move them there
+        bulk_move_to_dir(aux_files, makeAuxDir(args.outdir))
 
     except KeyboardInterrupt:
         cleanupPool(pool)
@@ -186,8 +193,8 @@ def renameSequences(args, pool=Pool(processes=1)):
     """Renames sequences in a fasta/fastq file as <filename>_ID0, <filename>_ID1, <filename>_ID2, etc., where <filename>
         is the name of the fasta/fastq file without any extensions or chewbacca suffixes.
     :param args: An argparse object with the following parameters:
-                    input       Input file or folder containing input files.
-                    outdir      Directory where outputs will be saved
+                    input       Input file or folder containing only fasta or fastq files.
+                    outdir      Directory where outputs will be saved.
                     filetype    File type of the input files.  Either 'fasta' or 'fastq'.
     :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
     """
@@ -196,14 +203,24 @@ def renameSequences(args, pool=Pool(processes=1)):
         makeDir(args.outdir)
 
         # Gather input files
-        inputs = getInputs(args.input, "*splitOut_*", "unmatched_*")
+        inputs = getInputs(args.input)
+        logging.debug("%d Input files to rename:" % len(inputs))
+        logging.debug(str(inputs))
 
+        printVerbose("Renaming sequences...")
         # Run serialRename in parallel
         parallel(runPython,
                  [(serialRename,
                    input_, "%s/%s_renamed%s" % (args.outdir, strip_ixes(getFileName(input_)),
                                                 os.path.splitext(input_)[1]), args.filetype) for input_ in inputs],
                  pool)
+        printVerbose("Done renaming sequences...")
+
+        # Grab all the auxillary files
+        aux_files = getInputs(args.outdir, "*.names")
+        # make aux dir for extraneous files and move them there
+        bulk_move_to_dir(aux_files, makeAuxDir(args.outdir))
+
     except KeyboardInterrupt:
         cleanupPool(pool)
 
@@ -257,41 +274,45 @@ def trim_flexbar(args, pool=Pool(processes=1)):
     # "flexbar":  "flexbar -r \"%s\" -t \"%s\" -ae \"%s\" -a \"%s\"",
     try:
         makeDir(args.outdir)
-        input_file_name_format = "*_renamed.f*"
-        input_files = getInputs(args.input, input_file_name_format)
-        print("inputfiles:")
-        print input_files
-        arg = [(input_file, "%s/temp_%s" % (args.outdir, getFileName(input_file)), "LEFT", args.barcodes) for input_file
-               in input_files]
-        print arg
 
-        printVerbose("Trimming barcodes and adapters with flexbar")
+        input_files = getInputs(args.input)
+        logging.debug("%d InputFiles to trim adapters from:" % len(input_files))
+        logging.debug(str(input_files))
+
+        temp_file_name_template = "%s/temp_%s"
+        debarcoded_file_name_template = "%s/%s_debarcoded"
+
+
         # TODO those exists validators dont really need ot be there since we globbed our files
         # TODO these should write to the input directory, then return the file names, so the parent can move and rename
+        printVerbose("Trimming barcodes and adapters with flexbar")
         # Trim the left
         parallel(runProgramRunner, [ProgramRunner("flexbar",
-                                                  [input_file, "%s/temp_%s" % (args.outdir, getFileName(input_file)),
-                                                   "LEFT", args.barcodes],
-                                                  {"exists": [input_file]}) for input_file in input_files], pool)
+                                          [input_file, temp_file_name_template % (args.outdir, strip_ixes(input_file)),
+                                           "LEFT", args.barcodes],
+                                          {"exists": [input_file]}) for input_file in input_files], pool)
 
         temp_files = getInputs(args.outdir, "temp_*")
-        print input_files
+        logging.debug("%d InputFiles to debarcode:" % len(temp_files))
+        logging.debug(str(temp_files))
+
         # Trim the right
         parallel(runProgramRunner, [ProgramRunner("flexbar",
-                                                  [input_file,
-                                                   "%s/%s_debarcoded" % (args.outdir, getFileName(input_file)[5:]),
-                                                   "RIGHT", args.adapters],
-                                                  {"exists": [input_file]}) for input_file in temp_files], pool)
-        printVerbose("Demuxed sequences.")
+                                          [input_file,
+                                           debarcoded_file_name_template % (args.outdir, strip_ixes(input_file)[5:]),
+                                           "RIGHT", args.adapters],
+                                          {"exists": [input_file]}) for input_file in temp_files], pool)
+        printVerbose("Done Trimming sequences.")
 
-        # gather output files and move them to their final destination
-        output_files = enumerateDir(".", "*_debarcoded*")
+        # Grab all the auxillary files (everything not containing ".assembled."
+        for file_ in getInputs(args.outdir, "temp_*"):
+            os.remove(file_)
 
-        return output_files
     except KeyboardInterrupt:
         cleanupPool(pool)
 
-
+# TODO debug/verbose printing
+# TODO file cleanup
 def trim_mothur(args, pool=Pool(processes=1)):
     """
     :param args: An argparse object with the following parameters:
@@ -303,7 +324,7 @@ def trim_mothur(args, pool=Pool(processes=1)):
     """
     try:
         printVerbose("Trimming barcodes and adapters with mothur")
-        inputs = getInputs(args.input, "*_splitOut_", "*unmatched.*")
+        inputs = getInputs(args.input)
         parallel(runProgramRunner, [ProgramRunner("trim.seqs", [input_, args.oligos],
                                                   {"exists": [args.oligos]})
                                     for input_ in inputs], pool)
@@ -327,18 +348,25 @@ def trimmomatic(args, pool=Pool(processes=1)):
     # -%phred %input %output SLIDINGWINDOW:%windowsize:%minAvgQuality MINLEN:%minLen"
     try:
         makeDir(args.outdir)
-        inputs = getInputs(args.input, "*_debarcoded.f*")
+
+        inputs = getInputs(args.input)
+        logging.debug("%d Input files to clean:" % len(inputs))
+        logging.debug(str(inputs))
+
+        printVerbose("Cleaning sequences with Trimmomatic...")
         parallel(runProgramRunner, [ProgramRunner("trimmomatic", [input_,
                                                                   "%s/%s_cleaned.fastq" % (
-                                                                      args.outdir, getFileName(input_)),
+                                                                      args.outdir, strip_ixes(input_)),
                                                                   args.windowSize, args.quality, args.minLen],
                                                   {"exists": [args.outdir, input_],
                                                    "positive": [args.windowSize, args.quality, args.minLen]})
                                     for input_ in inputs], pool)
+        printVerbose("Done cleaning sequences.")
+
     except KeyboardInterrupt:
         cleanupPool(pool)
 
-
+# TODO We should probably move the fasta conversion out to a different step
 def dereplicate(args, pool=Pool(processes=1)):
     """Uses a sliding window to identify and trim away areas of low quality.
 
@@ -351,8 +379,9 @@ def dereplicate(args, pool=Pool(processes=1)):
     #                                           -uc {/.}_uc.out"
     try:
         makeDir(args.outdir)
+        #TODO debug/verbose for conversion
         # grab all the _cleaned files and turn the fastqs into fastas
-        input_fqs = getInputs(args.input, "*_cleaned*")
+        input_fqs = getInputs(args.input)
         output_fas = []
         fastq_exts = set([".fq", ".fastq"])
 
@@ -362,16 +391,19 @@ def dereplicate(args, pool=Pool(processes=1)):
                 input_dir = os.path.dirname(input_)
                 base_name = os.path.basename(input_)
                 file_name = os.path.splitext(base_name)[0]
-                fasta_name = "%s/%s.fa" % (input_dir, file_name)
+                fasta_name = "%s/%s.fa" % (args.outdir, file_name)
                 translateFastqToFasta(input_, fasta_name)
                 output_fas.append(fasta_name)
 
         # zip those names to parallel array s
         file_args = zip(input_fqs, output_fas)
-
         # Translate fastq files in parallel
         parallel(runPython, [(translateFastqToFasta, input_fq, output_fa) for input_fq, output_fa in file_args], pool)
 
+
+        logging.debug("%d Input files to search for replication:" % len(output_fas))
+        logging.debug(str(output_fas))
+        printVerbose("Searching for identical reads...")
         # parse the number of identical reads included in each sequence and write them to the
         #       {sample_file}_parsed.out
         # ls *cleaned.fasta  | parallel  "~/ARMS/bin/usearch7.0.1090 -derep_fulllength {} -output {/.}_derep.fa
@@ -383,29 +415,94 @@ def dereplicate(args, pool=Pool(processes=1)):
                                                                   args.outdir, strip_ixes(getFileName(input_)))],
                                                   {"exists": [args.outdir, input_]})
                                     for input_ in output_fas], pool)
+        printVerbose("Done searching.")
 
         # Collect .uc files
         input_ucs = getInputs(args.outdir, "*_uc.out")
-
+        logging.debug("%d Input .out files to parse:" % len(input_ucs))
+        logging.debug(str(input_ucs))
+        printVerbose("Parsing search logs for seed sequences...")
         # Collect seeds
         # #ls *uc.out | parallel "python ~/ARMS/bin/getSeedSequences.py {} {.}_parsed.out"
         parallel(runPython,
-                 [(getSeedSequences, input_, "%s/%s_parsed.out" % (args.outdir, strip_ixes(getFileName(input_)))) for
+                 [(getSeedSequences, input_, "%s/%s.names" % (args.outdir, strip_ixes(getFileName(input_)))) for
                   input_ in input_ucs], pool)
+        printVerbose("Done parsing search logs.")
 
         # Rename the sequences to include the the number of identical reads.
         #  Ex. in the fasta file {sample_file}_derep_renamed.fa, read 123_10 indicate that for sequence
         # which id is 123, there 10 sequences that identical to it and which were discarded.
         # ls * cleaned.fasta | parallel "python ~/ARMS/bin/renameWithCount.py {/.}_derep.fa {/.}_uc_parsed.out {/.}_derep_renamed.fa"
         input_fa = getInputs(args.outdir, "*_derep.fa")
-        input_uc_parsed = getInputs(args.outdir, "*_parsed.out")
+        input_uc_parsed = getInputs(args.outdir, "*.names")
         inputs = zip(input_fa, input_uc_parsed)
+        logging.debug("%d Input fasta to rename and countfile:" % len(inputs))
+        logging.debug(str(inputs))
+
         # renameSequencesWithCount(input_fasta, count_file, outfile):
+        printVerbose("Renaming sequences with replication counts...")
         parallel(runPython,
                  [(renameSequencesWithCount,
                    fasta_file, count_file,
-                   "%s/%s_derep_renamed.fa" % (args.outdir, strip_ixes(getFileName(fasta_file))))
+                   "%s/%s_derepCount.fa" % (args.outdir, strip_ixes(getFileName(fasta_file))))
                   for fasta_file, count_file in inputs], pool)
+        printVerbose("Done renaming sequences.")
+
+        aux_files = getInputs(args.outdir, "*", "*_derepCount.*")
+        bulk_move_to_dir(aux_files, makeAuxDir(args.outdir))
+    except KeyboardInterrupt:
+        cleanupPool(pool)
+
+
+
+def align_mothur(args, pool=Pool(processes=1)):
+    """Aligns sequences with mothur
+
+    :param args: An argparse object with the following parameters:
+                input        Database against which to align and filter reads
+                ref          Directory containig the samples to be cleaned
+                outdir       Directory where outputs will be saved
+    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
+    :return:
+    """
+    try:
+        # Make the output directory, or abort if it already exists
+
+        makeDir(args.outdir)
+
+        inputs = getInputs(args.input)
+        logging.debug("%d Input files to be aligned:" % len(inputs))
+        logging.debug(str(inputs))
+
+        printVerbose("Aligning sequences with mothur against BIOCODE")
+        # ls *debarcoded_cleaned_derep_renamed.fa | parallel  \
+        #   mothur '"#align.seqs(candidate={}, template=~/ARMS/data/BIOCODETEMPLATE, flip=t)"'
+        #
+        # "align.seqs": "mothur \'#align.seqs(candidate=%s, template=%s, flip=t)\'",
+        parallel(runProgramRunner, [ProgramRunner("align.seqs", [input_, args.ref],
+                                                  {"exists": [args.outdir, args.ref, input_]})
+                                    for input_ in inputs], pool)
+        printVerbose("Done with alignment.")
+
+        out_exts = ["*.align", "*.align.report", "*.accnos"]
+
+        # collect and move output files
+        if len(inputs) > 0:
+            indir = os.path.dirname(inputs[0])
+            out_files = []
+            for ext in out_exts:
+                out_files += getInputs(indir, ext)
+            out_files += getInputs(".", "mothur.*.logfile")
+            out_files += getInputs(".", "8mer")
+            bulk_move_to_dir(out_files, args.outdir)
+
+        # rename output files
+        for file_ in getInputs(args.outdir, "*"):
+            os.rename(file_, "%s/%s%s" % (args.outdir, strip_ixes(file_), os.path.splitext(file_)[1]))
+
+        # Grab the auxillary files and move them to an aux directory
+        aux_files = getInputs(args.outdir, "*", "*.align")
+        bulk_move_to_dir(aux_files, makeAuxDir(args.outdir))
 
     except KeyboardInterrupt:
         cleanupPool(pool)
@@ -426,115 +523,51 @@ def partition(args, pool=Pool(processes=1)):
         makeDir(args.outdir)
 
         # Gather input files
-        inputs = getInputs(args.input, "*.align")
+        inputs = getInputs(args.input)
 
         # Run renamer in parallel
         parallel(runPython, [
             (splitK, input_, "%s/%s" % (args.outdir, strip_ixes(getFileName(input_))), args.chunksize, args.filetype)
             for input_ in inputs], pool)
+
+
     except KeyboardInterrupt:
         cleanupPool(pool)
 
 
-def align_mothur(args, pool=Pool(processes=1)):
-    """Aligns sequences with mothur
-
-    :param args: An argparse object with the following parameters:
-                input        Database against which to align and filter reads
-                ref          Directory containig the samples to be cleaned
-                outdir       Directory where outputs will be saved
-    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
-    :return:
-    """
+def merge(args, pool=Pool(processes=1)):
+    """Clusters sequences.
+       :param args: An argparse object with the following parameters:
+                       input        Cleaned inputs File.
+                       outdir       Directory where outputs will be saved.
+                       name         Name prefix for the merged file.
+                       fileext      Output file extension.  e.g 'fasta', 'fastq', 'txt'
+       :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
+       """
     try:
-        # Make the output directory, or abort if it already exists
-
         makeDir(args.outdir)
-
-        inputs = getInputs(args.input, "*_derep.fa")
-
-        # ls *debarcoded_cleaned_derep_renamed.fa | parallel  \
-        #   mothur '"#align.seqs(candidate={}, template=~/ARMS/data/BIOCODETEMPLATE, flip=t)"'
-        #
-        # "align.seqs": "mothur \'#align.seqs(candidate=%s, template=%s, flip=t)\'",
-        parallel(runProgramRunner, [ProgramRunner("align.seqs", [input_, args.ref],
-                                                  {"exists": [args.outdir, args.ref, input_]})
-                                    for input_ in inputs], pool)
-
-        out_exts = ["*.align", "*.align.report", "*.accnos"]
-
-        # Wait for files to get written
-        pool.close()
-        pool.join()
-
-        if len(inputs) > 0:
-            indir = os.path.dirname(inputs[0])
-            out_files = []
-            for ext in out_exts:
-                out_files += getInputs(indir, ext)
-            out_files += getInputs(os.getcwd(), "mothur.*.logfile")
-            out_files += getInputs(os.getcwd(), "8mer")
-            bulk_move_to_dir(out_files, args.outdir)
+        inputs = getInputs(args.input)
+        joinFiles(inputs, "%s/%s_MERGED.%s" % (args.outdir, args.name, args.fileext))
 
     except KeyboardInterrupt:
         cleanupPool(pool)
 
-
-def align_macse(args, pool=Pool(processes=1)):
-    """Aligns sequences by iteratively adding them to a known good alignment.
-
-     :param args: An argparse object with the following parameters:
-                    db                  Database against which to align and filter reads
-                    samplesDir          Directory containig the samples to be cleaned
-                    outdir              Directory where outputs will be saved
-     :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
-    """
+def ungapFasta(args, pool=Pool(processes=1)):
+    """Clusters sequences.
+       :param args: An argparse object with the following parameters:
+                       input        Fasta files to ungap.
+                       outdir       Directory where outputs will be saved.
+                       gapchar      A gap character to remove from the sequences.
+       :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
+       """
     try:
         makeDir(args.outdir)
         inputs = getInputs(args.input)
 
-        printVerbose("\t %s Aligning reads using MACSE")
-        # Aligns sequences by iteratively adding them to a known good alignment.
-        #
-        # "macse_align":      "java -jar " + programPaths["MACSE"] + " -prog enrichAlignment  -seq \"%s\" -align \
-        #                                    \"%s\" -seq_lr \"%s\" -maxFS_inSeq 0  -maxSTOP_inSeq 0  -maxINS_inSeq 0 \
-        #                                    -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 -out_NT \"%s\"_NT \
-        #                                    -out_AA \"%s\"_AA -seqToAdd_logFile \"%s\"_log.csv",
-
-        parallel(runProgramRunner, [ProgramRunner("macse_align",
-                                                  [args.db, args.db, input_] +
-                                                  ["%s/%s" % (args.outdir, getFileName(input_))] * 3,
-                                                  {"exists": [input_, args.db]}) for input_ in inputs], pool)
-        print("Done writing")
-
-        printVerbose("\t %s Processing MACSE alignments")
-        # Removes non-nucleotide characters in MACSE aligned sequences for all fasta files in the samples directory
-        #
-        #    (the samplesDir argument).
-        # "macse_format":     "java -jar " + programPaths["MACSE"] + "  -prog exportAlignment -align \"%s\" \
-        #       -charForRemainingFS - -gc_def 5 -out_AA \"%s\" -out_NT \"%s\" -statFile \"%s\""
-
-        parallel(runProgramRunner, [ProgramRunner("macse_format",
-                                                  ["%s/%s_NT" % (args.outdir, getFileName(input_)),
-                                                   "%s/%s_AA_macse.fasta" % (args.outdir, getFileName(input_)),
-                                                   "%s/%s_NT_macse.fasta" % (args.outdir, getFileName(input_)),
-                                                   "%s/%s_macse.csv" % (args.outdir, getFileName(input_))],
-                                                  {"exists": [input_]}) for input_ in inputs], pool)
-
-        # Remove the reference sequences from the MACSE files and remove the non nucleotide characters from the sequences.
-        printVerbose("\tCleaning MACSE alignments")
-
-        macse_outputs = ["%s/%s_NT_macse.fasta" % (args.outdir, getFileName(input_)) for input_ in inputs]
-        cleaned_output_files = ["%s/MACSE_OUT_.part%d" % (args.outdir , i) for i in range(len(macse_outputs))]
-        input_pairs = zip(macse_outputs, cleaned_output_files)
-        # TODO removeMacseRefs reads the database with each process, perhpas pass a list of names instead?
-        # removeMacseRefs(file_to_clean, reference_file, output_file_name):
-        parallel(runPython, [(removeMacseRefs, macse_output, args.db, output_name)
-                             for macse_output, output_name in input_pairs], pool)
-
-        # cat the files
-        joinFiles(cleaned_output_files, "%s/MACSE_OUT_MERGED.fasta" % args.outdir)
-
+        #ungap(file_to_clean, output_file_name, gap_char, file_type):
+        parallel(runPython, [(ungap, input_, "%s/%s_cleaned.%s" % (args.outdir, strip_ixes(input_), 'fasta'),
+                              args.gapchar, args.fileext)
+                             for input_ in inputs], pool)
     except KeyboardInterrupt:
         cleanupPool(pool)
 
@@ -554,7 +587,7 @@ def cluster(args, pool=Pool(processes=1)):
         ## prepare the file for clustering. Dereplicates across smaples and renames the resulting sequences with hashes
         # "vsearch": program_paths["VSEARCH"] + "--derep_fulllength \"%s\" --sizeout --fasta_width 0  \
         #                                    --output amplicons_linearized_dereplicated.fasta -uc ",
-        inputs = getInputs(args.input, "*MACSE_OUT_MERGED*")
+        inputs = getInputs(args.input)
 
         parallel(runProgramRunner, [ProgramRunner("vsearch.derep",
                                                   [input_, "%s/%s.fa" % (args.outdir, getFileName(input_)),
@@ -566,6 +599,9 @@ def cluster(args, pool=Pool(processes=1)):
         parallel(runPython,
                  [(getSeedSequences, input_, "%s/%s_parsed.out" % (args.outdir, getFileName(input_))) for
                   input_ in input_ucs], pool)
+
+        #TODO update the names file with updateNames.py
+
 
         # python formatWithSwarmCounts.py
         #                                   8_macse_out/MACSEOUT_MERGED.fasta uc_parsed.out dereplicated_renamed.fasta
@@ -608,9 +644,214 @@ def cluster(args, pool=Pool(processes=1)):
                      pool)
             # generate names file
 
+        # Gather and move auxillary files
+        aux_files = getInputs(args.outdir, "*", "*_seeds.fasta")
+        bulk_move_to_dir(aux_files, makeAuxDir(args.outdir))
     except KeyboardInterrupt:
         cleanupPool(pool)
 
+
+def queryBiocode(args, pool=Pool(processes=1)):
+    """Compare reference sequences to the fasta-formatted query sequences, using global pairwise alignment.
+
+    :param args: An argparse object with the following parameters:
+                    accnosFile  List of sequence names to remove
+                    outdir      Directory to put the output files
+    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
+    """
+    try:
+        DB_STRING = os.path.expanduser("~/ARMS/data/BiocodePASSED_SAP.txt")
+        ALN_USER_STRING = ""
+        makeDir(args.outdir)
+
+        # vsearch --usearch_global %s seeds.pick.fasta  --db ../data/BiocodePASSED_SAP.txt --id 0.9 \
+        #		--userfields query+target+id+alnlen+qcov --userout %sout --alnout %s alnout.txt
+
+        # expecting a fasta to annotate
+        inputs = getInputs(args.input)
+        # input, db, userout, alnout, aln_userfield
+        parallel(runProgramRunner, [ProgramRunner("vsearch.usearch_global",
+                                                  [input_, DB_STRING, "%s/%s.out" % (args.outdir, strip_ixes(input_)),
+                                                   "%s/%s.alnout" % (args.outdir, strip_ixes(input_)), ALN_USER_STRING],
+                                                  {"exists": [input_]}) for input_ in inputs], pool)
+        # Parse the alignment results and put those that pass the criterion (97 similarity, 85 coverage) in
+        # parsed_BIOCODE.out.  Parameters can be changed and this command can be rerun as many times as necessary
+        #
+        # parseVSearchout.py ~/ARMS/data/BiocodePASSED_SAP_tax_info.txt vsearch_out  parsed_BIOCODE.out 97 85
+        parallel(runPython, [(parseVSearchout, os.path.expanduser("~/ARMS/data/BiocodePASSED_SAP_tax_info.txt"),
+                              "%s/%s.out" % (args.outdir, strip_ixes(input_)),
+                              "%s/%s_parsed_BIOCODE.out" % (args.outdir, strip_ixes(input_)),
+                              97, 85) for input_ in inputs], pool)
+
+    except KeyboardInterrupt:
+        cleanupPool(pool)
+
+
+def queryNCBI(args, pool=Pool(processes=1)):
+    """Compare reference sequences to the fasta-formatted query sequences, using global pairwise alignment.
+
+    :param args: An argparse object with the following parameters:
+                    accnosFile  List of sequence names to remove
+                    outdir      Directory to put the output files
+    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
+    """
+    try:
+        COI_DB_STRING = os.path.expanduser("~/ARMS/refs/COI.fasta")
+        NCBI_DB_STRING = os.path.expanduser("~/ARMS/refs/ncbi.db")
+        ALN_USER_STRING = "--userfields query+target+id+alnlen+qcov"
+        makeDir(args.outdir)
+
+        # vsearch --usearch_global %s seeds.pick.fasta  --db ../data/BiocodePASSED_SAP.txt --id 0.9 \
+        #		--userfields query+target+id+alnlen+qcov --userout %sout --alnout %s alnout.txt
+
+        # expecting a fasta to annotate
+        inputs = getInputs(args.input)
+        # input, db, userout, alnout, aln_userfield
+        parallel(runProgramRunner, [ProgramRunner("vsearch.usearch_global",
+                                                  [input_, COI_DB_STRING,
+                                                   "%s/%s.out" % (args.outdir, strip_ixes(input_)),
+                                                   "%s/%s.alnout" % (args.outdir, strip_ixes(input_)), ALN_USER_STRING],
+                                                  {"exists": [input_]}) for input_ in inputs], pool)
+        # Parse the alignment results and put those that pass the criterion (97 similarity, 85 coverage) in
+        # parsed_BIOCODE.out.  Parameters can be changed and this command can be rerun as many times as necessary
+        #
+        # parseVSearchToTaxa(vsearch_out, ncbi_db, min_coverage, min_similarity)> parsed_nt.out
+        parallel(runPython, [(parseVSearchToTaxa, "%s/%s.out" % (args.outdir, strip_ixes(input_)), NCBI_DB_STRING,
+                              "%s/%s_parsed_nt.out" % (args.outdir, strip_ixes(input_)),
+                              97, 85) for input_ in inputs], pool)
+
+    except KeyboardInterrupt:
+        cleanupPool(pool)
+
+
+def makeFastq(args, pool=Pool(processes=1)):
+    """Finds chimeric sequences from a fasta file and writes them to an accons file.
+    :param args: An argparse object with the following parameters:
+                    inputFasta	Input Fasta file
+                    inputQual	Input Qual file
+    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
+    """
+    try:
+        parallel(runProgramRunner, [ProgramRunner("make.fastq", [args.inputFasta, args.inputQual],
+                                                  {"exists": [args.inputFasta, args.inputQual]}, pool)
+                                    ])
+
+    except KeyboardInterrupt:
+        cleanupPool(pool)
+
+
+def makeFasta(args, pool=Pool(processes=1)):
+    """Finds chimeric sequences from a fasta file and writes them to an accons file.
+    :param args: An argparse object with the following parameters:
+                    inputFastq	Input Fastq file
+    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
+    """
+    try:
+        parallel(runProgramRunner, [ProgramRunner("make.fasta", [args.inputFastq], {"exists": [args.inputFastq]})
+                                    ], pool)
+
+    except KeyboardInterrupt:
+        cleanupPool(pool)
+
+
+def prescreen(args, pool=Pool(processes=1)):
+    """Prescreens a file for sequences with frameshfits, and logs the frameshifts.
+
+    :param args: An argparse object with the following parameters:
+                    aln_out_file        A human-readable output file from vsearch.
+                    caln_userout_file   A caln file where each line represents one target/query match.
+    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
+    """
+    try:
+        # ensure that our files exist
+        helpValidate({"exists": [args.aln_out_file, args.caln_userout_file]})
+
+        # Make the output directory
+        makeDir(args.outdir)
+
+        # def screen(vsearch_aln_out_file, vsearch_caln_userout_file):
+        screen(args.aln_out_file, args.caln_userout_file)
+
+        # move files
+        flagged_seqs_file = "%s.bad" % args.aln_out_file
+        move_to_dir(flagged_seqs_file, args.outdir)
+    except KeyboardInterrupt:
+        cleanupPool(pool)
+
+
+# Orphaned code
+# ========================================================================================================
+# ========================================================================================================
+# ========================================================================================================
+
+
+def screenSeqs(args, pool=Pool(processes=1)):
+    """Identifies sequences that don't meet specified requirements and writes them to a .accons file.
+
+    :param args: An argparse object with the following parameters:
+                    input           Input fasta file to screen.
+                    outdir          Directory to dump the output files.
+                        ..and any of these filter options:
+                    start	        Maximum allowable sequence starting index.
+                    end	            Minimum allowable sequence ending index.
+                    minlength	    Minimum allowable sequence length.
+                    maxlength	    Maximum allowable sequence length.
+                    maxambig	    Maxmimum number of allowed ambiguities.
+                    maxn	        Maximum number of allowed N's.
+                    maxhomop	    Maximum allowable homopolymer length.
+                    groups	        Groups file to update.
+                    names	        Names file to update.
+                    alnReport	    Alignment report to update.
+                    contigsReport	Contigs report to update.
+                    summaryFile	    SummaryFile to update.
+
+    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
+    """
+    # "screen.seqs": "mothur \'#screen.seqs(fasta=%s, %s)\'",
+
+    # identify the input file type
+    # TODO Not sure if mothur actually supports these different imput formats for this command.  Documentation is vague.
+    try:
+        optionString = mothur_buildOptionString(args, mustFilter=True)
+        parallel(runProgramRunner, [ProgramRunner("screen.seqs", [args.input, optionString],
+                                                  {"exists": [args.input]}, pool)
+                                    ])
+    except KeyboardInterrupt:
+        cleanupPool(pool)
+
+
+def dropShort(args, poo=Pool(processes=1)):
+    good_seqs = []
+    for seq in SeqIO.parse(args.inputFasta, "fasta"):
+        if len(seq.seq) >= int(args.minLenght):
+            good_seqs.append(seq)
+        else:
+            print "seq %s too short (%s bases)" % (seq.id, len(seq.seq))
+
+
+# TODO multiproc
+def fastxRename(args, pool=Pool(processes=1)):
+    """Renames sequences in a fastq file as 1,2,3,...
+    :param args: An argparse object with the following parameters:
+                    input_f     Forward Fastq Reads
+                    input_r     Reverse Fastq Reads
+                    outdir      Directory where outputs will be saved
+    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
+    """
+    try:
+        # Make the output directory, or abort if it already exists
+        makeDir(args.outdir)
+        printVerbose("\tRenaming sequences")
+        # "~/programs/fastx/bin/fastx_renamer -n COUNT -i %s %s"
+        rename_outFile_f = os.path.join(args.outdir, os.path.basename(args.input_f) + "_renamed")
+        rename_outFile_r = os.path.join(args.outdir, os.path.basename(args.input_r) + "_renamed")
+        parallel(runProgramRunner, [
+            ProgramRunner("fastx_renamer", [args.input_f, rename_outFile_f], {"exists": [args.input_f]}),
+            ProgramRunner("fastx_renamer", [args.input_r, rename_outFile_r], {"exists": [args.input_r]}),
+        ], pool)
+        printVerbose("\tRenamed %s sequences")
+    except KeyboardInterrupt:
+        cleanupPool(pool)
 
 def findChimeras(args, pool=Pool(processes=1)):
     """Finds chimeric sequences in a fasta file and writes them to a .accons file.
@@ -730,201 +971,63 @@ def removeSeqs(args, pool=Pool(processes=1)):
         cleanupPool(pool)
 
 
-def queryBiocode(args, pool=Pool(processes=1)):
-    """Compare reference sequences to the fasta-formatted query sequences, using global pairwise alignment.
+def align_macse(args, pool=Pool(processes=1)):
+    """Aligns sequences by iteratively adding them to a known good alignment.
 
-    :param args: An argparse object with the following parameters:
-                    accnosFile  List of sequence names to remove
-                    outdir      Directory to put the output files
-    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
+     :param args: An argparse object with the following parameters:
+                    db                  Database against which to align and filter reads
+                    samplesDir          Directory containig the samples to be cleaned
+                    outdir              Directory where outputs will be saved
+     :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
     """
     try:
-        DB_STRING = os.path.expanduser("~/ARMS/data/BiocodePASSED_SAP.txt")
-        ALN_USER_STRING = ""
         makeDir(args.outdir)
+        inputs = getInputs(args.input)
 
-        # vsearch --usearch_global %s seeds.pick.fasta  --db ../data/BiocodePASSED_SAP.txt --id 0.9 \
-        #		--userfields query+target+id+alnlen+qcov --userout %sout --alnout %s alnout.txt
-        inputs = getInputs(args.input, "*.pick.fasta")
-        # input, db, userout, alnout, aln_userfield
-        parallel(runProgramRunner, [ProgramRunner("vsearch.usearch_global",
-                                                  [input_, DB_STRING, "%s/%s.out" % (args.outdir, strip_ixes(input_)),
-                                                   "%s/%s.alnout" % (args.outdir, strip_ixes(input_)), ALN_USER_STRING],
-                                                  {"exists": [input_]}) for input_ in inputs], pool)
-        # Parse the alignment results and put those that pass the criterion (97 similarity, 85 coverage) in
-        # parsed_BIOCODE.out.  Parameters can be changed and this command can be rerun as many times as necessary
+        logging.debug("\t %s Aligning reads using MACSE")
+        # Aligns sequences by iteratively adding them to a known good alignment.
         #
-        # parseVSearchout.py ~/ARMS/data/BiocodePASSED_SAP_tax_info.txt vsearch_out  parsed_BIOCODE.out 97 85
-        parallel(runPython, [(parseVSearchout, os.path.expanduser("~/ARMS/data/BiocodePASSED_SAP_tax_info.txt"),
-                              "%s/%s.out" % (args.outdir, strip_ixes(input_)),
-                              "%s/%s_parsed_BIOCODE.out" % (args.outdir, strip_ixes(input_)),
-                              97, 85) for input_ in inputs], pool)
+        # "macse_align":      "java -jar " + programPaths["MACSE"] + " -prog enrichAlignment  -seq \"%s\" -align \
+        #                                    \"%s\" -seq_lr \"%s\" -maxFS_inSeq 0  -maxSTOP_inSeq 0  -maxINS_inSeq 0 \
+        #                                    -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 -out_NT \"%s\"_NT \
+        #                                    -out_AA \"%s\"_AA -seqToAdd_logFile \"%s\"_log.csv",
 
-    except KeyboardInterrupt:
-        cleanupPool(pool)
+        parallel(runProgramRunner, [ProgramRunner("macse_align",
+                                                  [args.db, args.db, input_] +
+                                                  ["%s/%s" % (args.outdir, getFileName(input_))] * 3,
+                                                  {"exists": [input_, args.db]}) for input_ in inputs], pool)
 
-
-def queryNCBI(args, pool=Pool(processes=1)):
-    """Compare reference sequences to the fasta-formatted query sequences, using global pairwise alignment.
-
-    :param args: An argparse object with the following parameters:
-                    accnosFile  List of sequence names to remove
-                    outdir      Directory to put the output files
-    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
-    """
-    try:
-        COI_DB_STRING = os.path.expanduser("~/ARMS/refs/COI.fasta")
-        NCBI_DB_STRING = os.path.expanduser("~/ARMS/refs/ncbi.db")
-        ALN_USER_STRING = "--userfields query+target+id+alnlen+qcov"
-        makeDir(args.outdir)
-
-        # vsearch --usearch_global %s seeds.pick.fasta  --db ../data/BiocodePASSED_SAP.txt --id 0.9 \
-        #		--userfields query+target+id+alnlen+qcov --userout %sout --alnout %s alnout.txt
-        inputs = getInputs(args.input, "*.pick.fasta")
-        # input, db, userout, alnout, aln_userfield
-        parallel(runProgramRunner, [ProgramRunner("vsearch.usearch_global",
-                                                  [input_, COI_DB_STRING,
-                                                   "%s/%s.out" % (args.outdir, strip_ixes(input_)),
-                                                   "%s/%s.alnout" % (args.outdir, strip_ixes(input_)), ALN_USER_STRING],
-                                                  {"exists": [input_]}) for input_ in inputs], pool)
-        # Parse the alignment results and put those that pass the criterion (97 similarity, 85 coverage) in
-        # parsed_BIOCODE.out.  Parameters can be changed and this command can be rerun as many times as necessary
+        logging.debug("\t %s Processing MACSE alignments")
+        # Removes non-nucleotide characters in MACSE aligned sequences for all fasta files in the samples directory
         #
-        # parseVSearchToTaxa(vsearch_out, ncbi_db, min_coverage, min_similarity)> parsed_nt.out
-        parallel(runPython, [(parseVSearchToTaxa, "%s/%s.out" % (args.outdir, strip_ixes(input_)), NCBI_DB_STRING,
-                              "%s/%s_parsed_nt.out" % (args.outdir, strip_ixes(input_)),
-                              97, 85) for input_ in inputs], pool)
+        #    (the samplesDir argument).
+        # "macse_format":     "java -jar " + programPaths["MACSE"] + "  -prog exportAlignment -align \"%s\" \
+        #       -charForRemainingFS - -gc_def 5 -out_AA \"%s\" -out_NT \"%s\" -statFile \"%s\""
+
+        parallel(runProgramRunner, [ProgramRunner("macse_format",
+                                                  ["%s/%s_NT" % (args.outdir, getFileName(input_)),
+                                                   "%s/%s_AA_macse.fasta" % (args.outdir, getFileName(input_)),
+                                                   "%s/%s_NT_macse.fasta" % (args.outdir, getFileName(input_)),
+                                                   "%s/%s_macse.csv" % (args.outdir, getFileName(input_))],
+                                                  {"exists": [input_]}) for input_ in inputs], pool)
+
+        printVerbose("\tCleaning MACSE alignments")
+        # Remove the reference sequences from the MACSE files and remove the non nucleotide characters from the
+        #       sequences.
+        macse_outputs = ["%s/%s_NT_macse.fasta" % (args.outdir, getFileName(input_)) for input_ in inputs]
+        cleaned_output_files = ["%s/MACSE_OUT_.part%d" % (args.outdir, i) for i in range(len(macse_outputs))]
+        input_pairs = zip(macse_outputs, cleaned_output_files)
+        # TODO removeMacseRefs reads the database with each process, perhpas pass a list of names instead?
+        # removeMacseRefs(file_to_clean, reference_file, output_file_name):
+        parallel(runPython, [(removeMacseRefs, macse_output, args.db, output_name)
+                             for macse_output, output_name in input_pairs], pool)
+
+        # cat the files
+        joinFiles(cleaned_output_files, "%s/MACSE_OUT_MERGED.fasta" % args.outdir)
 
     except KeyboardInterrupt:
         cleanupPool(pool)
 
-
-def screenSeqs(args, pool=Pool(processes=1)):
-    """Identifies sequences that don't meet specified requirements and writes them to a .accons file.
-
-    :param args: An argparse object with the following parameters:
-                    input           Input fasta file to screen.
-                    outdir          Directory to dump the output files.
-                        ..and any of these filter options:
-                    start	        Maximum allowable sequence starting index.
-                    end	            Minimum allowable sequence ending index.
-                    minlength	    Minimum allowable sequence length.
-                    maxlength	    Maximum allowable sequence length.
-                    maxambig	    Maxmimum number of allowed ambiguities.
-                    maxn	        Maximum number of allowed N's.
-                    maxhomop	    Maximum allowable homopolymer length.
-                    groups	        Groups file to update.
-                    names	        Names file to update.
-                    alnReport	    Alignment report to update.
-                    contigsReport	Contigs report to update.
-                    summaryFile	    SummaryFile to update.
-
-    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
-    """
-    # "screen.seqs": "mothur \'#screen.seqs(fasta=%s, %s)\'",
-
-    # identify the input file type
-    # TODO Not sure if mothur actually supports these different imput formats for this command.  Documentation is vague.
-    try:
-        optionString = mothur_buildOptionString(args, mustFilter=True)
-        parallel(runProgramRunner, [ProgramRunner("screen.seqs", [args.input, optionString],
-                                                  {"exists": [args.input]}, pool)
-                                    ])
-    except KeyboardInterrupt:
-        cleanupPool(pool)
-
-
-def makeFastq(args, pool=Pool(processes=1)):
-    """Finds chimeric sequences from a fasta file and writes them to an accons file.
-    :param args: An argparse object with the following parameters:
-                    inputFasta	Input Fasta file
-                    inputQual	Input Qual file
-    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
-    """
-    try:
-        parallel(runProgramRunner, [ProgramRunner("make.fastq", [args.inputFasta, args.inputQual],
-                                                  {"exists": [args.inputFasta, args.inputQual]}, pool)
-                                    ])
-
-    except KeyboardInterrupt:
-        cleanupPool(pool)
-
-
-def makeFasta(args, pool=Pool(processes=1)):
-    """Finds chimeric sequences from a fasta file and writes them to an accons file.
-    :param args: An argparse object with the following parameters:
-                    inputFastq	Input Fastq file
-    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
-    """
-    try:
-        parallel(runProgramRunner, [ProgramRunner("make.fasta", [args.inputFastq], {"exists": [args.inputFastq]})
-                                    ], pool)
-
-    except KeyboardInterrupt:
-        cleanupPool(pool)
-
-
-def prescreen(args, pool=Pool(processes=1)):
-    """Prescreens a file for sequences with frameshfits, and logs the frameshifts.
-
-    :param args: An argparse object with the following parameters:
-                    aln_out_file        A human-readable output file from vsearch.
-                    caln_userout_file   A caln file where each line represents one target/query match.
-    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
-    """
-    try:
-        # ensure that our files exist
-        helpValidate({"exists": [args.aln_out_file, args.caln_userout_file]})
-
-        # Make the output directory
-        makeDir(args.outdir)
-
-        # def screen(vsearch_aln_out_file, vsearch_caln_userout_file):
-        screen(args.aln_out_file, args.caln_userout_file)
-
-        # move files
-        flagged_seqs_file = "%s.bad" % args.aln_out_file
-        move_to_dir(flagged_seqs_file, args.outdir)
-    except KeyboardInterrupt:
-        cleanupPool(pool)
-
-
-# Orphaned code
-# ========================================================================================================
-# ========================================================================================================
-# ========================================================================================================
-def dropShort(args, poo=Pool(processes=1)):
-    good_seqs = []
-    for seq in SeqIO.parse(args.inputFasta, "fasta"):
-        if len(seq.seq) >= int(args.minLenght):
-            good_seqs.append(seq)
-        else:
-            print "seq %s too short (%s bases)" % (seq.id, len(seq.seq))
-
-
-# TODO multiproc
-def fastxRename(args, pool=Pool(processes=1)):
-    """Renames sequences in a fastq file as 1,2,3,...
-    :param args: An argparse object with the following parameters:
-                    input_f     Forward Fastq Reads
-                    input_r     Reverse Fastq Reads
-                    outdir      Directory where outputs will be saved
-    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
-    """
-    try:
-        # Make the output directory, or abort if it already exists
-        makeDir(args.outdir)
-        printVerbose("\tRenaming sequences")
-        # "~/programs/fastx/bin/fastx_renamer -n COUNT -i %s %s"
-        rename_outFile_f = os.path.join(args.outdir, os.path.basename(args.input_f) + "_renamed")
-        rename_outFile_r = os.path.join(args.outdir, os.path.basename(args.input_r) + "_renamed")
-        parallel(runProgramRunner, [
-            ProgramRunner("fastx_renamer", [args.input_f, rename_outFile_f], {"exists": [args.input_f]}),
-            ProgramRunner("fastx_renamer", [args.input_r, rename_outFile_r], {"exists": [args.input_r]}),
-        ], pool)
-        printVerbose("\tRenamed %s sequences")
-    except KeyboardInterrupt:
-        cleanupPool(pool)
 
 
 # Todo remove this

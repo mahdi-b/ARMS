@@ -88,31 +88,42 @@ def parallel(function, data, pool=Pool(processes=1)):
     pool.map_async(function, data).get(999999999)
     return True
 
-def makeDirOrdie(dirPath):
+def makeDirOrdie(dir_path):
     """Creates a directory 'dirPath' or exits if the 'dirPath' directory already exists.  Prevents unnecessary execution.
     :param dirPath: The filepath to the directory to look for.
 
     :return: The path to the new directory (same as 'dirPath').
     """
-    if not os.path.isdir(dirPath):
-        os.makedirs(dirPath)
+    if not os.path.isdir(dir_path):
+        os.makedirs(dir_path)
     else:
-        logging.error("Split fasta directory %s already exists " % dirPath)
+        logging.error("Directory %s already exists " % dir_path)
         sys.exit()
     # TODO Ask Mahdi why we do this?  Why not just return?  See makeDir below...
-    return dirPath
+    return dir_path
 
 
-def makeDir(dirPath):
+def makeDir(dir_path):
     """Create a directory 'dirPath' if it doesn't already exist.
     :param dirPath: The filepath to the directory to look for.
 
     :return: The path to the new directory (same as 'dirPath').
     """
-    if not os.path.isdir(dirPath):
-        os.makedirs(dirPath)
+    if not os.path.isdir(dir_path):
+        return os.makedirs(dir_path)
     else:
-        logging.warning("Split fasta directory %s already exists " % dirPath)
+        logging.warning("Directory %s already exists " % dir_path)
+
+
+def makeAuxDir(dir_path):
+    """Create a directory 'dirPath_aux' if it doesn't already exist.
+    :param dirPath: The filepath to the directory to look for.
+
+    :return: The path to the new directory (same as 'dirPath').
+    """
+    aux_path = dir_path + "_aux"
+    makeDir(aux_path)
+    return aux_path
 
 
 def cleanupPool(pool):
@@ -122,10 +133,11 @@ def cleanupPool(pool):
 
 def strip_ixes(path):
     file_name = getFileName(path)
-    name = re.sub(r'_splitOut_\d+', '', file_name)
-    name = re.sub(r'_part_\d+', '', name)
-    ixes=[ "_renamed", "_debarcoded", ".assembled", ".discarded", ".unassembled", "_cleaned", "_derep", "_uc",
-           ".denovo.uchime"]
+    #name = re.sub(r'_splitOut_\d+', '', file_name)
+    #name = re.sub(r'_part_\d+', '', name)
+    name = file_name
+    ixes=[ "_renamed", "_debarcoded", ".assembled", ".discarded", ".unassembled", "_cleaned", "_derepCount","_derep",
+           "_uc", "_splitOut", ".denovo.uchime", "_derepCount"]
     for ix in ixes:
         name = name.replace(ix, "")
     return name

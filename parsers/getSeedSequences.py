@@ -3,6 +3,13 @@ import sys
 
 # TODO rename, these arent fasta files
 def getSeedSequences(input_fasta, output_fasta):
+    """Pulls the representative seed sequences from a uc file.
+
+    :param input_fasta:
+    :param output_fasta:
+    :return:
+    """
+
     seeds = defaultdict(list)
     for line in open(input_fasta, 'r'):
         data = line.split()
