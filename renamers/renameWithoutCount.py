@@ -46,6 +46,6 @@ def removeCountsFromNamesFile(input_names_file, output_names_file, clip_char="_"
             seed_name = clip_char.join(data[0].split(clip_char)[:-1])
             children = []
             for item in data[1:]:
-                children += clip_char.join(item.split(clip_char)[:-1])
-            output.write("%s\t%s" % seed_name, " ".join(children))
+                children.append(clip_char.join(item.split(clip_char)[:-1]))
+            output.write("%s\t%s\n" % (seed_name, " ".join(children)))
     return output_names_file

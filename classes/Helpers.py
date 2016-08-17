@@ -138,7 +138,7 @@ def strip_ixes(path):
     #name = re.sub(r'_part_\d+', '', name)
     name = file_name
     ixes=[ "_renamed", "_debarcoded", ".assembled", ".discarded", ".unassembled", "_cleaned", "_derepCount","_derep",
-           "_uc", "_splitOut", ".denovo.uchime", "_derepCount"]
+           "_uc", "_splitOut", ".denovo.uchime", "_derepCount", "_uncount", "_counts", "_seeds"]
     for ix in ixes:
         name = name.replace(ix, "")
     return name
@@ -243,6 +243,10 @@ def move(origin, destination):
     :param destination:     File path to the file's new destination.  e.g. "dirB/a.txt"
     """
     os.rename(sanitize_string(origin), sanitize_string(destination))
+
+def debugPrintInputInfo(input, action_suffix):
+    logging.debug("%d files to be %s:" % (len(input), action_suffix))
+    logging.debug(str(input))
 
 """
 def mothur_parseInputFileType(args):

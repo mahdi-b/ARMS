@@ -7,12 +7,15 @@ def parseCountFileToCountDict(count_file):
     i = 0
     nb_lines = 0
     for line in open(count_file, 'r'):
-        seed, children = line.rstrip().split("\t")
-        print line
+        children = ""
+        data = line.rstrip().split("\t")
+        seed = data[0]
+        if len(data) > 1:
+            children = data[1]
         seeds[seed] = len(children.split(" "))
-        if nb_lines % 1000000 == 0:
-            print "%s lines processed" % nb_lines
-        nb_lines +=1
+        # if nb_lines % 1000000 == 0:
+        #     print "%s lines processed" % nb_lines
+        # nb_lines +=1
     print "Done reading count file."
     return seeds
 
@@ -23,8 +26,11 @@ def parseCountFileToDict(count_file):
     i = 0
     nb_lines = 0
     for line in open(count_file, 'r'):
-        seed, children = line.rstrip().split("\t")
-        print line
+        data = line.rstrip().split("\t")
+        seed = data[0]
+        children = ""
+        if len(data) > 1:
+            children = ' '.join(data[1:])
         seeds[seed] = children
         if nb_lines % 1000000 == 0:
             print "%s lines processed" % nb_lines

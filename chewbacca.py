@@ -246,7 +246,7 @@ def main(argv):
     # "vsearch": program_paths["VSEARCH"] + "--derep_fulllength \"%s\" --sizeout --fasta_width 0  \
     #
     parser_align = subparsers.add_parser('cluster_seqs')
-    parser_align.add_argument('-i', '--input', required=True, help="Input fasta")
+    parser_align.add_argument('-i', '--input', required=True, help="Input fasta file/folder")
     parser_align.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
     parser_align.add_argument('-n', '--namesfile', required=False, help="A .names file to update.")
     parser_align.add_argument('-s', '--stripcounts', required=False, type=bool, default=True, help="If True, strip \
@@ -277,7 +277,7 @@ def main(argv):
     # --usearch_global  ../9_p_uchime/seeds.pick.fasta  --db ../data/BiocodePASSED_SAP.txt --id 0.9 \
     #	--userfields query+target+id+alnlen+qcov --userout out  --alnout alnout.txt
     parser_biocode = subparsers.add_parser('query_biocode')
-    parser_biocode.add_argument('-i', '--input', required=True, help="Input Fasta File to clean")
+    parser_biocode.add_argument('-i', '--input', required=True, help="Input file/folder with fasta files")
     parser_biocode.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
     parser_biocode.set_defaults(func=queryBiocode)
 
@@ -359,18 +359,6 @@ def main(argv):
     parser_toFastq.add_argument('-i', '--inputFasta', required=True, help="Input Fasta File")
     parser_toFastq.add_argument('-q', '--inputQual', required=True, help="Input qual File")
     parser_toFastq.set_defaults(func=makeFastq)
-
-
-    # Drop short reads
-    parser_dropShort = subparsers.add_parser('dropShort')
-    parser_dropShort.add_argument('-n', '--name', required=True, help="Run Id")
-    parser_dropShort.add_argument('-i', '--inputFasta', required=True, help="Clean inputs File")
-    parser_dropShort.add_argument('-f', '--namesFile', required=True, help="Updated names file")
-    parser_dropShort.add_argument('-l', '--minLenght', required=True, help="Min. length to keep")
-    # todo -o is resereved for outdir
-    # parser_dropShort.add_argument('-o', '--outFasta', required=True, help="Output file filtered on lenght")
-    parser_dropShort.add_argument('-s', '--outNames', required=True, help="Updated names file")
-    parser_dropShort.set_defaults(func=dropShort)
 
 
     # Todo remove this

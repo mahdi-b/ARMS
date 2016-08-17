@@ -2,7 +2,7 @@ import sys
 from Bio import SeqIO
 from countToDict import parseCountFileToCountDict
 
-
+#TODO DELETE THIS
 # Renames sequences by looking up their count in a global count file.
 def renameSequencesWithCount(input_fasta, count_file, outfile):
     seeds = parseCountFileToCountDict(count_file)

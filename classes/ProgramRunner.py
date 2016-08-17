@@ -184,12 +184,11 @@ class ProgramRunner(object):
                 "align.seqs": program_paths["MOTHUR"] + " \'#align.seqs(candidate=%s, template=%s, flip=t)\'",
                 "vsearch.derep": program_paths["VSEARCH"] + " --derep_fulllength \"%s\" --sizeout --fasta_width 0 "
                                             "--output \"%s\" -uc \"%s\"",
-                "swarm": program_paths["SWARM"] + " \"%s\" --output-file \"%s\" \
+                "swarm": program_paths["SWARM"] + " \"%s\" -o \"%s\" \
                                             -u \"%s\" -w \"%s\"",
                 "vsearch.usearch_global": program_paths["VSEARCH"] + " --usearch_global \"%s\" --db \"%s\" --id 0.9 \
                                             --userfields query+target+id+alnlen+qcov --userout \"%s\" --alnout \"%s\"\
                                              %s",
 
                 "unique.seqs": program_paths["MOTHUR"] + " \'#unique.seqs(fasta=%s)\'",
-                "cluster-swarm": "",
             }
