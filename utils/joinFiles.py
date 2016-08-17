@@ -11,3 +11,5 @@ def joinFiles(input_file_list, output_file):
             with open(fname) as infile:
                 for line in infile:
                     outfile.write(line)
+    outfile.close()
+    return output_file

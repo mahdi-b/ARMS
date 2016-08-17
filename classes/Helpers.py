@@ -110,7 +110,8 @@ def makeDir(dir_path):
     :return: The path to the new directory (same as 'dirPath').
     """
     if not os.path.isdir(dir_path):
-        return os.makedirs(dir_path)
+        os.makedirs(dir_path)
+        return dir_path
     else:
         logging.warning("Directory %s already exists " % dir_path)
 

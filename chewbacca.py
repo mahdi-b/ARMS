@@ -248,6 +248,10 @@ def main(argv):
     parser_align = subparsers.add_parser('cluster_seqs')
     parser_align.add_argument('-i', '--input', required=True, help="Input fasta")
     parser_align.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
+    parser_align.add_argument('-n', '--namesfile', required=False, help="A .names file to update.")
+    parser_align.add_argument('-s', '--stripcounts', required=False, type=bool, default=True, help="If True, strip \
+                                    counts from sequence names before clustering.  This allows for the recognition of \
+                                    sequence names.")
     parser_align.set_defaults(func=cluster)
 
 

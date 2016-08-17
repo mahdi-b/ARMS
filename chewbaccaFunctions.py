@@ -13,6 +13,8 @@ from parsers.parseVSearchout import parseVSearchout
 from renamers.formatWithSwarmCounts import formatWithSwarmCounts
 from renamers.renameSequences import serialRename
 from renamers.renameWithCount import renameSequencesWithCount
+from renamers.renameWithoutCount import removeCountsFromName, removeCountsFromNamesFile
+from renamers.updateNames import  updateNames
 from utils.joinFiles import joinFiles
 from utils.splitKperFasta import splitK
 
@@ -448,8 +450,12 @@ def dereplicate(args, pool=Pool(processes=1)):
                   for fasta_file, count_file in inputs], pool)
         printVerbose("Done renaming sequences.")
 
+        aux_dir = makeAuxDir(args.outdir)
         aux_files = getInputs(args.outdir, "*", "*_derepCount.*")
-        bulk_move_to_dir(aux_files, makeAuxDir(args.outdir))
+        bulk_move_to_dir(aux_files, aux_dir)
+        # separate names folder
+        bulk_move_to_dir(getInputs(aux_dir, "*.names"), makeDir("%s_%s" % (args.outdir, "names_files")))
+
     except KeyboardInterrupt:
         cleanupPool(pool)
 
@@ -584,31 +590,54 @@ def cluster(args, pool=Pool(processes=1)):
     """
     try:
         makeDir(args.outdir)
-        ## prepare the file for clustering. Dereplicates across smaples and renames the resulting sequences with hashes
-        # "vsearch": program_paths["VSEARCH"] + "--derep_fulllength \"%s\" --sizeout --fasta_width 0  \
-        #                                    --output amplicons_linearized_dereplicated.fasta -uc ",
         inputs = getInputs(args.input)
 
+        # REMOVES COUNTS FROM SEQUENCE NAMES IN ORDER TO CLUSTER PROPERLY
+        # strip counts if we need to.
+        if args.stripcounts:
+            printVerbose("Removing counts from sequence names...")
+            parallel(runPython,
+                     [(removeCountsFromName, input_, "%s/%s_uncount.fasta" % (args.outdir, strip_ixes(input_)), 'fasta')
+                      for input_ in inputs], pool)
+            printVerbose("Done removing counts.")
+
+            # Grab the cleaned files as input
+            inputs = getInputs(args.outdir, "*_uncount.fasta")
+
+        # DEREPLICATE ONE MORE TIME
+        printVerbose("Dereplicating before clustering...")
         parallel(runProgramRunner, [ProgramRunner("vsearch.derep",
-                                                  [input_, "%s/%s.fa" % (args.outdir, getFileName(input_)),
+                                                  [input_, "%s/%s_derep.fasta" % (args.outdir, getFileName(input_)),
                                                    "%s/%s_uc.out" % (args.outdir, getFileName(input_))],
                                                   {"exists": [input_]}) for input_ in inputs], pool)
-
+        printVerbose("Done dereplicating")
+        # generates a .names file named _uc_parsed.out
         # python getSeedSequences.py uc.out uc_parsed.out
         input_ucs = getInputs(args.outdir, "*_uc.out")
         parallel(runPython,
-                 [(getSeedSequences, input_, "%s/%s_parsed.out" % (args.outdir, getFileName(input_))) for
-                  input_ in input_ucs], pool)
+                 [(getSeedSequences, input_, "%s/%s_derep.names" % (args.outdir, strip_ixes(input_)))
+                  for input_ in input_ucs], pool)
 
-        #TODO update the names file with updateNames.py
+        current_names_file_path = "%s/%s_derep.names" % (args.outdir, getFileName(input_))
 
+        # UPDATE THE NAMES FILES
+        if args.namesfile is not None:
+            # Grab the old names file and the dereplicated names file
+            old_names_files = getInputs(args.namesfile)
+            derep_names_files = getInputs(args.outdir, "*_derep.names")
 
-        # python formatWithSwarmCounts.py
-        #                                   8_macse_out/MACSEOUT_MERGED.fasta uc_parsed.out dereplicated_renamed.fasta
+            printVerbose("Updating .names files with dereplicated data")
+            # updateNames (old_names_files, new_names_files, updated)
+            current_names_file_path = updateNames(old_names_files, derep_names_files, args.outdir)
+            printVerbose("Done updating .names files.")
+
+        # ADD COUNT TO SEQUENCE NAMES AND SORT BY COUNT
+        # python formatWithSwarmCounts.py  8_macse_out/MACSEOUT_MERGED.fasta uc_parsed.out dereplicated_renamed.fasta
         parallel(runPython,
-                 [(formatWithSwarmCounts, input_, "%s/%s_uc_parsed.out" % (args.outdir, getFileName(input_)),
-                   "%s/%s_derep_renamed.fasta" % (args.outdir, getFileName(input_))) for
-                  input_ in inputs], pool)
+                 [(formatWithSwarmCounts, input_, current_names_file_path,
+                   "%s/%s_derep_renamed.fasta" % (args.outdir, getFileName(input_))) for input_ in inputs], pool)
+
+        # CLUSTER
         # TODO IMPORTANT: make sure that the abundances in dereplicated_renamed.fasta are sorted in decreasing order
         # We need to explore this more. Run by default for now....
         # Nore that any program can be used here as long as two files
@@ -622,16 +651,30 @@ def cluster(args, pool=Pool(processes=1)):
         # "swarm": program_paths["SWARM"] + " \"%s\" --output-file \"%s\" \
         #                                            -u \"%s\" -w \"%s\"",
         inputs = getInputs(args.outdir, "*_derep_renamed.fasta")
-
         parallel(runProgramRunner, [ProgramRunner("swarm", [input_,
-                                                            "%s/%s_clustering.out" % (args.outdir, strip_ixes(input_)),
+                                                            "%s/%s_clustering.names" % (args.outdir, strip_ixes(input_)),
                                                             "%s/%s_uclust" % (args.outdir, strip_ixes(input_)),
                                                             "%s/%s_seeds" % (args.outdir, strip_ixes(input_))],
                                                   {"exists": [input_]}) for input_ in inputs], pool)
-        ## We convert the seeds files to uppercase (strangely, it is output in lowercase by swarm)
-        ## this might not be necessary with other clustering programs
 
-        # write upppercase seeds fasta
+        # UPDATE THE NAMES FILES WITH NEW CLUSTERS
+        # Grab the current names file and the new clustered names file (which needs to be cleaned)
+        clustered_names_files = getInputs(args.outdir, "*_clustering.names")
+
+        # Remove counts from the clustering names files
+        parallel(runPython,
+                 [(removeCountsFromNamesFile, input_, "%s_uncount.names" % getFileName(input_))
+                  for input_ in clustered_names_files], pool)
+
+        cleaned_clustered_names_files = getInputs(args.outdir, "*_uncount.names")
+        current_names_file = getInputs(args.outdir, current_names_file_path)
+
+        printVerbose("Updating .names files with clustering data")
+        # updateNames (old_names_files, new_names_files, updated)
+        updateNames(current_names_file, cleaned_clustered_names_files, args.outdir)
+        printVerbose("Done updating .names files.")
+
+        ## Convert the seeds files to uppercase (swarm writes in lowercase)
         inputs = getInputs(args.outdir, "*_seeds")
         parallel(runPython,
                  [(capitalizeSeqs, input_, "%s.fasta" % input_) for input_ in inputs], pool)
@@ -642,11 +685,11 @@ def cluster(args, pool=Pool(processes=1)):
             parallel(runPython,
                      [(seedToNames, input_, "%s/%s.names" % (args.outdir, getFileName(input_))) for input_ in inputs],
                      pool)
-            # generate names file
 
         # Gather and move auxillary files
         aux_files = getInputs(args.outdir, "*", "*_seeds.fasta")
         bulk_move_to_dir(aux_files, makeAuxDir(args.outdir))
+
     except KeyboardInterrupt:
         cleanupPool(pool)
 
