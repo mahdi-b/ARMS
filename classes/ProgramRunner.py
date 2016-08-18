@@ -189,6 +189,6 @@ class ProgramRunner(object):
                 "vsearch.usearch_global": program_paths["VSEARCH"] + " --usearch_global \"%s\" --db \"%s\" --id 0.9 \
                                             --userfields query+target+id+alnlen+qcov --userout \"%s\" --alnout \"%s\"\
                                              %s",
-
+                "echo": "echo \"%s\"",
                 "unique.seqs": program_paths["MOTHUR"] + " \'#unique.seqs(fasta=%s)\'",
             }

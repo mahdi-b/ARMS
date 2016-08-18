@@ -1,6 +1,7 @@
 import glob
 import logging
 import os
+import sys
 import Validator
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
@@ -14,15 +15,16 @@ class printVerbose(object):
     # If True, verbose printing is enabled
     VERBOSE = False
 
-    def __init__(self, msg, newline=True):
+    def __init__(self, msg, newline=True, out=sys.stdout):
         """Prints the msg to console if printVerbose.VERBOSE is True.
         :param msg: The thing to print.
-        :param newline: Should a newline character be printed before the msg?
+        :param newline: Should a newline character be printed before the msg? Default True.
+        :param out: Where to write the verbose message.  Default sys.stdout
         """
         if printVerbose.VERBOSE:
             if newline:
-                print "\n"
-            print msg
+                out.write("\n")
+            out.write(msg)
 
 
 class MissingMothurFilterException(Exception):
@@ -45,18 +47,20 @@ def helpValidate(conditions):
                             program to execute.
     :return: True if validation is successful, and raising an exception in <Validator.function> if not.
     """
-    for condition in conditions.iteritems():
-        getattr(Validator, condition[0])(condition[1])
-    # TODO sanitize inputs
-    return True
-
+    try:
+        for condition in conditions.iteritems():
+            getattr(Validator, condition[0])(condition[1])
+        # TODO sanitize inputs
+        return True
+    except Exception, error:
+        print error
 
 def runProgramRunnerInstance(my_instance):
     """Runs an instance of a ProgramRunner.  Calls ProgramRunner.run() for a ProgramRunner object.'
         :param my_instance A fully initalized ProgramRunner object to run.
     """
     # logging.info(myInstance.dryRun())
-    my_instance.run()
+    return my_instance.run()
 
 
 def runPythonInstance(params):
@@ -65,7 +69,7 @@ def runPythonInstance(params):
     :param params:  A tuple, where the first item is a function, and the remainder is a set of parameters
     :return:        The output of params[0](*params[1:]
     """
-    print params
+    printVerbose(params)
     func = params[0]
     args = params[1:]
     return func(*args)
@@ -75,12 +79,12 @@ def parallel(function, data, pool=Pool(processes=1)):
     """Executes jobs in parallel.
     :param function:    The function to call.  Generally runInstance() for ProgramRunner objects, or a local python
                             function.
-    :param data:        A list of arguments to run the function over.
-    :param pool:        An initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
-    :return:
+    :param data: A list of arguments to run the function over.
+    :param pool: An initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
+    :return: A list of results.
     """
-    pool.map_async(function, data).get(999999999)
-    return True
+    return pool.map_async(function, data).get(999999999)
+
 
 
 def makeDirOrdie(dir_path):
@@ -92,8 +96,7 @@ def makeDirOrdie(dir_path):
     if not os.path.isdir(dir_path):
         os.makedirs(dir_path)
     else:
-        logging.warning("Directory %s already exists " % dir_path)
-        # sys.exit()
+        sys.exit("Directory %s already exists " % dir_path)
     return dir_path
 
 
@@ -273,13 +276,13 @@ def debugPrintInputInfo(input_, action_suffix):
     logging.debug("%d files to be %s:" % (len(input_), action_suffix))
     logging.debug(str(input_))
 
-"""
+
 def mothur_parseInputFileType(args):
-    Gets the input file format and input file from the args argparser.
+    """Gets the input file format and input file from the args argparser.
 
     :param args:
     :return: A tuple: (input file format, input file path)
-
+    """
     if args.fasta:
         inputFileType = "fasta"
         inputFile = args.fasta
@@ -310,7 +313,7 @@ def mothur_parseInputFileType(args):
         inputFile = args.alnReport
 
     return inputFileType, inputFile
-"""
+
 
 
 def mothur_buildOptionString(args, mustFilter=False, mustUpdate=False):
