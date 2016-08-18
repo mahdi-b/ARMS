@@ -204,7 +204,7 @@ def main(argv):
     parser_mothuralign.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
     parser_mothuralign.set_defaults(func=align_mothur)
     
-    """
+
     # ================================
     # ==  9 Align Reads with MACSE  ==
     # ================================
@@ -217,7 +217,7 @@ def main(argv):
     parser_align.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
     parser_align.add_argument('-d', '--db', required=True, help="Database against which to align and filter reads")
     parser_align.set_defaults(func=align_macse)
-    """
+
     # =======================
     # ==  9 Cat the files  ==
     # =======================
