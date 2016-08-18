@@ -1,13 +1,12 @@
 import glob
 import logging
 import os
-import re
-import sys
 import Validator
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 from collections import defaultdict
 from multiprocessing import Pool
+
 
 class printVerbose(object):
     """A class to toggle verbose printing."""
@@ -26,6 +25,16 @@ class printVerbose(object):
             print msg
 
 
+class MissingMothurFilterException(Exception):
+    def __str__(self):
+        return "Expected a mothur filter parameter, but found none"
+
+
+class MissingMothurFileException(Exception):
+    def __str__(self):
+        return "Expected a mothur file to update, but found none."
+
+
 def helpValidate(conditions):
     """Validates all conditions using a Validator object, returning True if successful and raising an exception
         if not.
@@ -36,35 +45,21 @@ def helpValidate(conditions):
                             program to execute.
     :return: True if validation is successful, and raising an exception in <Validator.function> if not.
     """
-    # if any of the conditions fail, an exception is raised in getattr
-    # TODO: The exception should be raised in this function, so users know that the error is in validation of their conditions, not the
-    #   accessing of properties.
     for condition in conditions.iteritems():
         getattr(Validator, condition[0])(condition[1])
-
     # TODO sanitize inputs
-
     return True
 
-class MissingMothurFilterException(Exception):
-    def __str__(self):
-        return "Expected a mothur filter parameter, but found none"
 
-class MissingMothurFileException(Exception):
-    def __str__(self):
-        return "Expected a mothur file to update, but found none."
-
-
-def runProgramRunner(myInstance):
+def runProgramRunnerInstance(my_instance):
     """Runs an instance of a ProgramRunner.  Calls ProgramRunner.run() for a ProgramRunner object.'
-        :param myInstance A fully initalized ProgramRunner object to run.
+        :param my_instance A fully initalized ProgramRunner object to run.
     """
-    # Use the global version to facilitate calling workers
-    #print "runinstance"
     # logging.info(myInstance.dryRun())
-    myInstance.run()
+    my_instance.run()
 
-def runPython(params):
+
+def runPythonInstance(params):
     """Wraps a multi-parameter, local, python method, so that it can be run as a multiprocessing.Pool job.
 
     :param params:  A tuple, where the first item is a function, and the remainder is a set of parameters
@@ -73,69 +68,65 @@ def runPython(params):
     print params
     func = params[0]
     args = params[1:]
-    func(*args)
+    return func(*args)
 
 
 def parallel(function, data, pool=Pool(processes=1)):
-    '''
-    Executes one or more ProgramRunners in parallel.
+    """Executes jobs in parallel.
     :param function:    The function to call.  Generally runInstance() for ProgramRunner objects, or a local python
                             function.
     :param data:        A list of arguments to run the function over.
     :param pool:        An initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
     :return:
-    '''
+    """
     pool.map_async(function, data).get(999999999)
     return True
 
+
 def makeDirOrdie(dir_path):
     """Creates a directory 'dirPath' or exits if the 'dirPath' directory already exists.  Prevents unnecessary execution.
-    :param dirPath: The filepath to the directory to look for.
+    :param dir_path: The filepath to the directory to look for.
 
-    :return: The path to the new directory (same as 'dirPath').
+    :return: The path to the new directory (same as 'dir_path').
     """
     if not os.path.isdir(dir_path):
         os.makedirs(dir_path)
-    else:
-        logging.error("Directory %s already exists " % dir_path)
-        sys.exit()
-    # TODO Ask Mahdi why we do this?  Why not just return?  See makeDir below...
-    return dir_path
-
-
-def makeDir(dir_path):
-    """Create a directory 'dirPath' if it doesn't already exist.
-    :param dirPath: The filepath to the directory to look for.
-
-    :return: The path to the new directory (same as 'dirPath').
-    """
-    if not os.path.isdir(dir_path):
-        os.makedirs(dir_path)
-        return dir_path
     else:
         logging.warning("Directory %s already exists " % dir_path)
+        # sys.exit()
+    return dir_path
 
 
 def makeAuxDir(dir_path):
     """Create a directory 'dirPath_aux' if it doesn't already exist.
-    :param dirPath: The filepath to the directory to look for.
+    :param dir_path: The filepath to the directory to look for.
 
     :return: The path to the new directory (same as 'dirPath').
     """
     aux_path = dir_path + "_aux"
-    makeDir(aux_path)
+    makeDirOrdie(aux_path)
     return aux_path
 
 
 def cleanupPool(pool):
+    """Cleans up a pool object.  Used when the user provides a KeyboardInterrupt
+
+    :param pool: A fully initalized multiprocessing.Pool object.
+    """
     pool.terminate()
     pool.join()
     exit()
 
+
 def strip_ixes(path):
+    """Strips prefix/suffixes from a file to get a base identifier for file operations.
+
+    :param path: The path to clean.
+    :return: A cleaned file identifier.
+    """
     file_name = getFileName(path)
-    #name = re.sub(r'_splitOut_\d+', '', file_name)
-    #name = re.sub(r'_part_\d+', '', name)
+    # name = re.sub(r'_splitOut_\d+', '', file_name)
+    # name = re.sub(r'_part_\d+', '', name)
     name = file_name
     ixes=[ "_renamed", "_debarcoded", ".assembled", ".discarded", ".unassembled", "_cleaned", "_derepCount","_derep",
            "_uc", "_splitOut", ".denovo.uchime", "_derepCount", "_uncount", "_counts", "_seeds"]
@@ -143,39 +134,61 @@ def strip_ixes(path):
         name = name.replace(ix, "")
     return name
 
-def getInputs(path, pattern="*", butNot="", critical=True, ignoreEmptyFiles=True):
-    """Checks if a path is a file or folder.  Optionally takes a pattern.  Returns a list of either a single file, or
-        all files in a folder (matching pattern if it was provided).  Returns only non-empty files
 
-    :param path:        File path to a folder or file.
-    :param pattern:     Optional pattern string. e.g. *.txt grabs all .txt files in path.
+def enumerateDir(dir_, pattern="*"):
+    """Returns all the files in a directory, optionally requiring a pattern match.
+
+    :param dir_:     The directory to look in/at.
+    :param pattern: An optional pattern to match
+    :return:
+    """
+    hits = "%s/%s" % (dir_, pattern)
+    return sorted(glob.glob(hits), key=str.lower)
+
+
+def getInputs(path, match_pattern="*", mismatch_pattern="", critical=True, ignore_empty_files=True):
+    """Checks if a path is a file or folder.  Optionally takes a match and mismatch pattern.
+        Returns a list of either a single file, or all files in a folder (matching match_pattern, if it was provided,
+        and not matching mismatch_pattern, if it was provided).  If critical is True, throws an error if no files were
+        found.  If ignoreEmptyFiles is True, empty files are not returned.
+
+    :param path:             File path to a folder or file to look in/at.
+    :param match_pattern:            Optional pattern string. e.g. *.txt grabs all .txt files in path.
+    :param mismatch_pattern:         Mismatch pattern.  Ignores all files matching this pattern, even if they
+                                previously matched.
+    :param critical:         If True, throws an exception if no files are found.  Default True.
+    :param ignore_empty_files: If True, does not return empty files.  Default True.
     :return:            A list of one or more files.
     """
     rslt = ""
     if os.path.isfile(path):
         rslt = [path]
     elif os.path.isdir(path):
-        patternMatch = enumerateDir(path, pattern)
-        if butNot:
-            negativeMatch = enumerateDir(path,butNot)
-            rslt = list(set(patternMatch) - set(negativeMatch))
+        patternMatch = enumerateDir(path, match_pattern)
+        if mismatch_pattern:
+            negative_match = enumerateDir(path, mismatch_pattern)
+            rslt = list(set(patternMatch) - set(negative_match))
         else:
             rslt = patternMatch
 
     else:
-        logging.error("Found no  matching inputs matching %s at %s" % (pattern, path))
+        logging.error("Found no  matching inputs matching %s at %s" % (match_pattern, path))
         if critical:
-            print "Error: Found no matching inputs matching %s at %s" % (pattern, path)
+            print "Error: Found no matching inputs matching %s at %s" % (match_pattern, path)
             exit()
-        #return []
-    if ignoreEmptyFiles:
+        # return []
+    if ignore_empty_files:
         rslt = [path for path in rslt if os.path.getsize(path)]
     print rslt
     return rslt
 
 
 def getDir(path):
-    """Returns the last directory name in path"""
+    """Returns the last directory name in path.
+
+    :param path: The filepath.
+    :return:    The last directory on path, or path if it is a directory.
+    """
     if os.path.isfile(path):
         return os.path.dirname(path)
     elif os.path.isdir(path):
@@ -186,19 +199,23 @@ def getDir(path):
 
 
 def getFileName(path):
-    """Returns the filename (no extension, no directory) in an absoloute filepath
-    :param path:
-    :return:
+    """Returns the filename (no extension, no directory) in an absoloute filepath.
+
+    :param path:The file path.
+    :return:    Returns the filename on a path with no directory prefix or file extension.
     """
     return os.path.splitext(os.path.basename(path))[0]
 
-def enumerateDir(dir, pattern="*"):
-    hits = "%s/%s" % (dir, pattern)
-    return sorted(glob.glob(hits), key=str.lower)
 
+#TODO work on this
+def sanitize_string(input_):
+    """Returns a white-list sanitized string.
 
-def sanitize_string(input):
-    return input
+    :param input_:
+    :return:
+    """
+    return input_
+
 
 def sanitize(inputs):
     """White list sanitizes a dictionary of inputs, returning a dictionary of sanitized strings.  Raises an exception if
@@ -208,17 +225,17 @@ def sanitize(inputs):
     :return: A list of sanitized inputs
     """
 
-    for name, input in inputs.iteritems():
-        text = str(input)
+    for name, input_ in inputs.iteritems():
+        text = str(input_)
 
     return inputs
 
 
 def bulk_move_to_dir(target_files, dest_dir_path):
-    """Moves a file with a given filepath to a given directory.  Sanitizes inputs before execution.
+    """Moves a list of files with a given filepath to a given directory.
 
-    :param target_files:
-    :param dest_dir_path:
+    :param target_files:    A list of files to move
+    :param dest_dir_path:   The directory to move the files to.
     :return:
     """
     if target_files is not None:
@@ -229,24 +246,32 @@ def bulk_move_to_dir(target_files, dest_dir_path):
 def move_to_dir(target_file_path, dest_dir_path):
     """Moves a file with a given filepath to a given directory.  Sanitizes inputs before execution.
 
-    :param taret_file_path:          File path to the file to be moved.  e.g. "dirA/a.txt"
+    :param target_file_path:          File path to the file to be moved.  e.g. "dirA/a.txt"
     :param dest_dir_path:     File path to the file's new destination.  e.g. "dirB/"
     """
     target_file = target_file_path.split('/')[-1]
     dest_file_path = "%s/%s" % (dest_dir_path, target_file)
     move(target_file_path, dest_file_path)
 
+
 def move(origin, destination):
     """Moves a file from an origin to a destination.  Sanitizes inputs before execution.
 
-    :param origin:          File path to the file to be moved.  e.g. "dirA/a.txt"
-    :param destination:     File path to the file's new destination.  e.g. "dirB/a.txt"
+    :param origin: File path to the file to be moved.  e.g. "dirA/a.txt"
+    :param destination: File path to the file's new destination.  e.g. "dirB/a.txt"
     """
     os.rename(sanitize_string(origin), sanitize_string(destination))
 
-def debugPrintInputInfo(input, action_suffix):
-    logging.debug("%d files to be %s:" % (len(input), action_suffix))
-    logging.debug(str(input))
+
+def debugPrintInputInfo(input_, action_suffix):
+    """Prints debug information about an input.
+
+    :param input_: The input to log debug info for.
+    :param action_suffix: The past-tense operation to be preformed on the input.
+    :return:
+    """
+    logging.debug("%d files to be %s:" % (len(input_), action_suffix))
+    logging.debug(str(input_))
 
 """
 def mothur_parseInputFileType(args):
@@ -313,50 +338,48 @@ def mothur_buildOptionString(args, mustFilter=False, mustUpdate=False):
     :return:    An option string with the selected options.  e.g "start=100, end=300"
     """
     filters = ["start", "end", "minlength", "maxlength", "maxambig", "maxn", "maxhomop", "pdiff", "bdiff"]
-    updateFiles = ["groups", "names", "alnReport", "contigsReport", "summaryFile"]
-    filterString = buildCSL(args,filters)
-    updateString = buildCSL(args, updateFiles)
-    updateString = buildCSL(args, updateFiles)
-    didntFindFilter = (len(filterString) ==  0)
-    didntFindUpdate = (len(updateString) == 0)
-    if mustFilter and didntFindFilter:
+    update_files = ["groups", "names", "alnReport", "contigsReport", "summaryFile"]
+    filter_string = buildCSL(args, filters)
+    update_string = buildCSL(args, update_files)
+    didnt_find_filter = (len(filter_string) == 0)
+    didnt_find_update = (len(update_string) == 0)
+    if mustFilter and didnt_find_filter:
         raise MissingMothurFilterException
 
-    if mustUpdate and didntFindUpdate:
+    if mustUpdate and didnt_find_update:
         raise MissingMothurFileException
 
     comma = ", "
-    if didntFindFilter or didntFindUpdate:
+    if didnt_find_filter or didnt_find_update:
         comma = ""
-    # print updateString
-    # print filterString
-    return "%s%s%s" % (updateString, comma, filterString)
+    # print update_string
+    # print filter_string
+    return "%s%s%s" % (update_string, comma, filter_string)
 
 
 def buildCSL(item, attributes):
     """Tests if item has the attributes in options.  Any found attributes are built into a comma-delimited string in the
             format attribute_name=attribute_value.  e.g. "attr1=5, attr2=abc, attrk=def"
 
-    :param item:        An object to probe.
+    :param item: An object to probe.
     :param attributes:  A list of the desired attributes as strings.  e.g ["attr1", "attr2", "attrk"]
     :return: A comma-delimited string in the format attribute_name=attribute_value. e.g. "attr1=5, attr2=abc, attrk=def"
     """
-    optionString = ""
+    option_string = ""
     for attr in attributes:
-        val = ""
         try:
             val = getattr(item, attr)
-            if val != None:
-                optionString = optionString + "%s=%s, " % (attr, val)
+            if val is not None:
+                option_string = "%s%s=%s, " % (option_string, attr, val)
         except:
             pass
 
     # chop off the trailing comma
-    return optionString [:-2]
+    return option_string[:-2]
 
 
 
-def splitFileBySample(fastaFile, groupsFile, splitFastaDir, memLimit=0):
+def splitFileBySample(fastaFile, groupsFile, splitFastaDir, mem_limit=0):
     """ Splits an input 'fastaFile' into separate files based on the mapping in a 'groupsFile', and outputs a separate
         fasta file for each group.  Sanitizes the sequence names by removing "." dots added by align.seq.
         See <http://www.mothur.org/wiki/Group_file> for group file specification.
@@ -372,21 +395,21 @@ def splitFileBySample(fastaFile, groupsFile, splitFastaDir, memLimit=0):
     # however, this is ideal require sample file independently
     # this also sanitizes the sequences by removing "." dots added by align.seq
 
-
-    if memLimit:
-        fileSize = os.path.getsize(fastaFile)
-        if fileSize > memLimit:
-                raise Exception ("Target file is too big.")
+    if mem_limit:
+        file_size = os.path.getsize(fastaFile)
+        if file_size > mem_limit:
+                raise Exception("Target file is too big.")
 
     # TODO: test that the file fits into memory, otherwise this could cause problems
-    mySequences = SeqIO.to_dict(SeqIO.parse(fastaFile, 'fasta'))
+    my_sequences = SeqIO.to_dict(SeqIO.parse(fastaFile, 'fasta'))
 
-    seqsByGroup = defaultdict(list)
+    seqs_by_group = defaultdict(list)
     for line in open(groupsFile, 'r'):
         seq, group = line.rstrip().split()
-        seqsByGroup[group].append(seq)
-    for group in seqsByGroup.keys():
-        outFile = open(os.path.join(splitFastaDir, group), 'a')
-        for seq in seqsByGroup[group]:
-            SeqIO.write(SeqRecord(mySequences[seq].seq.ungap(".").ungap("-"), id=seq, description=""), outFile, 'fasta')
-        outFile.close()
+        seqs_by_group[group].append(seq)
+    for group in seqs_by_group.keys():
+        out_file = open(os.path.join(splitFastaDir, group), 'a')
+        for seq in seqs_by_group[group]:
+            SeqIO.write(
+                SeqRecord(my_sequences[seq].seq.ungap(".").ungap("-"), id=seq, description=""), out_file, 'fasta')
+        out_file.close()

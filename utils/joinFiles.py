@@ -1,3 +1,4 @@
+import sys
 
 def joinFiles(input_file_list, output_file):
     """Concatenates the contents of input_file_list into one output_file.  Overwrites any pre-existing content in
