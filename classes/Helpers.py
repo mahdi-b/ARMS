@@ -69,7 +69,7 @@ def runPythonInstance(params):
     :param params:  A tuple, where the first item is a function, and the remainder is a set of parameters
     :return:        The output of params[0](*params[1:]
     """
-    printVerbose(params)
+    printVerbose(str(params))
     func = params[0]
     args = params[1:]
     return func(*args)
