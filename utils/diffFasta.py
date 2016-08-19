@@ -2,7 +2,7 @@ import sys
 from Bio import SeqIO
 
 def diff(fastaA, fastaB, outFile):
-    """Writes the difference of fastaA and fastaB to outFile.  Order matters.
+    """Writes the difference of fastaA and fastaB to outFile.  i.e. A-B
         i.e. Write to file the records in fastaA but not fastaB.
 
     :param fastaA:  The first fasta file.  Preferably the larger fasta file.

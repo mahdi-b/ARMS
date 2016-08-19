@@ -30,7 +30,7 @@ class ProgramRunner(object):
         "MOTHUR" : os.path.expanduser("~/ARMS/programs/mothur/mothur"),
         "FLEXBAR": os.path.expanduser("~/ARMS/programs/flexbar/flexbar"),
         "VSEARCH": os.path.expanduser("~/ARMS/programs/vsearch/vsearch"),
-        "SWARM"  : os.path.expanduser("~/ARMS/programs/swarm/swarm-2.1.9-linux-x86_64")
+        "SWARM"  : os.path.expanduser("~/ARMS/programs/swarm/swarm-2.1.9-linux-x86_64"),
     }
 
     def __init__(self, program, params, conditions=None, stdin="", stdout="", stderr=""):
@@ -190,5 +190,9 @@ class ProgramRunner(object):
                                             --userfields query+target+id+alnlen+qcov --userout \"%s\" --alnout \"%s\"\
                                              %s",
                 "echo": "echo \"%s\"",
-                "unique.seqs": program_paths["MOTHUR"] + " \'#unique.seqs(fasta=%s)\'",
+                # done only if the existing database dosen't exist
+                "min.hash.build.db": "java -jar ~/ARMS/programs/mhap/mhap-2.1.jar --store-full-id -p \"%s\" -q \"%s\"",
+                "min.hash.query": "java -jar ~/ARMS/programs/mhap/mhap-2.1.jar --store-full-id -s \"%s\" -q \"%s\" \
+                                            --no-self --num-min-matches %d > \"%s\"",
+                 "unique.seqs": program_paths["MOTHUR"] + " \'#unique.seqs(fasta=%s)\'",
             }

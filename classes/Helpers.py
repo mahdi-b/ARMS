@@ -1,6 +1,7 @@
 import glob
 import logging
 import os
+import re
 import sys
 import Validator
 from Bio import SeqIO
@@ -87,7 +88,7 @@ def parallel(function, data, pool=Pool(processes=1)):
 
 
 
-def makeDirOrdie(dir_path):
+def makeDirOrdie(dir_path, orDie=True):
     """Creates a directory 'dirPath' or exits if the 'dirPath' directory already exists.  Prevents unnecessary execution.
     :param dir_path: The filepath to the directory to look for.
 
@@ -96,9 +97,9 @@ def makeDirOrdie(dir_path):
     if not os.path.isdir(dir_path):
         os.makedirs(dir_path)
     else:
-        sys.exit("Directory %s already exists " % dir_path)
+        if orDie:
+            sys.exit("Directory %s already exists " % dir_path)
     return dir_path
-
 
 def makeAuxDir(dir_path):
     """Create a directory 'dirPath_aux' if it doesn't already exist.
@@ -137,6 +138,8 @@ def strip_ixes(path):
         name = name.replace(ix, "")
     return name
 
+def clip_count(filename, delim=''):
+    return re.sub(r'_\d+', '', filename)
 
 def enumerateDir(dir_, pattern="*"):
     """Returns all the files in a directory, optionally requiring a pattern match.

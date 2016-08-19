@@ -293,6 +293,20 @@ def main(argv):
     parcer_ncbi.set_defaults(func=queryNCBI)
 
 
+    # =============================================
+    # ==  14 Get Orientation with MinHash Query  ==
+    # =============================================
+    # done only if the existing database dosen't exist
+    # "min.hash.build.db": "java -jar ~/ARMS/programs/mhap/mhap-2.1.jar --store-full-id -p \"%s\" -q \"%s\"",
+    # "min.hash.search": "java -jar ~/ARMS/programs/mhap/mhap-2.1.jar --store-full-id -s \"%s\" -q \"%s\" \
+    #                            --no-self --num-min-matches %d > \"%s\"",
+    parser_minhash = subparsers.add_parser('minhash')
+    parser_minhash.add_argument('-i', '--input', required=True, help="Input query file.")
+    parser_minhash.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
+    parser_minhash.add_argument('-d', '--dbfasta', required=True, help="Reference Fasta to query.")
+    parser_minhash.add_argument('-r', '--rebuilddb', required=False, default=False, help="Force rebuild the database.")
+    parser_minhash.set_defaults(func=minhash)
+
     # =======================================
     # ==  xx Remove sequences with Mothur  ==
     # =======================================

@@ -9,6 +9,7 @@ from filters.removeMacseRefs import removeMacseRefs
 from filters.ungap import ungap
 from parsers.getSeedSequences import getSeedSequences
 from parsers.getTaxFromId import parseVSearchToTaxa
+from parsers.parseMHAPOut import findUnmatchedSeqs
 from parsers.parseVSearchout import parseVSearchout
 from renamers.renameWithReplicantCounts import renameWithReplicantCounts
 from renamers.renameSequences import serialRename
@@ -823,6 +824,8 @@ def prescreen(args, pool=Pool(processes=1)):
     """Prescreens a file for sequences with frameshfits, and logs the frameshifts.
 
     :param args: An argparse object with the following parameters:
+    input           input file/folder with fasta sequences
+                    outdir      Directory to put the output files
                     aln_out_file        A human-readable output file from vsearch.
                     caln_userout_file   A caln file where each line represents one target/query match.
     :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
@@ -842,6 +845,68 @@ def prescreen(args, pool=Pool(processes=1)):
         move_to_dir(flagged_seqs_file, args.outdir)
     except KeyboardInterrupt:
         cleanupPool(pool)
+
+#TODO doc and debug
+def minhash(args, pool=Pool(processes=1)):
+    """Queries a compiled database using minhashes to determine the orientation of a file.
+
+    :param args: An argparse object with the following parameters:
+                    input       File/folder with fasta sequences
+                    outdir      Directory to put the output files
+                    rebuilddb   If true, recompile the DB
+                    dbfasta     The fasta file listing reference sequences (the DB to compile)
+    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
+    """
+    #match once, then match again with stragglers
+
+    database_dir = os.path.expanduser("~/ARMS/data/")
+    makeDirOrdie(database_dir, orDie=False)
+    compiled_data_base = getInputs("%s%s.dat" % (database_dir, getFileName(args.dbfasta)), critical=False)
+
+    # if the db doesnt exist, or forced rebuild,
+    if len(compiled_data_base) == 0 or args.rebuilddb:
+        print "Compiling database..."
+        # (Re)Build the Database from a fasta
+        db_source_fastas = getInputs(args.dbfasta)
+        debugPrintInputInfo(db_source_fastas, "be compiled into a DB.")
+        if len(db_source_fastas) == 0:
+            print("Error: Database source fasta(s) not found!")
+            sys.exit()
+
+        #"min.hash.build.db": "java -jar ~/ARMS/programs/mhap/mhap-2.1.jar --store-full-id -p \"%s\" -q \"%s\"",
+        parallel(runProgramRunnerInstance, [ProgramRunner("min.hash.build.db",
+                                                          [source, database_dir],
+                                                          {"exists": []})
+                                            for source in db_source_fastas], pool)
+    makeDirOrdie(args.outdir)
+    query_fastas = getInputs(args.input)
+    debugPrintInputInfo(query_fastas, "be queried against the db.")
+    for sensitivity in ([40, 30, 20, 10, 5]):
+
+        #"min.hash.search": "java -jar ~/ARMS/programs/mhap/mhap-2.1.jar --store-full-id -s \"%s\" -q \"%s\" \
+        #                                       --no-self --num-min-matches %d > \"%s\"",
+        printVerbose("Querying DB with sensativity %d" % sensitivity)
+        parallel(runProgramRunnerInstance, [ProgramRunner("min.hash.query",
+                                              [compiled_data_base[0], query, sensitivity, "%s/%s_%d.out" %
+                                                (args.outdir, clip_count(strip_ixes(query)), sensitivity)], {"exists": []})
+                                            for query in query_fastas], pool)
+        printVerbose("Done with queries.")
+
+        # Diff the found items from the query file,
+        mhap_outputs = getInputs(args.outdir, "*_%d.out" % sensitivity, ignore_empty_files=False)
+        debugPrintInputInfo(query_fastas, "parse and screen from the query fastas.")
+
+        # def findUnmatchedSeqs(fasta_to_clean, mhap_outfile, unmatched_fasta):
+        fasta_mhap_pairs = zip(query_fastas, mhap_outputs)
+
+        printVerbose("Removing identified sequences from query fasta")
+        parallel(runPythonInstance, [(findUnmatchedSeqs, fasta_query, mhap_output,
+                                      "%s/%s_%d.fasta" % (args.outdir, clip_count(strip_ixes(fasta_query)),sensitivity))
+                                     for fasta_query, mhap_output in fasta_mhap_pairs], pool)
+        printVerbose("Done removing sequences")
+
+        # update counters for next iteration
+        query_fastas = getInputs(args.outdir, "*_%d.fasta" % sensitivity, ignore_empty_files=False)
 
 
 # Orphaned code
