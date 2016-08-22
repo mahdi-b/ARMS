@@ -45,7 +45,6 @@ Supported operations:
 
     8 macsealign
         macse
-        macse
 
     9 cluster
         vsearch derep_full_length
@@ -86,20 +85,24 @@ def main(argv):
     #
     #"make.contigs": "mothur \'#make.contigs(ffastq=%s, rfastq=%s, bdiffs=1, pdiffs=2, oligos=%s, \
     #                                 processors=%s)\'",
-    parser_assemble = subparsers.add_parser('assemble')
-    parser_assemble.add_argument('-f', '--input_f', required=True, help="Forward Fastq Reads (file or folder)")
-    parser_assemble.add_argument('-r', '--input_r', required=True, help="Reverse Fastq Reads (file or folder)")
-    parser_assemble.add_argument('-n', '--name',    required=True, help="Assembled File Prefix")
-    parser_assemble.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved")
-    parser_assemble.add_argument('-p', '--program', required=True, help="The name of the program to use.  \
-                                                                        Either 'mothur' or 'pear' ")
-    parser_assemble.set_defaults(func=assemble)
+    parser_assemble = subparsers.add_parser('assemble', description="Given a pair of left and right fasta/fastq reads, \
+                            or a pair of folder containing the left and right fasta/fastq files, assembles the left \
+                            and right read files into contiguous sequence files.  Forwards reads filenames should \
+                            end in '_forward.<ext>' or '_R1.<ext>'.  Reverse reads filenames should end in \
+                            '_reverse.<ext>' or '_R2.<ext>'.  (where <ext> is the file extension).")
+    parser_assemble.add_argument('-f', '--input_f', required=True, help="Forward Fastq Reads file or folder.")
+    parser_assemble.add_argument('-r', '--input_r', required=True, help="Reverse Fastq Reads file or folder.")
+    parser_assemble.add_argument('-n', '--name',    required=True, help="Assembled File Prefix.")
+    parser_assemble.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved.")
+    #parser_assemble.add_argument('-p', '--program', required=True, help="The name of the program to use.  \
+    #                                                                    Either 'mothur' or 'pear' ")
+    parser_assemble.set_defaults(func=assemble_pear)
 
     # for mothur assembler
-    mothur_assembler = parser_assemble.add_argument_group('mothur', 'Mothur options')
-    mothur_assembler.add_argument('-g', '--oligos',  help="Oligos file with barcode and primer sequences")
-    mothur_assembler.add_argument('-bd', '--bdiffs', help="# of allowed barcode mismatches")
-    mothur_assembler.add_argument('-pd', '--pdiffs', help="# of allowed primer mismatches")
+    # mothur_assembler = parser_assemble.add_argument_group('mothur', 'Mothur options')
+    # mothur_assembler.add_argument('-g', '--oligos',  help="Oligos file with barcode and primer sequences")
+    # mothur_assembler.add_argument('-bd', '--bdiffs', help="# of allowed barcode mismatches")
+    # mothur_assembler.add_argument('-pd', '--pdiffs', help="# of allowed primer mismatches")
 
     # for pear assembler
     pear_assembler = parser_assemble.add_argument_group('pear', 'Pear options')
@@ -111,11 +114,14 @@ def main(argv):
     # ======================================
     # "barcode.splitter": "cat \"%s\" | " + programPaths["FASTX"] + "fastx_barcode_splitter.pl  --bcfile \"%s\" \
     #                                    -prefix \"%s\" --suffix .fastq --bol --mismatches 1",
-    parser_demux = subparsers.add_parser('demux_samples')
-    parser_demux.add_argument('-i', '--input', required=True, help="Input fasta/fastq")
+    parser_demux = subparsers.add_parser('demux_samples', description ="Given a single barcodes file, and a \
+                            fasta/fastq file or a folder containing fasta/fastq files, splits each input fasta/fastq \
+                            file into separate sample files (based on each sequence's barcode), for each barcode in \
+                            the barcodes file.  Sample files of size zero are ignored.")
+    parser_demux.add_argument('-i', '--input', required=True, help="Input fasta/fastq file or folder.")
     parser_demux.add_argument('-b', '--barcodes', required=True,
-                              help="Tab delimted files of barcodes and their samples")
-    parser_demux.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
+                              help="Tab delimted files of barcodes and corresponding samples.")
+    parser_demux.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
     parser_demux.set_defaults(func=splitOnBarcodes)
 
 
@@ -123,32 +129,36 @@ def main(argv):
     # ==  3 Rename reads serially with renameSequences  ==
     # ===================================================
     # renameSequences(input, output)
-    parser_rename = subparsers.add_parser('rename')
-    parser_rename.add_argument('-i', '--input', required=True, help="Input file or directory")
-    parser_rename.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
+    parser_rename = subparsers.add_parser('rename', description="Given a fasta/fastq file or directory of fasta/fastq \
+                            files, serially renames each sequence in each file serially, with the filename as a prefix.")
+    parser_rename.add_argument('-i', '--input', required=True, help="Input fasta/fastq file or folder.")
+    parser_rename.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
     parser_rename.add_argument('-f', '--filetype', required=True, help="The filetype of the input files.  Either \
-                                            'fasta' or 'fastq'")
+                            'fasta' or 'fastq'.")
     parser_rename.set_defaults(func=renameSequences)
 
 
     # =============================================================
     # ==  4 Trims barcodes and adapters using mothur or flexbar  ==
     # =============================================================
-    parser_trim = subparsers.add_parser('trim_adapters')
-    parser_trim.add_argument('-i', '--input', required=True, help="Input Fasta/Fastq File")
-    parser_trim.add_argument('-p', '--program', required=True, help="The name of the program to use")
-    parser_trim.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
-    parser_trim.set_defaults(func=trim)
-    # Mothur
-    # "trim.seqs":        "mothur \'#trim.seqs(fasta=\"%s\", oligos=\"%s\", maxambig=1, maxhomop=8, \
-    #                                minlength=300, maxlength=550, bdiffs=1, pdiffs=2)\'",
-    mothur_trim = parser_trim.add_argument_group('mothur', 'Mothur options')
-    mothur_trim.add_argument('-g', '--oligos', help="Mothur oligos file")
-    # flexbar
-    #"flexbar":  "flexbar -r \"%s\" -t \"%s\" -ae \"%s\" -a \"%s\""
+    # "flexbar":  "flexbar -r \"%s\" -t \"%s\" -ae \"%s\" -a \"%s\""
+    parser_trim = subparsers.add_parser('trim_adapters', description="Given a single barcodes file, a single adapters \
+                            file, and a single fasta/fastq file or a folder containing fasta/fastq files, removes the \
+                            specified barcodes and adapters from all sequences in the given fasta/fastq files.")
+    parser_trim.add_argument('-i', '--input', required=True, help="Input fasta/fastq file or folder.")
+    parser_trim.add_argument('-p', '--program', required=True, help="The name of the program to use.")
+    parser_trim.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
+    parser_trim.set_defaults(func=trim_flexbar)
     flexbar_trim = parser_trim.add_argument_group('flexbar', 'flexbar options')
     flexbar_trim.add_argument('-b', '--barcodes', help="Barcodes file")
     flexbar_trim.add_argument('-a', '--adapters', help="Adapters file")
+
+    # Mothur
+    # "trim.seqs":        "mothur \'#trim.seqs(fasta=\"%s\", oligos=\"%s\", maxambig=1, maxhomop=8, \
+    #                                minlength=300, maxlength=550, bdiffs=1, pdiffs=2)\'",
+    # mothur_trim = parser_trim.add_argument_group('mothur', 'Mothur options')
+    # mothur_trim.add_argument('-g', '--oligos', help="Mothur oligos file")
+
 
 
     # ======================================
@@ -157,8 +167,11 @@ def main(argv):
     # Clean low-quality reads with trimmomatic
     # "trimomatic":       "java -jar ~/ARMS/programs/Trimmomatic-0.33/trimmomatic-0.33.jar SE \
     # -phred33 input output_cleaned.fastq SLIDINGWINDOW:%windowsize:%minAvgQuality MINLEN:%minLen"
-    parser_trimmomatic = subparsers.add_parser('clean_seqs')
-    parser_trimmomatic.add_argument('-i', '--input', required=True, help="Run Id")
+    parser_trimmomatic = subparsers.add_parser('clean_seqs', description="Given a single fastq file or a folder \
+                            containing fastq files, trims away areas of low read quality (specified by -q) in each \
+                            sequence.  Then, the longest remaining segment (of at least length -m) is recorded as the \
+                            new sequence.")
+    parser_trimmomatic.add_argument('-i', '--input', required=True, help="Input fastq file or folder")
     parser_trimmomatic.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
     parser_trimmomatic.add_argument('-m', '--minLen', type=int, default=200,
                                             help="Minimum length for cleaned sequences")
@@ -173,11 +186,14 @@ def main(argv):
     # ==  6 Dereplicate sequences with usearch  ==
     # ============================================
     # "usearch": programPaths["USEARCH"] + " -derep_fulllength \"%s\" -output \"%s\" -uc \"%s\"",
-    parser_derep = subparsers.add_parser('dereplicate_fasta')
-    parser_derep.add_argument('-i', '--input', required=True, help="Input fasta/fastq")
-    parser_derep.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved")
+    parser_derep = subparsers.add_parser('dereplicate_fasta', description="Given an input fasta or fastq file, removes \
+                            identical duplicates and subsequences, keeping the longest sequence, and renames it with \
+                            the number of duplicates as '<longest_sequence_name>_<duplicate count>'.  Outputs are in \
+                            fasta format regardless of the input format (i.e. fastq files are converted to fasta.")
+    parser_derep.add_argument('-i', '--input', required=True, help="Input fasta/fastq file or folder.")
+    parser_derep.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved.")
     parser_derep.add_argument('-f', '--filetype', required=True, help="The filetype of the input files.  Either \
-                                            'fasta' or 'fastq'")
+                                            'fasta' or 'fastq'.")
     parser_derep.set_defaults(func=dereplicate)
 
 
@@ -185,12 +201,16 @@ def main(argv):
     # ==  7 Partition fastas with splitKperFasta  ==
     # ==============================================
     # splitK(inputFasta, prefix, nbSeqsPerFile, filetype):
-    parser_split = subparsers.add_parser('partition')
-    parser_split.add_argument('-i', '--input', required=True, help="Input fasta file to split")
-    parser_split.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved")
-    parser_split.add_argument('-c', '--chunksize', type=int, required=True, help="Chunksize.")
+    parser_split = subparsers.add_parser('partition', description="Given a fasta/fastq file, or folder containing \
+                            fasta/fastq files, splits each file into a set of sub files labeled \
+                            <filename>_part_x.<ext>, where each subfile contains at most <--chunksize> sequences. \
+                            (Where <ext> is the file extension of the original file.")
+    parser_split.add_argument('-i', '--input', required=True, help="Input fasta/fastq file or folder.")
+    parser_split.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved.")
+    parser_split.add_argument('-c', '--chunksize', type=int, required=True, help="Chunksize. (Max number of sequences \
+                            per file).")
     parser_split.add_argument('-f', '--filetype', required=True, help="The filetype of the input files.  Either \
-                                            'fasta' or 'fastq'")
+                            'fasta' or 'fastq'.")
     parser_split.set_defaults(func=partition)
 
 
@@ -198,10 +218,14 @@ def main(argv):
     # ==  8 Align Reads with Mothur  ==
     # =================================
     #"align.seqs": "mothur \'#align.seqs(candidate=%s, template=%s, flip=t)\'",
-    parser_mothuralign = subparsers.add_parser('align_seqs')
-    parser_mothuralign.add_argument('-i', '--input', required=True, help="Fasta file containing the reads to align")
-    parser_mothuralign.add_argument('-r', '--ref', required=True, help="Reference file containing known sequences")
-    parser_mothuralign.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
+    parser_mothuralign = subparsers.add_parser('align_seqs', description="Given a single reference fasta file, and \
+                             a single fasta file or folder containing fasta files, performs a global alignment against \
+                            the reference fasta file.  Sequences that do not align, are written to a .accons file.  \
+                            Sequences that do align are written to a .align file with alignment characters (.) \
+                            inserted.")
+    parser_mothuralign.add_argument('-i', '--input', required=True, help="Fasta file containing the reads to align.")
+    parser_mothuralign.add_argument('-r', '--ref', required=True, help="Reference file containing known sequences.")
+    parser_mothuralign.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
     parser_mothuralign.set_defaults(func=align_mothur)
     
 
@@ -212,32 +236,37 @@ def main(argv):
     #                                \"%s\" -seq_lr \"%s\" -maxFS_inSeq 0  -maxSTOP_inSeq 0  -maxINS_inSeq 0 \
     #                                -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 -out_NT \"%s\"_NT \
     #                                -out_AA \"%s\"_AA -seqToAdd_logFile \"%s\"_log.csv",
-    parser_align = subparsers.add_parser('macseAlign')
-    parser_align.add_argument('-i', '--input', required=True, help="Input fasta")
-    parser_align.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
-    parser_align.add_argument('-d', '--db', required=True, help="Database against which to align and filter reads")
+    parser_align = subparsers.add_parser('macseAlign', "Given a single reference fasta file, and an input fasta file \
+                            or folder containing fasta files, performs a global alignment, using enrichment.")
+    parser_align.add_argument('-i', '--input', required=True, help="Input fasta file or folder.")
+    parser_align.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
+    parser_align.add_argument('-d', '--db', required=True, help="Database against which to align and filter reads.")
     parser_align.set_defaults(func=align_macse)
 
     # =======================
     # ==  9 Cat the files  ==
     # =======================
-    parser_cat = subparsers.add_parser('merge_fasta')
-    parser_cat.add_argument('-i', '--input', required=True, help="Input directory containing files to concatenate")
-    parser_cat.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
-    parser_cat.add_argument('-n', '--name', required=True, help="Prfix name for the merged file")
-    parser_cat.add_argument('-f', '--fileext', required=True, help="File extension for the output file.  Either \
-                                    'fasta', or 'fastq'.")
+    # joinFiles(input_file_list, output_file)
+    parser_cat = subparsers.add_parser('merge_files', description="Given a folder containing any type of file, \
+                            concatenates all files in that folder together, regardless of their filetype.  Note: Any \
+                            file headers/footers will be written as well.")
+    parser_cat.add_argument('-i', '--input', required=True, help="Input directory containing files to concatenate.")
+    parser_cat.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
+    parser_cat.add_argument('-n', '--name', required=True, help="Prefix name for the merged file.")
+    parser_cat.add_argument('-f', '--fileext', required=True, help="File extension for the output file.")
     parser_cat.set_defaults(func=merge)
 
     # ===========================
     # ==  9.5 ungap the files  ==
     # ===========================
-    parser_cat = subparsers.add_parser('ungap_fasta')
-    parser_cat.add_argument('-i', '--input', required=True, help="Input directory containing files to concatenate")
-    parser_cat.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
+    # ungap(file_to_clean, output_file_name, gap_char, file_type)
+    parser_cat = subparsers.add_parser('ungap_fasta', description="Given a fasta/fastq file or a folder containing \
+                            fasta/fastq files, removes alignment characters (specified by -g).")
+    parser_cat.add_argument('-i', '--input', required=True, help="Input directory containing files to concatenate.")
+    parser_cat.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
     parser_cat.add_argument('-f', '--fileext', required=True, help="File extension for the output file.  Either \
-                                    'fasta', or 'fastq'.")
-    parser_cat.add_argument('-g', '--gapchar', required=True, help="Character to filter from sequences.")
+                            'fasta', or 'fastq'.")
+    parser_cat.add_argument('-g', '--gapchar', required=True, help="Character to remove from sequences.")
     parser_cat.set_defaults(func=ungapFasta)
 
     # ==========================================
@@ -245,38 +274,27 @@ def main(argv):
     # ==========================================
     # "vsearch": program_paths["VSEARCH"] + "--derep_fulllength \"%s\" --sizeout --fasta_width 0  \
     #
-    parser_align = subparsers.add_parser('cluster_seqs')
+    parser_align = subparsers.add_parser('cluster_seqs', description="Given a fasta file or a folder containing fasta \
+                            files, performs clustering on each input file individually.  Outputs a .names file listing \
+                            unique representative sequences from each cluster, and the names of the sequences they \
+                            represent.  Also outputs a <input_file_name>_seeds.fasta file of the unique representatives.")
     parser_align.add_argument('-i', '--input', required=True, help="Input fasta file/folder")
     parser_align.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
     parser_align.add_argument('-n', '--namesfile', required=False, help="A .names file to update.")
     parser_align.add_argument('-s', '--stripcounts', required=False, type=bool, default=True, help="If True, strip \
-                                    counts from sequence names before clustering.  This allows for the recognition of \
-                                    sequence names.")
+                            counts from sequence names before clustering.  This allows for the recognition of \
+                            sequence names.")
     parser_align.set_defaults(func=cluster)
 
-
-    # ====================================
-    # ==  11 Find Chimeras with Mothur  ==
-    # ====================================
-    # "chmimera.uchime":  "mothur \'#chimera.uchime(fasta=\"%s\", name=\"%s\")\'",
-    '''
-    parser_chimera = subparsers.add_parser('uchime')
-    parser_chimera.add_argument('-i', '--input', required=True, help="Input Fasta File to clean")
-    parser_chimera.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved")
-    parser_chimera.add_argument('-p', '--program', required=False, default="uchime",
-                                help="Program for detecting and removing chimeras. Default is uchime")
-    refType = parser_chimera.add_mutually_exclusive_group(required=True)
-    refType.add_argument('-n', '--names', help="Names file to reference")
-    refType.add_argument('-d', '--refdb', help="Database file to reference")
-    parser_chimera.set_defaults(func=findChimeras)
-    '''
 
     # ==========================================
     # ==  12 Closed Ref Picking with BIOCODE  ==
     # ==========================================
+    # TODO description
     # --usearch_global  ../9_p_uchime/seeds.pick.fasta  --db ../data/BiocodePASSED_SAP.txt --id 0.9 \
     #	--userfields query+target+id+alnlen+qcov --userout out  --alnout alnout.txt
-    parser_biocode = subparsers.add_parser('query_biocode')
+    parser_biocode = subparsers.add_parser('query_biocode', description="Given a fasta file, or folder containing \
+                            fasta files, aligns sequences asgainst the BIOCODE database.")
     parser_biocode.add_argument('-i', '--input', required=True, help="Input file/folder with fasta files")
     parser_biocode.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
     parser_biocode.set_defaults(func=queryBiocode)
@@ -285,6 +303,7 @@ def main(argv):
     # =======================================
     # ==  13 Closed Ref Picking with NCBI  ==
     # =======================================
+    # TODO description
     # --usearch_global ../9_p_uchime/seeds.pick.fasta  --db /home/mahdi/refs/COI_DOWNLOADED/COI.fasta -id 0.9 \
     #          --userfields query+target+id+alnlen+qcov --userout out --alnout alnout.txt --userfields query+target+id+alnlen+qcov
     parcer_ncbi = subparsers.add_parser('query_ncbi')
@@ -318,16 +337,17 @@ def main(argv):
     # ========================
     # ==  xx Build Matrix  ==
     # ========================
-    parser_matrix = subparsers.add_parser('buildmatrix')
-    parser_matrix.add_argument('-i', '--input', required=True, help="Input query file.")
-    parser_matrix.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
-    parser_matrix.add_argument('-d', '--dbfasta', required=True, help="Reference Fasta to query.")
-    parser_matrix.add_argument('-s', '--sensativities', required=True, help="Semi-colon delimited list of sensativities\
-                                to use.  Should be a list of diminishing positive values representing the allowed % \
-                                mismatch in sequence alignments.  e.g. 40;30;20;10;5")
-    parser_matrix.add_argument('-r', '--rebuilddb', required=False, default=False, help="Force rebuild the database.")
-    parser_matrix.set_defaults(func=minhash)
 
+
+    '''
+    # ==================================================================================================================
+    # ==================================================================================================================
+    # ==================================================================================================================
+    # ==  ORPHANED CODE ================================================================================================
+    # ==================================================================================================================
+    # ==================================================================================================================
+    # ==================================================================================================================
+    # ==================================================================================================================
 
     # =======================================
     # ==  xx Remove sequences with Mothur  ==
@@ -378,6 +398,25 @@ def main(argv):
     parser_prescreeen.set_defaults(func=prescreen)
 
 
+
+
+    # ====================================
+    # ==  11 Find Chimeras with Mothur  ==
+    # ====================================
+    # "chmimera.uchime":  "mothur \'#chimera.uchime(fasta=\"%s\", name=\"%s\")\'",
+
+    parser_chimera = subparsers.add_parser('uchime')
+    parser_chimera.add_argument('-i', '--input', required=True, help="Input Fasta File to clean")
+    parser_chimera.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved")
+    parser_chimera.add_argument('-p', '--program', required=False, default="uchime",
+                                help="Program for detecting and removing chimeras. Default is uchime")
+    refType = parser_chimera.add_mutually_exclusive_group(required=True)
+    refType.add_argument('-n', '--names', help="Names file to reference")
+    refType.add_argument('-d', '--refdb', help="Database file to reference")
+    parser_chimera.set_defaults(func=findChimeras)
+
+
+
     # ==============================
     # ==  Convert fastq to fasta  ==
     # ==============================
@@ -395,7 +434,7 @@ def main(argv):
     parser_toFastq.add_argument('-i', '--inputFasta', required=True, help="Input Fasta File")
     parser_toFastq.add_argument('-q', '--inputQual', required=True, help="Input qual File")
     parser_toFastq.set_defaults(func=makeFastq)
-
+    '''
 
     # Todo remove this
     testParser = subparsers.add_parser('test')

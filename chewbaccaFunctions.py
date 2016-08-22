@@ -72,6 +72,7 @@ def assemble_pear(args, pool=Pool(processes=1)):
     """
     # "~/programs/pear-0.9.4-bin-64/pear-0.9.4-64 -f %s -r %s -o %s -j %s -m %d"
     try:
+        makeDirOrdie(args.outdir)
         name_error_text = "Forwards reads should include the filename suffix \"_forward\" " \
                           + "or \"R1\".  Reverse reads should include the filename suffix \"_reverse\" or \"R2\"."
 
@@ -898,10 +899,10 @@ def minhash(args, pool=Pool(processes=1)):
 
         # Diff the found items from the query file,
         mhap_outputs = getInputs(args.outdir, "*_%d.out" % sensitivity, ignore_empty_files=False)
-        debugPrintInputInfo(query_fastas, "parse and screen from the query fastas.")
 
         # def findUnmatchedSeqs(fasta_to_clean, mhap_outfile, unmatched_fasta):
         fasta_mhap_pairs = zip(query_fastas, mhap_outputs)
+        debugPrintInputInfo(fasta_mhap_pairs, "parse and screen from the query fastas.")
 
         printVerbose("Removing identified sequences from query fasta")
         parallel(runPythonInstance, [(findUnmatchedSeqs, fasta_query, mhap_output,
