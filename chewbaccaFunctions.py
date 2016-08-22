@@ -879,9 +879,13 @@ def minhash(args, pool=Pool(processes=1)):
                                                           {"exists": []})
                                             for source in db_source_fastas], pool)
     makeDirOrdie(args.outdir)
+    # Convert the sensativity list to a reverse-sorted list of integers
+    sensativity_list = map(int, args.sensativities.split(","))
+    sensativity_list.sort(reverse=True)
+
     query_fastas = getInputs(args.input)
     debugPrintInputInfo(query_fastas, "be queried against the db.")
-    for sensitivity in ([40, 30, 20, 10, 5]):
+    for sensitivity in sensativity_list:
 
         #"min.hash.search": "java -jar ~/ARMS/programs/mhap/mhap-2.1.jar --store-full-id -s \"%s\" -q \"%s\" \
         #                                       --no-self --num-min-matches %d > \"%s\"",

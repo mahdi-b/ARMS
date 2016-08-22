@@ -300,12 +300,34 @@ def main(argv):
     # "min.hash.build.db": "java -jar ~/ARMS/programs/mhap/mhap-2.1.jar --store-full-id -p \"%s\" -q \"%s\"",
     # "min.hash.search": "java -jar ~/ARMS/programs/mhap/mhap-2.1.jar --store-full-id -s \"%s\" -q \"%s\" \
     #                            --no-self --num-min-matches %d > \"%s\"",
-    parser_minhash = subparsers.add_parser('minhash')
+    parser_minhash = subparsers.add_parser('minhash', description="Iteratively executes the MinHash Alignment Protocol \
+                                (MHAP) <https://github.com/marbl/MHAP>  over a set of query sequences, using a \
+                                data-base of reference sequences, for an decreasing number of  minimum # min-mers that \
+                                must be shared (-s).  Note: this database must be compiled prior to execution, and \
+                                should be manually recompiled (using the -r flag) if that fasta file changes.  ")
     parser_minhash.add_argument('-i', '--input', required=True, help="Input query file.")
     parser_minhash.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
     parser_minhash.add_argument('-d', '--dbfasta', required=True, help="Reference Fasta to query.")
+    parser_minhash.add_argument('-s', '--sensativities', required=True, default=False, help="Comma delimited list\
+                                of integers to iterate over.  Each sensativity represents the minimum # of min-mers \
+                                that must be shared between query sequences and reference sequences for query  \
+                                identification.  e.g. 40,30,20,10,5")
     parser_minhash.add_argument('-r', '--rebuilddb', required=False, default=False, help="Force rebuild the database.")
     parser_minhash.set_defaults(func=minhash)
+
+    # ========================
+    # ==  xx Build Matrix  ==
+    # ========================
+    parser_matrix = subparsers.add_parser('buildmatrix')
+    parser_matrix.add_argument('-i', '--input', required=True, help="Input query file.")
+    parser_matrix.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
+    parser_matrix.add_argument('-d', '--dbfasta', required=True, help="Reference Fasta to query.")
+    parser_matrix.add_argument('-s', '--sensativities', required=True, help="Semi-colon delimited list of sensativities\
+                                to use.  Should be a list of diminishing positive values representing the allowed % \
+                                mismatch in sequence alignments.  e.g. 40;30;20;10;5")
+    parser_matrix.add_argument('-r', '--rebuilddb', required=False, default=False, help="Force rebuild the database.")
+    parser_matrix.set_defaults(func=minhash)
+
 
     # =======================================
     # ==  xx Remove sequences with Mothur  ==

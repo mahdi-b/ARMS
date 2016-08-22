@@ -15,7 +15,6 @@ def findUnmatchedSeqs(fasta_to_clean, mhap_outfile, unmatched_fasta):
         for line in mhap_file:
             data = line.split()
             id = data[0]
-            print id
             match_data = "\t".join(data[1:])
 
             if id not in mhap_rslts:
