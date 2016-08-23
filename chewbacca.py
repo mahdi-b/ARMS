@@ -237,7 +237,7 @@ def main(argv):
     #                                \"%s\" -seq_lr \"%s\" -maxFS_inSeq 0  -maxSTOP_inSeq 0  -maxINS_inSeq 0 \
     #                                -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 -out_NT \"%s\"_NT \
     #                                -out_AA \"%s\"_AA -seqToAdd_logFile \"%s\"_log.csv",
-    parser_align = subparsers.add_parser('macseAlign', "Given a single reference fasta file, and an input fasta file \
+    parser_align = subparsers.add_parser('macseAlign', description="Given a single reference fasta file, and an input fasta file \
                             or folder containing fasta files, performs a global alignment, using enrichment.")
     parser_align.add_argument('-i', '--input', required=True, help="Input fasta file or folder.")
     parser_align.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
