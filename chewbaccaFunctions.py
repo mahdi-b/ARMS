@@ -717,7 +717,9 @@ def minhash(args, pool=Pool(processes=1), debug=False):
                                                           [args.memlimit, source, database_dir],
                                                           {"exists": []})
                                             for source in db_source_fastas], pool, debug)
-    makeDirOrdie(args.outdir)
+        # retry grabbing the compiled db
+        compiled_data_base = getInputs("%s%s.dat" % (database_dir, getFileName(args.dbfasta)), critical=False)
+    makeDirOrdie(args.outdir, orDie=False)
     # Convert the sensativity list to a reverse-sorted list of integers
     sensativity_list = map(int, args.sensativities.split(","))
     sensativity_list.sort(reverse=True)
@@ -743,7 +745,7 @@ def minhash(args, pool=Pool(processes=1), debug=False):
         debugPrintInputInfo(fasta_mhap_pairs, "parse and screen from the query fastas.")
 
         printVerbose("Removing identified sequences from query fasta")
-        parallel(runPythonInstance, [(findUnmatchedSeqs, args.memlimit, fasta_query, mhap_output,
+        parallel(runPythonInstance, [(findUnmatchedSeqs, fasta_query, mhap_output,
                                       "%s/%s_%d.fasta" % (args.outdir, clip_count(strip_ixes(fasta_query)),sensitivity))
                                      for fasta_query, mhap_output in fasta_mhap_pairs], pool, debug)
         printVerbose("Done removing sequences")

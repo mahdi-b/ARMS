@@ -169,7 +169,7 @@ def getInputs(path, match_pattern="*", mismatch_pattern="", critical=True, ignor
     :param ignore_empty_files: If True, does not return empty files.  Default True.
     :return:            A list of one or more files.
     """
-    rslt = ""
+    rslt = []
     if os.path.isfile(path):
         rslt = [path]
     elif os.path.isdir(path):
@@ -185,10 +185,8 @@ def getInputs(path, match_pattern="*", mismatch_pattern="", critical=True, ignor
         if critical:
             print "Error: Found no matching inputs matching %s at %s" % (match_pattern, path)
             exit()
-        # return []
     if ignore_empty_files:
         rslt = [path for path in rslt if os.path.getsize(path)]
-    print rslt
     return rslt
 
 
