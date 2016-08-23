@@ -714,7 +714,7 @@ def minhash(args, pool=Pool(processes=1), debug=False):
 
         #"min.hash.build.db": "java -jar ~/ARMS/programs/mhap/mhap-2.1.jar --store-full-id -p \"%s\" -q \"%s\"",
         parallel(runProgramRunnerInstance, [ProgramRunner("min.hash.build.db",
-                                                          [source, database_dir],
+                                                          [args.memlimit, source, database_dir],
                                                           {"exists": []})
                                             for source in db_source_fastas], pool, debug)
     makeDirOrdie(args.outdir)
