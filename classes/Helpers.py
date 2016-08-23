@@ -76,7 +76,7 @@ def runPythonInstance(params):
     return func(*args)
 
 
-def parallel(function, data, pool=Pool(processes=1)):
+def parallel(function, data, pool=Pool(processes=1), debug=False):
     """Executes jobs in parallel.
     :param function:    The function to call.  Generally runInstance() for ProgramRunner objects, or a local python
                             function.
@@ -84,7 +84,10 @@ def parallel(function, data, pool=Pool(processes=1)):
     :param pool: An initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
     :return: A list of results.
     """
-    return pool.map_async(function, data).get(999999999)
+    if debug:
+        return data
+    else:
+        pool.map_async(function, data).get(999999999)
 
 
 
