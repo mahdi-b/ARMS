@@ -7,8 +7,9 @@ from pipes import quote
 
 
 class ProgramRunner(object):
-    """A class to interact with external command line programs.  The class contains a dictionary of formatted command
-    strings.  The class supports validation, sanitization, and debugging of user-supplied parameters.
+    """A class to interact with external command line programs and internal python functions.  The class contains a \
+    dictionary of formatted command strings for external programs.  The class supports validation, sanitization, and \
+    debugging of user-supplied parameters.
 
     Attributes:
         DEFAULT_CONFIG_FILEPATH     The filepath to a config file containing user-specified overrides (such as file
@@ -194,8 +195,8 @@ class ProgramRunner(object):
                                              %s",
                 "echo": "echo \"%s\"",
                 # done only if the existing database dosen't exist
-                "min.hash.build.db": "java -jar ~/ARMS/programs/mhap/mhap-2.1.jar --store-full-id -p \"%s\" -q \"%s\"",
-                "min.hash.query": "java -jar ~/ARMS/programs/mhap/mhap-2.1.jar --store-full-id -s \"%s\" -q \"%s\" \
+                "min.hash.build.db": "java -Xmx%s -server -jar ~/ARMS/programs/mhap/mhap-2.1.jar --store-full-id -p \"%s\" -q \"%s\"",
+                "min.hash.query": "java -Xmx%s -server -jar ~/ARMS/programs/mhap/mhap-2.1.jar --store-full-id -s \"%s\" -q \"%s\" \
                                             --no-self --num-min-matches %d > \"%s\"",
                  "unique.seqs": program_paths["MOTHUR"] + " \'#unique.seqs(fasta=%s)\'",
             }

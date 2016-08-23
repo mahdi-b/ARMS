@@ -730,7 +730,7 @@ def minhash(args, pool=Pool(processes=1), debug=False):
         #                                       --no-self --num-min-matches %d > \"%s\"",
         printVerbose("Querying DB with sensativity %d" % sensitivity)
         parallel(runProgramRunnerInstance, [ProgramRunner("min.hash.query",
-                                              [compiled_data_base[0], query, sensitivity, "%s/%s_%d.out" %
+                                              [args.memlimit, compiled_data_base[0], query, sensitivity, "%s/%s_%d.out" %
                                                 (args.outdir, clip_count(strip_ixes(query)), sensitivity)], {"exists": []})
                                             for query in query_fastas], pool, debug)
         printVerbose("Done with queries.")
@@ -743,7 +743,7 @@ def minhash(args, pool=Pool(processes=1), debug=False):
         debugPrintInputInfo(fasta_mhap_pairs, "parse and screen from the query fastas.")
 
         printVerbose("Removing identified sequences from query fasta")
-        parallel(runPythonInstance, [(findUnmatchedSeqs, fasta_query, mhap_output,
+        parallel(runPythonInstance, [(findUnmatchedSeqs, args.memlimit, fasta_query, mhap_output,
                                       "%s/%s_%d.fasta" % (args.outdir, clip_count(strip_ixes(fasta_query)),sensitivity))
                                      for fasta_query, mhap_output in fasta_mhap_pairs], pool, debug)
         printVerbose("Done removing sequences")

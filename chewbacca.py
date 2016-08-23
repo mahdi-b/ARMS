@@ -332,6 +332,7 @@ def main(argv):
                                 of integers to iterate over.  Each sensativity represents the minimum # of min-mers \
                                 that must be shared between query sequences and reference sequences for query  \
                                 identification.  e.g. 40,30,20,10,5")
+    parser_minhash.add_argument('-m', '--memlimit', required=True, help="Java Max Heap Size.  e.g. 32g=32gigabytes.")
     parser_minhash.add_argument('-r', '--rebuilddb', required=False, default=False, help="Force rebuild the database.")
     parser_minhash.set_defaults(func=minhash)
 
