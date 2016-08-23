@@ -75,6 +75,7 @@ def main(argv):
     parser.add_argument("--verbose", default=True, help="increase output verbosity", action="store_true")
     parser.add_argument('-t', '--threads', type=int, default=1)
     parser.add_argument('--dryRun', default=False)
+    parser.add_argument('--debugtest',default=False)
     subparsers = parser.add_subparsers(dest='action', help='Available commands')
 
 
@@ -460,7 +461,7 @@ def main(argv):
     logging.debug("Initial ARGS are: %s", args)
     print("\t\t")
     dryRun = args.dryRun
-    args.func(args, pool)
+    args.func(args, pool, args.debugtest)
 
     pool.close()
     pool.join()

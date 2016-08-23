@@ -115,13 +115,16 @@ class ProgramRunner(object):
         except KeyboardInterrupt:
             return
 
-    def dryRun(self):
+    def dryRun(self, dryValidate=True):
         """Prints the validation procedures that would be performed, and the commands that would be run in an actual
             run, without actually executing them.
 
         :return:
         """
-        self.dryValidateConditions(self.conditions)
+        if dryValidate:
+            self.dryValidateConditions(self.conditions)
+        else:
+            self.ValidateConditions(self.conditions)
         return self.command
 
     def loadConfigs(self):
