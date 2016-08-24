@@ -22,5 +22,5 @@ def diff(fastaA, fastaB, outFile):
 if __name__ == "__main__":
     if len(sys.argv) < 4:
         print "Usage: fastaA fastaB outfile"
-        exit()
-    diff(sys.argv[1], sys.argv[2], sys.argv[3])
+    else:
+        diff(*sys.argv[1:4])

@@ -29,5 +29,5 @@ def findUnmatchedSeqs(fasta_to_clean, mhap_outfile, unmatched_fasta):
 if __name__ == "__main__":
     if len(sys.argv) < 4:
         print "Usage: fasta_to_clean  mhap_outfile  unmatched_fasta"
-        exit()
-        findUnmatchedSeqs(sys.argv[1], sys.argv[2], sys.argv[3])
+    else:
+        findUnmatchedSeqs(*sys.argv[1:4])

@@ -1,4 +1,5 @@
-from classes.Helpers import *
+import sys
+from ..classes.Helpers import *
 
 # NOTE: A SEQUENCE MUST NOT APPEAR IN TWO NAMES FILES.
 def buildMatrix(latest_names_files, inital_groups_files, barcodes_file, out_file):

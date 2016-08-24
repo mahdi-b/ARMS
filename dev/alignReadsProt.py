@@ -125,13 +125,14 @@ def run(ref_file, query_file, mhap_out_file):
         # Welp, we tried.
         else:
             print("Error no translation found for sequence %s" % query.id)
-            exit()
+
 
 seqTranslations = defaultdict(list)
 if __name__ == "__main__":
     if len(sys.argv) < 4:
         print "Usage: ref_fasta  query_fasta  mhap_out_file"
-    run(sys.argv[1], sys.argv[2], sys.argv[3])
+    else:
+        run(*sys.argv[1:4])
     #bestHits = findBestHits("%s%s" % (data_dir, "/data/test2"))
 
 

@@ -27,5 +27,5 @@ def ungap(file_to_clean, output_file_name, gap_char, file_type):
 if __name__ == "__main__":
     if len(sys.argv) < 5:
         print "Usage: file_to_clean    output_file    list_of_chars_to_remove   filetype "
-        exit()
-        ungap(sys.argv[1:5])
+    else:
+        ungap(*sys.argv[1:5])

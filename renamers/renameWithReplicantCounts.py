@@ -49,5 +49,5 @@ def renameWithReplicantCounts(input_fasta, names_file, output_fasta, filetype):
 if __name__ == "__main__":
     if len(sys.argv) < 4:
         print "Usage: fasta count_file outfile"
-        exit()
-    renameWithReplicantCounts(sys.argv[1:4])
+    else:
+        renameWithReplicantCounts(*sys.argv[1:4])

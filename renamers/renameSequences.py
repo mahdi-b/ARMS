@@ -44,8 +44,5 @@ def serialRename(input_file, output_file, file_type, barcode_file="", clip=True)
 if __name__ == "__main__":
     if len(sys.argv) < 4:
         print "Usage: input_file output_file renaming_prefix file_type"
-        exit()
-        serialRename(sys.argv[1], sys.argv[2], sys.argv[3])
     else:
-        print "Could not open input_file."
-        exit()
+        serialRename(*sys.argv[1:4])

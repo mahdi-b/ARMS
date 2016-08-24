@@ -49,8 +49,8 @@ def parseVSearchToTaxa(vsearch_out, ncbi_db, output_file, min_coverage, min_simi
 if __name__ == "__main__":
     if len(sys.argv) < 6:
         print "Usage: vsearch_5_field_output   ncbi_db   outfile     min_similarity   min_coverage"
-        exit()
-    parseVSearchToTaxa(sys.argv[1:5])
+    else:
+        parseVSearchToTaxa(*sys.argv[1:6])
 
 
 

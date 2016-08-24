@@ -11,5 +11,5 @@ def seedToNames(seed_fasta, names_file):
 if __name__ == "__main__":
     if len(sys.argv) < 3:
         print "Usage: input_seed_fasta output_names_file"
-        exit()
-        seedToNames(sys.argv[1], sys.argv[2])
+    else:
+        seedToNames(*sys.argv[1:3])

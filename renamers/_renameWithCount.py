@@ -26,5 +26,5 @@ def renameSequencesWithCount(input_fasta, count_file, outfile):
 if __name__ == "__main__":
     if len(sys.argv) < 4:
         print "Usage: fastaA fastaB outfile"
-        exit()
-    renameSequencesWithCount(sys.argv[1:4])
+    else:
+        renameSequencesWithCount(*sys.argv[1:4])

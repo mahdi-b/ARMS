@@ -27,5 +27,5 @@ def getSeedSequences(input_uc_file, output_names_file):
 if __name__ == "__main__":
     if len(sys.argv) < 3:
         print "Usage: fastaA fastaB outfile"
-        exit()
-    getSeedSequences(sys.argv[1:3])
+    else:
+        getSeedSequences(*sys.argv[1:3])

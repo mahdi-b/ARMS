@@ -70,5 +70,5 @@ def updateNames(old_names_files, new_names_files, out_dir, out_prefix):
 if __name__ == "__main__":
     if len(sys.argv) < 4:
         print "Usage: fasta count_file outfile"
-        exit()
-    updateNames(*sys.argv[1:4])
+    else:
+        updateNames(*sys.argv[1:4])

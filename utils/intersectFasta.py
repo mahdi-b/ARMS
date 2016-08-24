@@ -23,5 +23,5 @@ def intersection(fastaA, fastaB, outFile):
 if __name__ == "__main__":
     if len(sys.argv) < 4:
         print "Usage: fastaA fastaB outfile"
-        exit()
-    intersection(sys.argv[1], sys.argv[2], sys.argv[3])
+    else:
+        intersection(*sys.argv[1:4])

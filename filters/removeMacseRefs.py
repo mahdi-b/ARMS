@@ -36,5 +36,5 @@ def removeMacseRefs(file_to_clean, reference_fie, output_file_name):
 if __name__ == "__main__":
     if len(sys.argv) < 4:
         print "Usage: MACSE_output_file reference_file output_file "
-        exit()
-        removeMacseRefs(sys.argv[1], sys.argv[2], sys.argv[3])
+    else:
+        removeMacseRefs(*sys.argv[1:4])
