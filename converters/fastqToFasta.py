@@ -11,4 +11,4 @@ if __name__ == "__main__":
     if len(sys.argv) < 3:
         print "Usage: input_fastq_file output_fasta_file"
         exit()
-        translateFastqToFasta(sys.argv[1], sys.argv[2])
+    translateFastqToFasta(sys.argv[1], sys.argv[2])

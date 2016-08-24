@@ -16,6 +16,7 @@ from renamers.renameSequences import serialRename
 from renamers._renameWithCount import renameSequencesWithCount
 from renamers.renameWithoutCount import removeCountsFromName, removeCountsFromNamesFile
 from renamers.updateNames import updateNames
+from utils.buildMatrix import buildMatrix
 from utils.joinFiles import joinFiles
 from utils.splitKperFasta import splitK
 
@@ -39,10 +40,10 @@ def assemble_pear(args, pool=Pool(processes=1), debug=False):
         name_error_text = "Forwards reads should include the filename suffix \"_forward\" " \
                           + "or \"R1\".  Reverse reads should include the filename suffix \"_reverse\" or \"R2\"."
 
-        forwards_reads = getInputs(args.input_f, "*_forward*")
-        forwards_reads += getInputs(args.input_f, "*_R1*")
-        reverse_reads = getInputs(args.input_r, "*_reverse*")
-        reverse_reads += getInputs(args.input_r, "*_R2*")
+        forwards_reads = getInputs(args.input_f, "*_forward*", critical=False)
+        forwards_reads += getInputs(args.input_f, "*_R1*", critical=False)
+        reverse_reads = getInputs(args.input_r, "*_reverse*", critical=False)
+        reverse_reads += getInputs(args.input_r, "*_R2*", critical=False)
 
         # Ensure that we have matching left and right reads
         if len(forwards_reads) != len(reverse_reads):
@@ -144,7 +145,7 @@ def renameSequences(args, pool=Pool(processes=1), debug=False):
         parallel(runPythonInstance,
                  [(serialRename,
                    input_, "%s/%s_renamed%s" % (args.outdir, strip_ixes(getFileName(input_)),
-                                                os.path.splitext(input_)[1]), args.filetype) for input_ in inputs],
+                                                os.path.splitext(input_)[1]), args.filetype, args.clip) for input_ in inputs],
                  pool, debug)
         printVerbose("Done renaming sequences...")
 
@@ -441,11 +442,9 @@ def cluster(args, pool=Pool(processes=1), debug=False):
     :param args: An argparse object with the following parameters:
                     input       A file or folder containing fasta files to cluster.
                     output      The output directory results will be written to.
-                    names       A names file or folder containing names files that describe the input.
+                    namesFile	A names file or folder containing names files that describe the input.
                                 Note: if no names file is supplied, then entries in the fasta file are assumed to be
-                                    singleton sequences.
-
-                    namesFile	Reference .names file. See <http://www.mothur.org/wiki/Name_file>
+                                    singleton sequences. See <http://www.mothur.org/wiki/Name_file>
                     stripcounts If False, leaves any abbundance suffixes (_###) intact.  This may hurt clustering.
                                     Defaults to True.
     :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
@@ -559,10 +558,14 @@ def cluster(args, pool=Pool(processes=1), debug=False):
         updateNames(most_recent_names_files, cleaned_clustered_names_files, args.outdir, "postcluster")
         printVerbose("Done updating .names files.")
 
+        printVerbose("Capitalizing sequences")
         # Convert the seeds files to uppercase (swarm writes in lowercase)
         inputs = getInputs(args.outdir, "*_seeds")
         parallel(runPythonInstance,
                  [(capitalizeSeqs, input_, "%s.fasta" % input_) for input_ in inputs], pool, debug)
+        printVerbose("Done capitalizing sequences")
+
+        printVerbose("Converting seeds files to .names files")
         # delete seeds file
         for input_ in inputs:
             os.remove(input_)
@@ -570,6 +573,14 @@ def cluster(args, pool=Pool(processes=1), debug=False):
             parallel(runPythonInstance,
                      [(seedToNames, input_, "%s/%s.names" % (args.outdir, getFileName(input_))) for input_ in inputs],
                      pool, debug)
+        printVerbose("Done converting seeds files.")
+
+
+        printVerbose("Moving aux files")
+        # Gather and move the post-clustering names file
+        names_dir = makeDirOrdie(args.outdir + "_names_files")
+        post_cluster_names_file = getInputs(args.outdir, "*_updated.names", critical=False)
+        bulk_move_to_dir(post_cluster_names_file, names_dir)
 
         # Gather and move auxillary files
         aux_files = getInputs(args.outdir, "*", "*_seeds.fasta")
@@ -652,8 +663,9 @@ def queryNCBI(args, pool=Pool(processes=1), debug=False):
                                       97, 85) for input_ in inputs], pool, debug)
 
         # Gather and move auxillary files
+        aux_dir = makeAuxDir(args.outdir)
         aux_files = getInputs(args.outdir, "*", "*_result.out")
-        bulk_move_to_dir(aux_files, makeAuxDir(args.outdir))
+        bulk_move_to_dir(aux_files, aux_dir)
 
     except KeyboardInterrupt:
         cleanupPool(pool)
@@ -707,7 +719,7 @@ def minhash(args, pool=Pool(processes=1), debug=False):
         print "Compiling database..."
         # (Re)Build the Database from a fasta
         db_source_fastas = getInputs(args.dbfasta)
-        debugPrintInputInfo(db_source_fastas, "be compiled into a DB.")
+        debugPrintInputInfo(db_source_fastas, "compiled into a DB.")
         if len(db_source_fastas) == 0:
             print("Error: Database source fasta(s) not found!")
             sys.exit()
@@ -725,7 +737,7 @@ def minhash(args, pool=Pool(processes=1), debug=False):
     sensativity_list.sort(reverse=True)
 
     query_fastas = getInputs(args.input)
-    debugPrintInputInfo(query_fastas, "be queried against the db.")
+    debugPrintInputInfo(query_fastas, "queried against the db.")
     for sensitivity in sensativity_list:
 
         #"min.hash.search": "java -jar ~/ARMS/programs/mhap/mhap-2.1.jar --store-full-id -s \"%s\" -q \"%s\" \
@@ -752,6 +764,29 @@ def minhash(args, pool=Pool(processes=1), debug=False):
 
         # update counters for next iteration
         query_fastas = getInputs(args.outdir, "*_%d.fasta" % sensitivity, ignore_empty_files=False)
+
+
+#TODO doc and debug
+def buildMatrix(args, pool=Pool(processes=1), debug=False):
+    """Builds the unannotated OTU table.
+    :param args: An argparse object with the following parameters:
+                    names       File/folder with .names files.
+                    outdir      Directory to put the output files.
+                    groups      File/folder with .groups files.
+                    barcodes    A single barcodes file listing all possible sample names.
+    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
+    """
+    makeDirOrdie(args.outdir)
+    names = getInputs(args.names)
+    debugPrintInputInfo(names, "read.")
+    groups = getInputs(args.groups)
+    debugPrintInputInfo(groups, "read.")
+    barcodes = getInputs(args.barcodes)
+    debugPrintInputInfo(barcodes, "read.")
+    printVerbose("Building matrix...")
+    buildMatrix(names, groups, barcodes[0], args.outdir)
+    printVerbose("Done building.")
+
 
 '''
 # ========================================================================================================

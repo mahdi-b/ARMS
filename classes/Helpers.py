@@ -87,7 +87,7 @@ def parallel(function, data, pool=Pool(processes=1), debug=False):
     if debug:
         return data
     else:
-        pool.map_async(function, data).get(999999999)
+        return pool.map_async(function, data).get(999999999)
 
 
 

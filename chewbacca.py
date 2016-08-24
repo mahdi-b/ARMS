@@ -339,7 +339,15 @@ def main(argv):
     # ========================
     # ==  xx Build Matrix  ==
     # ========================
-
+    parser_build_matrix = subparsers.add_parser('build_matrix', description="Given a single barcodes file with all possible \
+                                sample names, a list of the latest names file(s), and a list of initial groups files \
+                                (mapping each original, undereplicated sequence to its sample name), builds an OTU \
+                                table..  ")
+    parser_build_matrix.add_argument('-g', '--groups', required=True, help="Input groups file or folder.")
+    parser_build_matrix.add_argument('-n', '--names', required=True, help="Input names file or folder.")
+    parser_build_matrix.add_argument('-b', '--barcodes', required=True, help="Input barcodes file.")
+    parser_build_matrix.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
+    parser_build_matrix.set_defaults(func=buildMatrix)
 
     '''
     # ==================================================================================================================

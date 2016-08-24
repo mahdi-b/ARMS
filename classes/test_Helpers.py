@@ -61,7 +61,7 @@ def test_runPythonInstance():
 def test_parallel():
     # NOTE: tests for correctness, not parallel execution!!!
     vals = [True, False, 3.1415, "test"]
-    rslts = parallel(runPythonInstance, [(mirror, val) for val in vals], Pool(2))
+    rslts = parallel(runPythonInstance, [(mirror, val) for val in vals], Pool(4))
     print rslts
     assert_equal(vals, rslts)
 

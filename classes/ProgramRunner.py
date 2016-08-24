@@ -24,6 +24,7 @@ class ProgramRunner(object):
     configsLoaded = False
     commandTemplates = {}
     dry_run = False
+    type =""
     programPaths = {
         "FASTX"  : os.path.expanduser("/usr/bin/fastx_barcode_splitter.pl"),
         "PEAR"   : os.path.expanduser("~/ARMS/programs/pear/pear-0.9.5-bin-64"),

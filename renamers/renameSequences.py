@@ -1,7 +1,7 @@
 from Bio import SeqIO
 import sys
 import os
-from classes.Helpers import getFileName, strip_ixes
+from classes.Helpers import getFileName, strip_ixes, clip_count
 
 """
 Takes in a fasta file and outputs a new fasta with the sequences renamed.  Renaming convention for sequences is
@@ -16,7 +16,7 @@ rename("a.b.c.fasta, "a_renamed.fasta", "fasta")
 
 """
 
-def serialRename(input_file, output_file, file_type, barcode_file=""):
+def serialRename(input_file, output_file, file_type, barcode_file="", clip=True):
     """Takes in a fasta file and outputs a new fasta with the sequences renamed.  Renaming convention is x.y.z<n> for
         x.y.z.fasta, where n is an integer in the range [0:n] where n is the position of the sequence in the input_file.
 
@@ -25,6 +25,8 @@ def serialRename(input_file, output_file, file_type, barcode_file=""):
     :param file_type:       "fasta" or "fastq"
     :return:
     """
+
+
     names_file = "%s/%s.names" % (os.path.dirname(output_file), getFileName(input_file))
     seqPrefix = strip_ixes(input_file)
     i = 0
@@ -32,7 +34,7 @@ def serialRename(input_file, output_file, file_type, barcode_file=""):
         with open(names_file,'w') as log:
             for s in SeqIO.parse(input_file, file_type):
                 s.id ="%s_ID%s" % (seqPrefix, i)
-                log.write("%s\t%s\n" % (s.id, seqPrefix))
+                log.write("%s\t%s\n" % (s.id, clip_count(seqPrefix, '_')))
                 s.description = ""
                 SeqIO.write(s, output, file_type)
                 i += 1
