@@ -59,7 +59,7 @@ def get_victims(input_fasta, num_seqs):
 
 
 def make_bads(input_fasta, num_seqs, output_file):
-    victims = get_victims(input_fasta, num_seqs)
+    victims = get_victims(input_fasta, int(num_seqs))
     bads = []
     count = 0
     seed(int(round(time.time() * 1000)))
