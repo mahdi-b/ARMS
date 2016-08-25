@@ -81,4 +81,4 @@ if __name__ == "__main__":
         print "Usage: input_fasta  num_seqs  output_file"
         exit()
     print sys.argv[2]
-    make_bads(*sys.argv[1:3])
+    make_bads(*sys.argv[1:4])

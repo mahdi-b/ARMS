@@ -4,8 +4,8 @@ from Bio.SubsMat import MatrixInfo as matlist
 from Bio import pairwise2
 import os
 from collections import defaultdict
-
-
+from itertools import product
+from heuristics import guess_table, parseNames
 # Variables should be local not global..
 # indel penalty.
 gap_open = -10
@@ -24,6 +24,20 @@ allAAs = set([x[0] for x in matrix.keys()])
 matrix.update(dict([((x, "*"), matrix[(x,x)]) for x in allAAs]))
 matrix.update(dict([(("*", "*"), matrix[(x,x)]) for x in allAAs]))
 
+def mapAllHits(hitsFile):
+    hits = {}
+    for line in open(hitsFile):
+        data = line.split()
+        id = data [0]
+        # if match in dict: append
+        if id in hits.keys():
+            hits[id] = [data[1:]]
+        # if not in dict: install
+        else:
+            hits[id].append(data[1:])
+    return hits
+
+
 def findBestHits(hitsFile):
     """Finds the best match score for each sequence id against all matches in the MHAP out filee
 
@@ -40,18 +54,19 @@ def findBestHits(hitsFile):
     return bestHits
 
 
-def returnRefWithId(seqId, refsPositionsInFile, refs):
+def returnRefById(seqId, refs):
     """Returns a SeqRecord corresponding to the given sequence Id (ex. 1,2,3,.... n) from the reference fasta file.
 
     :param seqId: Sequence name as a string
-    :param refsPositionsInFile: MAHP database ID
     :param refs: The SeqIO.index object of the reference database
     :return: The SeqRecord corresponding to that entry
     """
+    refsPositionsInFile = list(refs.keys())
     refId  = refsPositionsInFile[int(seqId)-1]
     return refs[refId]
 
-def returnQueryWithId(queryId, queries, orientation=0):
+
+def returnQueryById(queryId, queries, orientation=0):
     """Returns the correctly oriented SeqRecord corresponding to the sequence named in the query fasta.
 
     :param queryId: Sequence name
@@ -64,6 +79,7 @@ def returnQueryWithId(queryId, queries, orientation=0):
         return  queries[queryId].reverse_complement()
     else:
         return queries[queryId]
+
 
 def globallyAlign(seq1, seq2, matrix=matrix, gap_open=gap_open, gap_extend=gap_extend):
     """Performs a global alignment for two sequences, and returns a score for simmilarity.
@@ -83,26 +99,28 @@ def globallyAlign(seq1, seq2, matrix=matrix, gap_open=gap_open, gap_extend=gap_e
     return (ali, sim)
 
 
-def run(ref_file, query_file, mhap_out_file):
+def run(ref_file, query_file, mhap_out_file, nuc_to_prot_file):
     refs = SeqIO.index(ref_file, 'fasta')
     queries = SeqIO.index(query_file, 'fasta')
+    allHits = mapAllHits(mhap_out_file)
     bestHits = findBestHits(mhap_out_file)
+    nuc_to_prot_map = parseNames(nuc_to_prot_file)
     i = 0
     # predict the best ORF for each query sequence
     for queryId in bestHits:
         i += 1
         # Get correctly oriented sequence
-        query = returnQueryWithId(queryId, queries)
+        query = returnQueryById(queryId, queries)
         # Get reference sequence
-        ref = returnRefWithId(bestHits[queryId][0], list(refs.keys()), refs)
+        ref = returnRefById(bestHits[queryId][0], refs)
 
         orfs = range(3)
-        tables = [5, 9, 6]
+        # tables = [5, 9, 6]
+        tables = guess_table(allHits, refs, query, nuc_to_prot_map)
         foundTranslation = False
         translation = ""
         # Try a permutation of open reading frames and translation tables
-        orf_table_pairs = zip(sum([[offset] * len(tables) for offset in orfs], []), tables * 3)
-        for orf, table in orf_table_pairs:
+        for orf, table in product(orfs, tables):
             foundTranslation = False
             translation = str(query[orf:].seq.translate(table=table))
             # If no stop codons, we're done
@@ -129,10 +147,10 @@ def run(ref_file, query_file, mhap_out_file):
 
 seqTranslations = defaultdict(list)
 if __name__ == "__main__":
-    if len(sys.argv) < 4:
-        print "Usage: ref_fasta  query_fasta  mhap_out_file"
+    if len(sys.argv) < 5:
+        print "Usage: ref_fasta  query_fasta  mhap_out_file nuc_to_prot_file"
     else:
-        run(*sys.argv[1:4])
+        run(*sys.argv[1:5])
     #bestHits = findBestHits("%s%s" % (data_dir, "/data/test2"))
 
 

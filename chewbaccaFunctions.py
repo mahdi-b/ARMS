@@ -17,6 +17,7 @@ from renamers._renameWithCount import renameSequencesWithCount
 from renamers.renameWithoutCount import removeCountsFromName, removeCountsFromNamesFile
 from renamers.updateNames import updateNames
 from utils.buildMatrix import buildMatrix
+from utils.annotateMatrix import annotateMatrix
 from utils.joinFiles import joinFiles
 from utils.splitKperFasta import splitK
 
@@ -144,8 +145,8 @@ def renameSequences(args, pool=Pool(processes=1), debug=False):
         # Run serialRename in parallel
         parallel(runPythonInstance,
                  [(serialRename,
-                   input_, "%s/%s_renamed%s" % (args.outdir, strip_ixes(getFileName(input_)),
-                                                os.path.splitext(input_)[1]), args.filetype, args.clip) for input_ in inputs],
+                   input_, "%s/%s_renamed%s" % (args.outdir, strip_ixes(input_), os.path.splitext(input_)[1]),
+                                                args.filetype, args.clip) for input_ in inputs],
                  pool, debug)
         printVerbose("Done renaming sequences...")
 
@@ -767,7 +768,7 @@ def minhash(args, pool=Pool(processes=1), debug=False):
 
 
 #TODO doc and debug
-def buildMatrix(args, pool=Pool(processes=1), debug=False):
+def build_matrix(args, pool=Pool(processes=1), debug=False):
     """Builds the unannotated OTU table.
     :param args: An argparse object with the following parameters:
                     names       File/folder with .names files.
@@ -784,10 +785,27 @@ def buildMatrix(args, pool=Pool(processes=1), debug=False):
     barcodes = getInputs(args.barcodes)
     debugPrintInputInfo(barcodes, "read.")
     printVerbose("Building matrix...")
-    buildMatrix(names, groups, barcodes[0], args.outdir)
+    buildMatrix(names, groups, barcodes[0], "%s/%s.txt" % (args.outdir, "matrix"))
     printVerbose("Done building.")
 
-
+#TODO doc and debug
+def annotate_matrix(args, pool=Pool(processes=1), debug=False):
+    """Annotates an OTU table.
+    :param args: An argparse object with the following parameters:
+                    input       File/folder with matrix files.
+                    outdir      Directory to put the output files.
+                    map      File/folder with .groups files.
+    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
+    """
+    makeDirOrdie(args.outdir)
+    matricies = getInputs(args.names)
+    debugPrintInputInfo(matricies, "read.")
+    annotations = getInputs(args.groups)
+    debugPrintInputInfo(annotations, "read.")
+    printVerbose("Annotating matrix...")
+    # TODO annotations
+    #parallel(runPythonInstance(annotateMatrix(matrix, annotations, "%s/%s.txt" % (args.outdir, "matrix"))
+    printVerbose("Done building.")
 '''
 # ========================================================================================================
 # ========================================================================================================

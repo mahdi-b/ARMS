@@ -136,6 +136,9 @@ def main(argv):
     parser_rename.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
     parser_rename.add_argument('-f', '--filetype', required=True, help="The filetype of the input files.  Either \
                             'fasta' or 'fastq'.")
+    parser_rename.add_argument('-c', '--clip', required=False, default=True, help="True if input file names \
+                                contain trailing demux_seqs identifiers.  e.g. True if file name contains '_0', '_1', \
+                                '_2', etc..")
     parser_rename.set_defaults(func=renameSequences)
 
 
@@ -347,7 +350,20 @@ def main(argv):
     parser_build_matrix.add_argument('-n', '--names', required=True, help="Input names file or folder.")
     parser_build_matrix.add_argument('-b', '--barcodes', required=True, help="Input barcodes file.")
     parser_build_matrix.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
-    parser_build_matrix.set_defaults(func=buildMatrix)
+    parser_build_matrix.set_defaults(func=build_matrix)
+
+
+    # ==========================
+    # ==  xx Annotate Matrix  ==
+    # ==========================
+    parser_build_matrix = subparsers.add_parser('build_matrix', description="Given a tabular file mapping sequence IDs \
+                                to taxonomic names, and an OTU matrix, renames the identifiable sequence IDs with \
+                                taxonomic names.")
+    parser_build_matrix.add_argument('-i', '--input', required=True, help="Input matrix file or folder of matrix files.")
+    parser_build_matrix.add_argument('-m', '--map', required=True, help="File mapping sequence IDs to taxonomic names.")
+    parser_build_matrix.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
+    parser_build_matrix.set_defaults(func=annotate_matrix)
+
 
     '''
     # ==================================================================================================================

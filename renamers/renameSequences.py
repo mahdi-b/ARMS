@@ -16,7 +16,7 @@ rename("a.b.c.fasta, "a_renamed.fasta", "fasta")
 
 """
 
-def serialRename(input_file, output_file, file_type, barcode_file="", clip=True):
+def serialRename(input_file, output_file, file_type, clip=True):
     """Takes in a fasta file and outputs a new fasta with the sequences renamed.  Renaming convention is x.y.z<n> for
         x.y.z.fasta, where n is an integer in the range [0:n] where n is the position of the sequence in the input_file.
 
