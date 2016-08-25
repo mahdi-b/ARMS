@@ -4,7 +4,7 @@ from Bio.SubsMat import MatrixInfo as matlist
 from Bio import pairwise2
 from collections import defaultdict
 from itertools import product
-import operator
+from computeDist import *
 
 # Variables should be local not global..
 # indel penalty.
@@ -132,8 +132,9 @@ def globallyAlign(seq1, seq2, matrix=matrix, gap_open=gap_open, gap_extend=gap_e
     return (ali, sim)
 
 
-def run(ref_file, query_file, mhap_out_file, nuc_to_prot_file, prot_ref_fasta, use_heuristic):
-    refs = SeqIO.index(ref_file, 'fasta')
+def run(nuc_ref_file, query_file, mhap_out_file, nuc_to_prot_file, prot_ref_fasta, use_heuristic):
+    nuc_refs = SeqIO.index(nuc_ref_file, 'fasta')
+    prot_ref_fasta = SeqIO.index(prot_ref_fasta, 'fasta')
     queries = SeqIO.index(query_file, 'fasta')
     bestHits = findBestHits(mhap_out_file)
     # for heuristics
@@ -150,12 +151,13 @@ def run(ref_file, query_file, mhap_out_file, nuc_to_prot_file, prot_ref_fasta, u
         query = returnQueryById(queryId, queries)
         # Get reference sequence
         print queryId
-        ref = returnRefById(bestHits[queryId][0], list(refs.keys()), refs)
+        best_hit_id = bestHits[queryId][0]
+        prot_ref = returnRefById(best_hit_id, list(prot_ref_fasta.keys()), prot_ref_fasta)
 
         orfs = range(3)
         tables = [5, 9, 6]
         if use_heuristic:
-            tables = guess_table(allHits, refs, nuc_to_prot_map, query)
+            tables = guess_table(allHits, nuc_refs, nuc_to_prot_map, query)
         foundTranslation = False
         translation = ""
         # Try a permutation of open reading frames and translation tables
@@ -168,17 +170,19 @@ def run(ref_file, query_file, mhap_out_file, nuc_to_prot_file, prot_ref_fasta, u
                 # by aligning the reads on the protein sequence
                 # doing a global alignment here
                 foundTranslation = True
+                print tables
                 print "Used orf: %d, table %d" % (orf, table)
                 break
         # Print successful translation
         if foundTranslation:
-            alignResults = globallyAlign(translation, ref.seq)
+            alignResults = globallyAlign(prot_ref.seq, translation)
 
-            print "%d/%d : %s vs. %s" % (i, len(bestHits), query.id, ref.id),
+            print "%d/%d : %s vs. %s" % (i, len(bestHits), query.id, prot_ref.id),
             print "-" * 200
             print alignResults[0][0]
             print alignResults[0][1]
-            print alignResults[1]
+            simmilarity = 1 - float(computeDist_outterGapConserved([alignResults[0][0], alignResults[0][1]]))
+            print "%d % match" % simmilarity
             print "-" * 200
         # Welp, we tried.
         else:
@@ -188,7 +192,7 @@ def run(ref_file, query_file, mhap_out_file, nuc_to_prot_file, prot_ref_fasta, u
 seqTranslations = defaultdict(list)
 if __name__ == "__main__":
     if len(sys.argv) < 7:
-        print "Usage: ref_fasta  query_fasta  mhap_out_file nuc_to_prot_file  prot_ref_fasta  heuristic_T_F"
+        print "Usage: nuc_ref_fasta  query_fasta  mhap_out_file nuc_to_prot_file  prot_ref_fasta  heuristic_T_F"
     else:
         run(*sys.argv[1:7])
     #bestHits = findBestHits("%s%s" % (data_dir, "/data/test2"))

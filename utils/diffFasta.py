@@ -11,14 +11,20 @@ def diff(fastaA, fastaB, outFile):
     :return:
     """
     commonRecords = {}
+    records = []
+    i=0
     with open(outFile,'w') as out:
         for record in SeqIO.parse(open(fastaB,'r'), "fasta"):
             commonRecords[record.id]=""
         foundIDs = commonRecords.keys()
         for record in SeqIO.parse(open(fastaA,'r'), "fasta"):
             if not record.id in foundIDs:
-                out.write(record.format("fasta"))
-
+                records.append(record)
+                i += 1
+                if i % 5000 == 0:
+                    SeqIO.write(records, out, 'fasta')
+                    records =[]
+        SeqIO.write(records, out, 'fasta')
 if __name__ == "__main__":
     if len(sys.argv) < 4:
         print "Usage: fastaA fastaB outfile"
