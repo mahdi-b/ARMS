@@ -13,9 +13,9 @@ gap_open = -10
 gap_extend = -0.5
 
 # Index reference and query fastas
-data_dir = os.path.expanduser("/home/greg/ARMS")
-refs = SeqIO.index("%s%s" % (data_dir, "/data/BIOCODE_071216_MACSE_RENAMED_CORRECTED_FILTERD.fa"), 'fasta')
-queries = SeqIO.index("%s%s" % (data_dir, "/data/query_chimera.fna"), 'fasta')
+data_dir = ""
+refs = ""
+queries = ""
 
 matrix = matlist.blosum62
 # We assume that the "*" in a the query is an error of tanslation
@@ -99,12 +99,15 @@ def globallyAlign(seq1, seq2, matrix=matrix, gap_open=gap_open, gap_extend=gap_e
     return (ali, sim)
 
 
-def run(ref_file, query_file, mhap_out_file, nuc_to_prot_file):
+def run(ref_file, query_file, mhap_out_file, nuc_to_prot_file, prot_ref_fasta):
     refs = SeqIO.index(ref_file, 'fasta')
     queries = SeqIO.index(query_file, 'fasta')
-    allHits = mapAllHits(mhap_out_file)
     bestHits = findBestHits(mhap_out_file)
+
+    # for heuristics
+    allHits = mapAllHits(mhap_out_file)
     nuc_to_prot_map = parseNames(nuc_to_prot_file)
+    prots = prot_ref_fasta
     i = 0
     # predict the best ORF for each query sequence
     for queryId in bestHits:
@@ -147,10 +150,10 @@ def run(ref_file, query_file, mhap_out_file, nuc_to_prot_file):
 
 seqTranslations = defaultdict(list)
 if __name__ == "__main__":
-    if len(sys.argv) < 5:
-        print "Usage: ref_fasta  query_fasta  mhap_out_file nuc_to_prot_file"
+    if len(sys.argv) < 6:
+        print "Usage: ref_fasta  query_fasta  mhap_out_file nuc_to_prot_file  prot_ref_fasta"
     else:
-        run(*sys.argv[1:5])
+        run(*sys.argv[1:6])
     #bestHits = findBestHits("%s%s" % (data_dir, "/data/test2"))
 
 
