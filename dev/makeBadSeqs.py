@@ -66,11 +66,11 @@ def make_bads(input_fasta, num_seqs, output_file):
 
     for victim in victims:
         if coinflip():
-            bads.append(make_chimera(victims, victim))
-            count += 1
-        elif coinflip():
             bads.append(frame_shift(victim))
             count += 1
+        # elif coinflip():
+        #   bads.append(make_chimera(victims, victim))
+        #   count += 1
         else:
             bads.append(victim)
     SeqIO.write(bads, open(output_file, 'w'), "fasta")

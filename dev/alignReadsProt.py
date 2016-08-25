@@ -2,10 +2,10 @@ import sys
 from Bio import SeqIO
 from Bio.SubsMat import MatrixInfo as matlist
 from Bio import pairwise2
-import os
 from collections import defaultdict
 from itertools import product
-from heuristics import guess_table, parseNames
+import operator
+
 # Variables should be local not global..
 # indel penalty.
 gap_open = -10
@@ -24,17 +24,53 @@ allAAs = set([x[0] for x in matrix.keys()])
 matrix.update(dict([((x, "*"), matrix[(x,x)]) for x in allAAs]))
 matrix.update(dict([(("*", "*"), matrix[(x,x)]) for x in allAAs]))
 
+
+def guess_table(mhap_out_hits, refs, nuc_prt_names_map, query_seq):
+    """Given a lsit of mhap_output hits for a query sequence, and a sequence, guess the table number for that sequence.
+
+    :param mhap_out_hits:   A dictionary mapping sequence ID to a list of hits (which are tuples of (id, simmilarity) )
+    :param refs:    A SeqIO.index of the reference nucleotide DB.
+    :param query_seq:   A query SeqRecord
+    :return: An ordered list of tables to try
+    """
+    table_counts = {}
+    hits = mhap_out_hits[query_seq.id]
+    for hit in hits:
+        match_id = hit[0]
+        match_nuc_name = returnRefById(match_id, list(refs.keys()), refs).id
+        match_prot_name = nuc_prt_names_map[match_nuc_name]
+        match_table = match_prot_name.split("_cd_")[1]
+
+        if match_table in table_counts:
+            table_counts[match_table] += 1
+        else:
+            table_counts[match_table] = 0
+    rslts = sorted(table_counts, key=table_counts.get, reverse=True)
+    return [int(x) for x in rslts]
+
+
+def parseNames(names_file, delim=','):
+    names = {}
+    for line in open(names_file):
+        name, alias = line.split(delim)
+        names[name.rstrip()] = alias.rstrip()
+    return names
+
+
+
 def mapAllHits(hitsFile):
     hits = {}
     for line in open(hitsFile):
         data = line.split()
         id = data [0]
+        item = (data[1], float(data[3]))
         # if match in dict: append
         if id in hits.keys():
-            hits[id] = [data[1:]]
+            hits[id].append(item)
         # if not in dict: install
         else:
-            hits[id].append(data[1:])
+            hits[id] = [item]
+
     return hits
 
 
@@ -54,21 +90,18 @@ def findBestHits(hitsFile):
     return bestHits
 
 
-def returnRefById(seqId, refs):
+def returnRefById(seqId, refsPositionsInFile, refs):
     """Returns a SeqRecord corresponding to the given sequence Id (ex. 1,2,3,.... n) from the reference fasta file.
-
     :param seqId: Sequence name as a string
+    :param refsPositionsInFile: MAHP database ID
     :param refs: The SeqIO.index object of the reference database
     :return: The SeqRecord corresponding to that entry
     """
-    refsPositionsInFile = list(refs.keys())
     refId  = refsPositionsInFile[int(seqId)-1]
     return refs[refId]
 
-
 def returnQueryById(queryId, queries, orientation=0):
     """Returns the correctly oriented SeqRecord corresponding to the sequence named in the query fasta.
-
     :param queryId: Sequence name
     :param queries: The SeqIO.index object of the query fasta
     :param orientation: 1 or 0 representing orientation, 0 for forward, 1 for reverse
@@ -99,27 +132,30 @@ def globallyAlign(seq1, seq2, matrix=matrix, gap_open=gap_open, gap_extend=gap_e
     return (ali, sim)
 
 
-def run(ref_file, query_file, mhap_out_file, nuc_to_prot_file, prot_ref_fasta):
+def run(ref_file, query_file, mhap_out_file, nuc_to_prot_file, prot_ref_fasta, use_heuristic):
     refs = SeqIO.index(ref_file, 'fasta')
     queries = SeqIO.index(query_file, 'fasta')
     bestHits = findBestHits(mhap_out_file)
-
     # for heuristics
-    allHits = mapAllHits(mhap_out_file)
-    nuc_to_prot_map = parseNames(nuc_to_prot_file)
-    prots = prot_ref_fasta
+    allHits ={}
+    nuc_to_prot_map = {}
+    if use_heuristic:
+        allHits = mapAllHits(mhap_out_file)
+        nuc_to_prot_map = parseNames(nuc_to_prot_file)
     i = 0
     # predict the best ORF for each query sequence
     for queryId in bestHits:
         i += 1
-        # Get correctly oriented sequence
+        # Get correctly oriented SeqRecord
         query = returnQueryById(queryId, queries)
         # Get reference sequence
-        ref = returnRefById(bestHits[queryId][0], refs)
+        print queryId
+        ref = returnRefById(bestHits[queryId][0], list(refs.keys()), refs)
 
         orfs = range(3)
-        # tables = [5, 9, 6]
-        tables = guess_table(allHits, refs, query, nuc_to_prot_map)
+        tables = [5, 9, 6]
+        if use_heuristic:
+            tables = guess_table(allHits, refs, nuc_to_prot_map, query)
         foundTranslation = False
         translation = ""
         # Try a permutation of open reading frames and translation tables
@@ -132,6 +168,7 @@ def run(ref_file, query_file, mhap_out_file, nuc_to_prot_file, prot_ref_fasta):
                 # by aligning the reads on the protein sequence
                 # doing a global alignment here
                 foundTranslation = True
+                print "Used orf: %d, table %d" % (orf, table)
                 break
         # Print successful translation
         if foundTranslation:
@@ -150,10 +187,10 @@ def run(ref_file, query_file, mhap_out_file, nuc_to_prot_file, prot_ref_fasta):
 
 seqTranslations = defaultdict(list)
 if __name__ == "__main__":
-    if len(sys.argv) < 6:
-        print "Usage: ref_fasta  query_fasta  mhap_out_file nuc_to_prot_file  prot_ref_fasta"
+    if len(sys.argv) < 7:
+        print "Usage: ref_fasta  query_fasta  mhap_out_file nuc_to_prot_file  prot_ref_fasta  heuristic_T_F"
     else:
-        run(*sys.argv[1:6])
+        run(*sys.argv[1:7])
     #bestHits = findBestHits("%s%s" % (data_dir, "/data/test2"))
 
 
