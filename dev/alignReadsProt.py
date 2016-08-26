@@ -49,10 +49,10 @@ def guess_table(mhap_out_hits, refs, nuc_prt_names_map, query_seq):
     return [int(x) for x in rslts]
 
 
-def parseNames(names_file, delim=','):
+def parseNames(names_file):
     names = {}
     for line in open(names_file):
-        name, alias = line.split(delim)
+        name, alias = line.split()
         names[name.rstrip()] = alias.rstrip()
     return names
 
@@ -133,6 +133,16 @@ def globallyAlign(seq1, seq2, matrix=matrix, gap_open=gap_open, gap_extend=gap_e
 
 
 def run(nuc_ref_file, query_file, mhap_out_file, nuc_to_prot_file, prot_ref_fasta, use_heuristic):
+    """
+
+    :param nuc_ref_file: Nucleotide reference fasta
+    :param query_file:  Query fasta
+    :param mhap_out_file: MHAP output from running over the query file
+    :param nuc_to_prot_file: A tab delimited mapping between nucleotide names in nuc_ref_file and protien names in prot_ref_fasta
+    :param prot_ref_fasta: Amino acid refrence fasta
+    :param use_heuristic: If true, use heuristics to guess the translation table.
+    :return:
+    """
     nuc_refs = SeqIO.index(nuc_ref_file, 'fasta')
     prot_ref_fasta = SeqIO.index(prot_ref_fasta, 'fasta')
     queries = SeqIO.index(query_file, 'fasta')
@@ -156,6 +166,9 @@ def run(nuc_ref_file, query_file, mhap_out_file, nuc_to_prot_file, prot_ref_fast
 
         orfs = range(3)
         tables = [5, 9, 6]
+        print tables
+        correct_table = int(nuc_to_prot_map[queryId.split('_')[0]].split("_cd_")[1])
+        used_table = -1
         if use_heuristic:
             tables = guess_table(allHits, nuc_refs, nuc_to_prot_map, query)
         foundTranslation = False
@@ -170,25 +183,27 @@ def run(nuc_ref_file, query_file, mhap_out_file, nuc_to_prot_file, prot_ref_fast
                 # by aligning the reads on the protein sequence
                 # doing a global alignment here
                 foundTranslation = True
-                print tables
                 print "Used orf: %d, table %d" % (orf, table)
+                used_table = table
                 break
         # Print successful translation
         if foundTranslation:
             alignResults = globallyAlign(prot_ref.seq, translation)
-
-            print "%d/%d : %s vs. %s" % (i, len(bestHits), query.id, prot_ref.id),
-            print "-" * 200
+            if int(correct_table) != int(used_table):
+                print "WRONG_TABLE_DETECTED!! %d instead of %d" % (used_table, correct_table)
+            print "%d/%d : %s vs. %s" % (i, len(bestHits), query.id, prot_ref.id)
+            simmilarity = 1 - float(computeDist_outterGapConserved([str(alignResults[0][0]), str(alignResults[0][1])]))
+            print "%f  match pct" % simmilarity
+            print "=" * 200
             print alignResults[0][0]
             print alignResults[0][1]
-            simmilarity = 1 - float(computeDist_outterGapConserved([alignResults[0][0], alignResults[0][1]]))
-            print "%d % match" % simmilarity
-            print "-" * 200
+            print "=" * 200
         # Welp, we tried.
         else:
-            print("Error no translation found for sequence %s" % query.id)
-
-
+            #print the ref table
+            print "Error no translation found for sequence %s" % query.id
+            print "Actual table was: %d" % correct_table
+            print "=" * 200
 seqTranslations = defaultdict(list)
 if __name__ == "__main__":
     if len(sys.argv) < 7:
