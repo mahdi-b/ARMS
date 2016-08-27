@@ -20,14 +20,14 @@ def insert_frame_shift(victim, f_shift_len):
     pos = rand_position(len(victim))
     id = "%s_i%d@%d" % (victim.id, f_shift_len, pos)
     seq = str(victim.seq)[:pos] + "".join(noise) + str(victim.seq)[pos:]
-    return SeqRecord(Seq(seq), id=id)
+    return SeqRecord(Seq(seq), id=id, description="")
 
 
 def delete_frame_shift(victim, f_shift_len):
     pos = rand_position(len(victim))
     seq = victim.seq[:pos] + victim.seq[(pos + f_shift_len):]
     id = "%s_d%d@%d" % (victim.id, f_shift_len, pos)
-    return SeqRecord(seq, id=id)
+    return SeqRecord(seq, id=id, description="")
 
 
 def make_chimera(victims, victim):

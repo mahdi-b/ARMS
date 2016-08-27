@@ -20,7 +20,7 @@ from utils.buildMatrix import buildMatrix
 from utils.annotateMatrix import annotateMatrix
 from utils.joinFiles import joinFiles
 from utils.splitKperFasta import splitK
-
+from itertools import product
 
 
 
@@ -580,7 +580,7 @@ def cluster(args, pool=Pool(processes=1), debug=False):
         printVerbose("Moving aux files")
         # Gather and move the post-clustering names file
         names_dir = makeDirOrdie(args.outdir + "_names_files")
-        post_cluster_names_file = getInputs(args.outdir, "*_updated.names", critical=False)
+        post_cluster_names_file = getInputs(args.outdir, "postcluster_updated.names", critical=False)
         bulk_move_to_dir(post_cluster_names_file, names_dir)
 
         # Gather and move auxillary files
@@ -798,14 +798,17 @@ def annotate_matrix(args, pool=Pool(processes=1), debug=False):
     :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
     """
     makeDirOrdie(args.outdir)
-    matricies = getInputs(args.names)
-    debugPrintInputInfo(matricies, "read.")
-    annotations = getInputs(args.groups)
-    debugPrintInputInfo(annotations, "read.")
+    matricies = getInputs(args.input)
+    debugPrintInputInfo(matricies, "annotate.")
+    annotations = getInputs(args.annotation)
+    debugPrintInputInfo(annotations, "parse.")
     printVerbose("Annotating matrix...")
-    # TODO annotations
-    #parallel(runPythonInstance(annotateMatrix(matrix, annotations, "%s/%s.txt" % (args.outdir, "matrix"))
-    printVerbose("Done building.")
+    # TODO annotationsxs
+    parallel(runPythonInstance, [(annotateMatrix, matrix, annotation, "%s/%s.txt" % (args.outdir, "matrix"))
+                                for matrix, annotation in product(matricies, annotations)], pool, debug)
+    printVerbose("Done Annotating.")
+
+
 '''
 # ========================================================================================================
 # ========================================================================================================

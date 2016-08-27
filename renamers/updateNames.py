@@ -60,6 +60,7 @@ def updateNames(old_names_files, new_names_files, out_dir, out_prefix):
                     children_of_my_new_children += old_seeds[entry].split(" ")
             all_my_children = list(set(my_old_children + my_new_children + children_of_my_new_children))
             output.write("%s\t%s\n" % (new_seed, " ".join(all_my_children)))
+            print "Seed %s has %d children" % (new_seed, len(all_my_children))
             #print "%s_%d = %d old  +  %d new  +   %d children of new" % (new_seed, len(all_my_children),
             #                             len(my_old_children), len(my_new_children), len(children_of_my_new_children))
     output.close()

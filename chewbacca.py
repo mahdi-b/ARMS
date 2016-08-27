@@ -356,13 +356,13 @@ def main(argv):
     # ==========================
     # ==  xx Annotate Matrix  ==
     # ==========================
-    parser_build_matrix = subparsers.add_parser('build_matrix', description="Given a tabular file mapping sequence IDs \
+    parser_annotate_matrix = subparsers.add_parser('annotate_matrix', description="Given a tabular file mapping sequence IDs \
                                 to taxonomic names, and an OTU matrix, renames the identifiable sequence IDs with \
                                 taxonomic names.")
-    parser_build_matrix.add_argument('-i', '--input', required=True, help="Input matrix file or folder of matrix files.")
-    parser_build_matrix.add_argument('-m', '--map', required=True, help="File mapping sequence IDs to taxonomic names.")
-    parser_build_matrix.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
-    parser_build_matrix.set_defaults(func=annotate_matrix)
+    parser_annotate_matrix.add_argument('-i', '--input', required=True, help="Input matrix file or folder of matrix files.")
+    parser_annotate_matrix.add_argument('-a', '--annotation', required=True, help="File mapping sequence IDs to taxonomic names.")
+    parser_annotate_matrix.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
+    parser_annotate_matrix.set_defaults(func=annotate_matrix)
 
 
     '''

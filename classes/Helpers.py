@@ -141,9 +141,9 @@ def strip_ixes(path):
         name = name.replace(ix, "")
     return name
 
-def clip_count(filename, delim=''):
-    return re.sub(r'_\d+', '', filename)
-
+def clip_count(filename, delim='_'):
+    #return re.sub(r'_\d+', '', filename)
+    return delim.join(filename.split(delim)[:-1])
 def enumerateDir(dir_, pattern="*"):
     """Returns all the files in a directory, optionally requiring a pattern match.
 

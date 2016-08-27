@@ -3,6 +3,7 @@ from Bio import SeqIO
 from Bio.SubsMat import MatrixInfo as matlist
 from Bio import pairwise2
 from collections import defaultdict
+from operator import itemgetter
 from itertools import product
 from computeDist import *
 
@@ -25,11 +26,12 @@ matrix.update(dict([((x, "*"), matrix[(x,x)]) for x in allAAs]))
 matrix.update(dict([(("*", "*"), matrix[(x,x)]) for x in allAAs]))
 
 
-def guess_table(mhap_out_hits, refs, nuc_prt_names_map, query_seq):
+def guess_table(mhap_out_hits, ref, ref_index, nuc_prt_names_map, query_seq):
     """Given a lsit of mhap_output hits for a query sequence, and a sequence, guess the table number for that sequence.
 
     :param mhap_out_hits:   A dictionary mapping sequence ID to a list of hits (which are tuples of (id, simmilarity) )
-    :param refs:    A SeqIO.index of the reference nucleotide DB.
+    :param ref:    A SeqIO.index of the reference nucleotide DB.
+    :param ref_index:    A list of the keys in ref
     :param query_seq:   A query SeqRecord
     :return: An ordered list of tables to try
     """
@@ -37,16 +39,16 @@ def guess_table(mhap_out_hits, refs, nuc_prt_names_map, query_seq):
     hits = mhap_out_hits[query_seq.id]
     for hit in hits:
         match_id = hit[0]
-        match_nuc_name = returnRefById(match_id, list(refs.keys()), refs).id
+        match_nuc_name = returnRefById(match_id, ref_index, ref).id
         match_prot_name = nuc_prt_names_map[match_nuc_name]
         match_table = match_prot_name.split("_cd_")[1]
 
         if match_table in table_counts:
             table_counts[match_table] += 1
         else:
-            table_counts[match_table] = 0
+            table_counts[match_table] = 1
     rslts = sorted(table_counts, key=table_counts.get, reverse=True)
-    return [int(x) for x in rslts]
+    return ([int(x) for x in rslts], table_counts)
 
 
 def parseNames(names_file):
@@ -132,79 +134,111 @@ def globallyAlign(seq1, seq2, matrix=matrix, gap_open=gap_open, gap_extend=gap_e
     return (ali, sim)
 
 
-def run(nuc_ref_file, query_file, mhap_out_file, nuc_to_prot_file, prot_ref_fasta, use_heuristic):
+
+def run(nuc_ref_file, query_file, mhap_out_file, nuc_to_prot_file, prot_ref_file, use_heuristic):
     """
 
     :param nuc_ref_file: Nucleotide reference fasta
     :param query_file:  Query fasta
-    :param mhap_out_file: MHAP output from running over the query file
+    :param mhap_out_file: MHAP output from running over the query_object file
     :param nuc_to_prot_file: A tab delimited mapping between nucleotide names in nuc_ref_file and protien names in prot_ref_fasta
-    :param prot_ref_fasta: Amino acid refrence fasta
+    :param prot_refs: Amino acid refrence fasta
     :param use_heuristic: If true, use heuristics to guess the translation table.
     :return:
     """
+    h_name = "d"
+    if use_heuristic:
+        h_name = "h"
+    out= open("%s_%s.tab"% (h_name,mhap_out_file), 'w')
+    out_tab_line = ""
+    print "Parsing data...."
     nuc_refs = SeqIO.index(nuc_ref_file, 'fasta')
-    prot_ref_fasta = SeqIO.index(prot_ref_fasta, 'fasta')
+    nuc_refs_index = list(nuc_refs.keys())
+    prot_refs = SeqIO.index(prot_ref_file, 'fasta')
+    prot_refs_index = list(prot_refs.keys())
     queries = SeqIO.index(query_file, 'fasta')
     bestHits = findBestHits(mhap_out_file)
+    print "Done parsing."
     # for heuristics
     allHits ={}
     nuc_to_prot_map = {}
+
     if use_heuristic:
         allHits = mapAllHits(mhap_out_file)
         nuc_to_prot_map = parseNames(nuc_to_prot_file)
     i = 0
-    # predict the best ORF for each query sequence
+    # predict the best ORF for each query_object sequence
     for queryId in bestHits:
+        print "=" * 200
         i += 1
         # Get correctly oriented SeqRecord
-        query = returnQueryById(queryId, queries)
+        query_object = returnQueryById(queryId, queries)
         # Get reference sequence
-        print queryId
-        best_hit_id = bestHits[queryId][0]
-        prot_ref = returnRefById(best_hit_id, list(prot_ref_fasta.keys()), prot_ref_fasta)
-
-        orfs = range(3)
-        tables = [5, 9, 6]
-        print tables
-        correct_table = int(nuc_to_prot_map[queryId.split('_')[0]].split("_cd_")[1])
+        print "%d/%d : %s" % (i, len(bestHits), queryId)
+        nuc_query_name = queryId.split('_')[0]
+        correct_table = int(nuc_to_prot_map[nuc_query_name].split("_cd_")[1])
         used_table = -1
+        all_hits_table_freqs = {}
+        candidate_tables = [5, 9, 6]
         if use_heuristic:
-            tables = guess_table(allHits, nuc_refs, nuc_to_prot_map, query)
-        foundTranslation = False
-        translation = ""
-        # Try a permutation of open reading frames and translation tables
-        for orf, table in product(orfs, tables):
-            foundTranslation = False
-            translation = str(query[orf:].seq.translate(table=table))
+            candidate_tables, all_hits_table_freqs = guess_table(allHits, nuc_refs, nuc_refs_index, nuc_to_prot_map,
+                                                                 query_object)
+            print "Candidate tables: %s" % str(candidate_tables)
+        found_good_translation = False
+        query_seq_translation = ""
+        # Try a permutation of open reading frames and translation candidate_tables
+        for orf, table in product(range(3), candidate_tables):
+            found_good_translation = False
+            query_seq_translation = str(query_object[orf:].seq.translate(table=table))
             # If no stop codons, we're done
-            if translation.count("*") == 0:
+            if query_seq_translation.count("*") == 0:
                 # TODO add another condition that the translation needs to match alignment landmarks
                 # by aligning the reads on the protein sequence
                 # doing a global alignment here
-                foundTranslation = True
+                found_good_translation = True
                 print "Used orf: %d, table %d" % (orf, table)
                 used_table = table
                 break
         # Print successful translation
-        if foundTranslation:
-            alignResults = globallyAlign(prot_ref.seq, translation)
+        simmilarity = 0
+        if found_good_translation:
+            status_code = 1
             if int(correct_table) != int(used_table):
-                print "WRONG_TABLE_DETECTED!! %d instead of %d" % (used_table, correct_table)
-            print "%d/%d : %s vs. %s" % (i, len(bestHits), query.id, prot_ref.id)
+                print "WRONG_TABLE_DETECTED!! %s : used %d instead of %d" % (queryId, used_table, correct_table)
+                status_code = -1
+
+            best_hit_id = bestHits[queryId][0]
+            best_hit_protien_obj = returnRefById(best_hit_id, prot_refs_index, prot_refs)
+            print "%s vs. %s" % (query_object.id, best_hit_protien_obj.id)
+
+            alignResults = globallyAlign(best_hit_protien_obj.seq, query_seq_translation)
             simmilarity = 1 - float(computeDist_outterGapConserved([str(alignResults[0][0]), str(alignResults[0][1])]))
-            print "%f  match pct" % simmilarity
-            print "=" * 200
+            print "Simmilarity: %f" % simmilarity
+            print "Alignment: "
             print alignResults[0][0]
             print alignResults[0][1]
-            print "=" * 200
+
         # Welp, we tried.
         else:
+            status_code = 0
             #print the ref table
-            print "Error no translation found for sequence %s" % query.id
+            print "Error no translation found for sequence %s" % query_object.id
             print "Actual table was: %d" % correct_table
-            print "=" * 200
-seqTranslations = defaultdict(list)
+            # name match_code actual_table used_table orf match%
+        #out_tab_line = "%s\t%d\t%d\t%d\t%d\t%f\n" % (queryId, status_code, correct_table, used_table, orf, simmilarity)
+        topHits = allHits[queryId]
+        topHits.sort(key=lambda x: x[1], reverse=True)
+        named_hits =[]
+        for hit in topHits[:5]:
+            num_matched_kmers = hit[1]
+            nuc_name = returnRefById(hit[0], nuc_refs_index, nuc_refs).id
+            prot_name = nuc_to_prot_map[nuc_name]
+            named_hits.append((prot_name, num_matched_kmers))
+        count_dict = sorted(all_hits_table_freqs.items(), key=itemgetter(1), reverse=True)
+        out_tab_line = "%s\t%d\t%s\t%s\t%d\n" % (queryId, correct_table, str(count_dict), str(named_hits), status_code)
+        out.write(out_tab_line)
+
+
 if __name__ == "__main__":
     if len(sys.argv) < 7:
         print "Usage: nuc_ref_fasta  query_fasta  mhap_out_file nuc_to_prot_file  prot_ref_fasta  heuristic_T_F"
