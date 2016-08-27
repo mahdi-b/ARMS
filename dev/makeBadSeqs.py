@@ -65,7 +65,7 @@ def make_bads(input_fasta, num_seqs, output_file):
     seed(int(round(time.time() * 1000)))
 
     for victim in victims:
-        if coinflip():
+        if coinflip:
             bads.append(frame_shift(victim))
             count += 1
         # elif coinflip():

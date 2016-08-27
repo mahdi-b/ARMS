@@ -37,8 +37,8 @@ paste ~/ARMS/data/bold100k.fna.names ~/ARMS/data/bold100k.faa.names > ~/ARMS/dat
 python ~/ARMS/src/ARMS/dev/makeBadSeqs.py ~/ARMS/data/bold10k.fna 1000 bads.fasta
 python ~/ARMS/src/ARMS/chewbacca.py minhash -i bads.fasta -o . -d ~/ARMS/data/bold100k.fna -m 32g -s 40,20,5
 #        print "Usage: nuc_ref_fasta  query_fasta  mhap_out_file nuc_to_prot_file  prot_ref_fasta  heuristic_T_F"
-python ~/ARMS/src/ARMS/dev/alignReadsProt.py ~/ARMS/data/bold100k.fna bads.fasta bads_20.out  ~/ARMS/data/bold110k_name_pairs.txt ~/ARMS/data/bold100k.faa True > h_rslt.out
-grep Error.*_i.* -B 2 h_rslt.out > h_errors.txt
-python ~/ARMS/src/ARMS/dev/alignReadsProt.py ~/ARMS/data/bold100k.fna bads.fasta bads_20.out  ~/ARMS/data/bold110k_name_pairs.txt ~/ARMS/data/bold100k.faa False > dumb_rslt.out
-grep Error.*_i.* -B 2 dumb_rslt.out > dumb_errors.txt
+python ~/ARMS/src/ARMS/dev/alignReadsProt.py ~/ARMS/data/bold100k.fna bads.fasta bads_40.out  ~/ARMS/data/bold110k_name_pairs.txt ~/ARMS/data/bold100k.faa True > h_rslt.40.out
 
+grep Error.*_i.* -B 2 h_rslt.out > h_errors.txt
+
+python ~/ARMS/src/ARMS/dev/indelPositionBadnessAnalysis.py ~/ARMS/testARMS/dev h_bads_40.out.tab

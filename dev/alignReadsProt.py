@@ -162,7 +162,7 @@ def run(nuc_ref_file, query_file, mhap_out_file, nuc_to_prot_file, prot_ref_file
     # for heuristics
     allHits ={}
     nuc_to_prot_map = {}
-
+    alignment = ""
     if use_heuristic:
         allHits = mapAllHits(mhap_out_file)
         nuc_to_prot_map = parseNames(nuc_to_prot_file)
@@ -217,7 +217,7 @@ def run(nuc_ref_file, query_file, mhap_out_file, nuc_to_prot_file, prot_ref_file
             print "Alignment: "
             print alignResults[0][0]
             print alignResults[0][1]
-
+            alignment = "%s\t%s" % (alignResults[0][0], alignResults[0][1])
         # Welp, we tried.
         else:
             status_code = 0
@@ -235,7 +235,7 @@ def run(nuc_ref_file, query_file, mhap_out_file, nuc_to_prot_file, prot_ref_file
             prot_name = nuc_to_prot_map[nuc_name]
             named_hits.append((prot_name, num_matched_kmers))
         count_dict = sorted(all_hits_table_freqs.items(), key=itemgetter(1), reverse=True)
-        out_tab_line = "%s\t%d\t%s\t%s\t%d\n" % (queryId, correct_table, str(count_dict), str(named_hits), status_code)
+        out_tab_line = "%s\t%d\t%s\t%s\t%d\t%s\n" % (queryId, correct_table, str(count_dict), str(named_hits), status_code, alignment)
         out.write(out_tab_line)
 
 

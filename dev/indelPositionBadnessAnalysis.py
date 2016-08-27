@@ -14,34 +14,48 @@ def getIndelPosition(query_name):
     return int(position.group(1))
 
 
-def main(input_dir, pat):
+def compute_gap_score(ref_align, query_align, gap_char):
+    ref_gaps = ref_align.rstrip(gap_char).count(gap_char)
+    query_align.rstrip(gap_char)
+    query_gaps = query_align.rstrip(gap_char).count(gap_char)
+    return ref_gaps + query_gaps
+
+
+def graph_gap_score_by_position(input_files, gap_char='-', max_len=800):
     total_indels = 0
-    max_len = 1000
-    errors_by_pos = [0]*max_len
-    totals_by_pos = [0]*max_len
-    hits = "%s/%s" % (input_dir, pat)
-    input_files = glob.glob(hits)
+    gaps_by_pos = [0]*max_len
+    occurances_at_pos = [1]*max_len
     for file_ in input_files:
         with open(file_, 'r') as out:
             next(out)
             for line in out:
-                data = line.split()
+                data = line.split('\t')
                 query_name = data[0]
-                match_code = data[4]
+                match_code = int(data[4])
                 if isIndel(query_name):
-                    print query_name
                     total_indels += 1
                     pos = getIndelPosition(query_name)
-                    print pos
-                    totals_by_pos[pos] += 1
-                    if match_code in [0,-1]:
-                        # found a stop
-                        errors_by_pos[pos] += 1
-
+                    if match_code == 1:
+                        occurances_at_pos[pos] += 1
+                        ref_align = data[5]
+                        query_align = data[6]
+                        gaps_by_pos[pos] += compute_gap_score(ref_align, query_align, gap_char)
+    # average gaps per occurance + 1
+    rslt = [ float(int(gaps_by_pos[i])/int(occurances_at_pos[i])) for i in range(max_len)]
+    print rslt
+    print "Graphing %d samples" % sum(occurances_at_pos)
     x = range(max_len)
-    print "Bad Errors = %s/%s" % (sum(errors_by_pos) , total_indels)
-    line, = plt.plot(x, errors_by_pos, '--', linewidth=2)
+    line, = plt.plot(x, rslt, '--', linewidth=2)
+    line2, = plt.plot(x, occurances_at_pos, '-', linewidth=2)
     plt.show()
+
+
+def main(input_dir, pat,):
+    hits = "%s/%s" % (input_dir, pat)
+    input_files = glob.glob(hits)
+    max_len = 800
+    graph_gap_score_by_position(input_files, '-', max_len)
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
