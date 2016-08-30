@@ -8,7 +8,7 @@ def diff(fastaA, fastaB, outFile):
     :param fastaA:  The first fasta file.  Preferably the larger fasta file.
     :param fastaB:  The second fasta file. Preferably the smaller fasta file.
     :param outFile: Where to write the resuling fasta to.
-    :return:
+    :return: Filepath to the output file.
     """
     commonRecords = {}
     records = []
@@ -25,6 +25,8 @@ def diff(fastaA, fastaB, outFile):
                     SeqIO.write(records, out, 'fasta')
                     records =[]
         SeqIO.write(records, out, 'fasta')
+    return outFile
+
 if __name__ == "__main__":
     if len(sys.argv) < 4:
         print "Usage: fastaA fastaB outfile"

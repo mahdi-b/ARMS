@@ -33,7 +33,7 @@ def buildMatrix(latest_names_files, inital_groups_files, barcodes_file, out_file
     printVerbose(str(all_sample_names))
 
     with open(out_file, 'w') as out:
-        header_line = "%*s" % (max_row_name_length, "OTU")
+        header_line = "%-*s" % (max_row_name_length, "OTU")
         for sample in all_sample_names:
             header_line += "%*s" % (padding, sample)
         out.write(header_line + "\n")
@@ -78,7 +78,7 @@ def buildMatrix(latest_names_files, inital_groups_files, barcodes_file, out_file
 
                     # WRITE THE COUNTS TO THE OUT FILE
                     # for each sample in the barcodes list, write otu to a txt file as a single line
-                    out_line = "%*s" % (max_row_name_length, otu)
+                    out_line = "%-*s" % (max_row_name_length, otu)
                     for sample_name in all_sample_names:
                         out_line += "%*s" % (padding, sample_counts[sample_name])
                     out.write(out_line + "\n")

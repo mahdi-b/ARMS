@@ -35,9 +35,9 @@ seqtk subseq ~/ARMS/data/bold_coi_11_05_2015_corrected_filtered.fna ~/ARMS/data/
 paste ~/ARMS/data/bold100k.fna.names ~/ARMS/data/bold100k.faa.names > ~/ARMS/data/bold100k_name_pairs.txt
 
 python ~/ARMS/src/ARMS/dev/makeBadSeqs.py ~/ARMS/data/bold10k.fna 1000 bads.fasta
-python ~/ARMS/src/ARMS/chewbacca.py minhash -i bads.fasta -o . -d ~/ARMS/data/bold100k.fna -m 32g -s 40,20,5
+nice 10 python ~/ARMS/src/ARMS/chewbacca.py minhash -i bads.fasta -o . -d ~/ARMS/data/bold100k.fna -m 32g -s 40,20,5
 #        print "Usage: nuc_ref_fasta  query_fasta  mhap_out_file nuc_to_prot_file  prot_ref_fasta  heuristic_T_F"
-python ~/ARMS/src/ARMS/dev/alignReadsProt.py ~/ARMS/data/bold100k.fna bads.fasta bads_40.out  ~/ARMS/data/bold110k_name_pairs.txt ~/ARMS/data/bold100k.faa True > h_rslt.40.out
+nice 10 python ~/ARMS/src/ARMS/dev/alignReadsProt.py ~/ARMS/data/bold100k.fna bads.fasta bads_40.out  ~/ARMS/data/bold110k_name_pairs.txt ~/ARMS/data/bold100k.faa True > h_rslt.40.out
 
 grep Error.*_i.* -B 2 h_rslt.out > h_errors.txt
 

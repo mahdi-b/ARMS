@@ -2,7 +2,15 @@ import os
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.Alphabet import SingleLetterAlphabet
+
+
 def capitalizeSeqs(input_fasta, output_fasta):
+    """Capitalizes the ATGC sequence in a fasta file and writes it to a new file.
+
+    :param input_fasta: Filepath to the input fasta file to capitalize.
+    :param output_fasta: Filepath to the output fasta file.
+    :return: Filepath to the output fasta file.
+    """
     seqBuffer = []
     i = 0
     if os.path.isfile(output_fasta):
@@ -19,3 +27,4 @@ def capitalizeSeqs(input_fasta, output_fasta):
             seqBuffer = []
     SeqIO.write(seqBuffer, output, "fasta")
     output.close()
+    return output_fasta

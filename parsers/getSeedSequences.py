@@ -3,11 +3,11 @@ import sys
 
 # TODO rename, these arent fasta files
 def getSeedSequences(input_uc_file, output_names_file):
-    """Pulls the representative seed sequences from a uc file and generates a .names file.
+    """Pulls the representative seed sequences from a .uc file and generates a .names file.
 
-    :param input_uc_file:
-    :param output_names_file:
-    :return:
+    :param input_uc_file: Filepath to the input .uc file.
+    :param output_names_file: File path to the output .names file.
+    :return: File path to the output .names file.
     """
 
     seeds = defaultdict(list)
@@ -22,6 +22,7 @@ def getSeedSequences(input_uc_file, output_names_file):
             outFile.write(key+"\t")
             outFile.write(" ".join(seeds[key]))
             outFile.write("\n")
+    return output_names_file
 
 
 if __name__ == "__main__":

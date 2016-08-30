@@ -190,11 +190,10 @@ def main(argv):
     # ==  6 Dereplicate sequences with usearch  ==
     # ============================================
     # "usearch": programPaths["USEARCH"] + " -derep_fulllength \"%s\" -output \"%s\" -uc \"%s\"",
-    parser_derep = subparsers.add_parser('dereplicate_fasta', description="Given an input fasta or fastq file, removes \
-                            identical duplicates and subsequences, keeping the longest sequence, and renames it with \
-                            the number of duplicates as '<longest_sequence_name>_<duplicate count>'.  Outputs are in \
-                            fasta format regardless of the input format (i.e. fastq files are converted to fasta.")
-    parser_derep.add_argument('-i', '--input', required=True, help="Input fasta/fastq file or folder.")
+    parser_derep = subparsers.add_parser('dereplicate_fasta', description="Given an fasta file or folder, removes \
+                            identical duplicates and subsequences WITHIN EACH FILE, keeping the longest sequence, and \
+                            renames it with the number of duplicates as '<longest_sequence_name>_<duplicate count>'.")
+    parser_derep.add_argument('-i', '--input', required=True, help="Input fasta file or folder of fasta files.")
     parser_derep.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved.")
     parser_derep.add_argument('-f', '--filetype', required=True, help="The filetype of the input files.  Either \
                                             'fasta' or 'fastq'.")
@@ -365,6 +364,17 @@ def main(argv):
     parser_annotate_matrix.set_defaults(func=annotate_matrix)
 
 
+    # =================================
+    # ==  xx Convert fastq to fasta  ==
+    # =================================
+    # translateFastqToFasta(inputFastQ, outputFasta):
+    parser_toFasta = subparsers.add_parser('convert_fastq_to_fasta')
+    parser_toFasta.add_argument('-i', '--input', required=True, help="Fastq file or folder containing fastq files to "
+                                 "translate")
+    parser_toFasta.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
+    parser_toFasta.set_defaults(func=makeFasta)
+
+
     '''
     # ==================================================================================================================
     # ==================================================================================================================
@@ -440,16 +450,6 @@ def main(argv):
     refType.add_argument('-n', '--names', help="Names file to reference")
     refType.add_argument('-d', '--refdb', help="Database file to reference")
     parser_chimera.set_defaults(func=findChimeras)
-
-
-
-    # ==============================
-    # ==  Convert fastq to fasta  ==
-    # ==============================
-    # "make.fasta":       "mothur \'#fastq.info(fastq=%s,fasta=T)\'"
-    parser_toFasta = subparsers.add_parser('makeFasta')
-    parser_toFasta.add_argument('-i', '--inputFastq', required=True, help="Input Fastq File")
-    parser_toFasta.set_defaults(func=makeFasta)
 
 
     # ==============================

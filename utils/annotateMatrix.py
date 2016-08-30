@@ -2,7 +2,7 @@ from classes.Helpers import clip_count
 
 
 def buildLine(row_name_str, child_list, header_padding, padding):
-    out = "%*s" % (header_padding, row_name_str)
+    out = "%-*s" % (header_padding, row_name_str)
     for child in child_list:
         out += "%*s" % (padding, child)
     out += "\n"

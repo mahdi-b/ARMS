@@ -10,6 +10,7 @@ def ungap(file_to_clean, output_file_name, gap_char, file_type):
     :param file_to_clean: Filepath to the list of sequences to clean.
     :param reference_fie: The file containing all reference sequences used to align file_to_clean.
     :param output_file_name: Filepath to where the cleaned sequences should be written.
+    :return Filepath to the output file.
     """
 
     cleaned_seqs=[]
@@ -23,6 +24,7 @@ def ungap(file_to_clean, output_file_name, gap_char, file_type):
             cleaned_seqs = []
         i += 1
     SeqIO.write(cleaned_seqs, output, file_type)
+    return output_file_name
 
 if __name__ == "__main__":
     if len(sys.argv) < 5:

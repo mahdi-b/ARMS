@@ -246,26 +246,8 @@ def dereplicate(args, pool=Pool(processes=1), debug=False):
         makeDirOrdie(args.outdir)
         # TODO debug/verbose for conversion
         # grab all the _cleaned files and turn the fastqs into fastas
-        input_fqs = getInputs(args.input)
-        output_fas = []
-        fastq_exts = {".fq", ".fastq"}
-
-        # Generate a list of files to translate from fastq to fasta
-        for input_ in input_fqs:
-            if os.path.splitext(input_)[1].lower() in fastq_exts:
-                base_name = os.path.basename(input_)
-                file_name = os.path.splitext(base_name)[0]
-                fasta_name = "%s/%s.fa" % (args.outdir, file_name)
-                translateFastqToFasta(input_, fasta_name)
-                output_fas.append(fasta_name)
-
-        # zip those names to parallel array s
-        file_args = zip(input_fqs, output_fas)
-        # Translate fastq files in parallel
-        parallel(runPythonInstance, [(translateFastqToFasta, input_fq, output_fa)
-                                     for input_fq, output_fa in file_args], pool, debug)
-
-        debugPrintInputInfo(output_fas, "searched for replicants")
+        inputs = getInputs(args.input)
+        debugPrintInputInfo(inputs, "searched for replicants")
         printVerbose("Searching for identical reads...")
         # parse the number of identical reads included in each sequence and write them to the
         #       {sample_file}_parsed.out
@@ -273,11 +255,11 @@ def dereplicate(args, pool=Pool(processes=1), debug=False):
         #                                                   -uc {/.}_uc.out"
         parallel(runProgramRunnerInstance, [ProgramRunner("usearch", [input_,
                                                               "%s/%s_derep.fa" % (
-                                                                  args.outdir, strip_ixes(getFileName(input_))),
+                                                                  args.outdir, strip_ixes(input_)),
                                                               "%s/%s_uc.out" % (
-                                                                  args.outdir, strip_ixes(getFileName(input_)))],
+                                                                  args.outdir, strip_ixes(input_))],
                                                           {"exists": [args.outdir, input_]})
-                                            for input_ in output_fas], pool, debug)
+                                            for input_ in inputs], pool, debug)
         printVerbose("Done searching.")
 
         # Collect .uc files
@@ -287,7 +269,7 @@ def dereplicate(args, pool=Pool(processes=1), debug=False):
         # Collect seeds
         # #ls *uc.out | parallel "python ~/ARMS/bin/getSeedSequences.py {} {.}_parsed.out"
         parallel(runPythonInstance,
-                 [(getSeedSequences, input_, "%s/%s.names" % (args.outdir, strip_ixes(getFileName(input_)))) for
+                 [(getSeedSequences, input_, "%s/%s.names" % (args.outdir, strip_ixes(input_))) for
                   input_ in input_ucs], pool, debug)
         printVerbose("Done parsing search logs.")
 
@@ -296,9 +278,9 @@ def dereplicate(args, pool=Pool(processes=1), debug=False):
         # which id is 123, there 10 sequences that identical to it and which were discarded.
         # ls * cleaned.fasta | parallel "python ~/ARMS/bin/_renameWithCount.py
         #                   {/.}_derep.fa {/.}_uc_parsed.out {/.}_derep_renamed.fa"
-        input_fa = getInputs(args.outdir, "*_derep.fa")
+        input_fas = getInputs(args.outdir, "*_derep.fa")
         names_file = getInputs(args.outdir, "*.names")
-        inputs = zip(input_fa, names_file)
+        inputs = zip(input_fas, names_file)
         debugPrintInputInfo(inputs, "rename, names file")
 
         # renameSequencesWithCount(input_fasta, count_file, outfile):
@@ -464,7 +446,7 @@ def cluster(args, pool=Pool(processes=1), debug=False):
                       for input_ in inputs], pool, debug)
             printVerbose("Done removing counts.")
 
-            # Grab the cleaned files as input
+            # Grab the cleaned files as input for the next step
             inputs = getInputs(args.outdir, "*_uncount.fasta")
 
         # DEREPLICATE ONE MORE TIME
@@ -475,6 +457,8 @@ def cluster(args, pool=Pool(processes=1), debug=False):
                                                    "%s/%s_uc.out" % (args.outdir, strip_ixes(input_))],
                                                           {"exists": [input_]}) for input_ in inputs], pool, debug)
         printVerbose("Done dereplicating")
+
+        # LOG DEREPLICATED SEQUENCES INTO A .NAMES FILE
         # generates a .names file named _uc_parsed.out
         # python getSeedSequences.py uc.out uc_parsed.out
         input_ucs = getInputs(args.outdir, "*_uc.out")
@@ -486,7 +470,7 @@ def cluster(args, pool=Pool(processes=1), debug=False):
 
         most_recent_names_files = getInputs(args.outdir, "*_derep.names")
 
-        # UPDATE THE NAMES FILES
+        # UPDATE THE MOST CURRENT NAMES FILES WITH DEREPLICATION COUNTS
         if args.namesfile is not None:
             # Grab the old names file and the dereplicated names file
             old_names_files = getInputs(args.namesfile)
@@ -517,7 +501,7 @@ def cluster(args, pool=Pool(processes=1), debug=False):
                   for fasta, names in fasta_names_pairs], pool, debug)
         printVerbose("Done adding data")
 
-        # CLUSTER
+
         # TODO IMPORTANT: make sure that the abundances in dereplicated_renamed.fasta are sorted in decreasing order
         # We need to explore this more. Run by default for now....
         # Nore that any program can be used here as long as two files
@@ -530,6 +514,8 @@ def cluster(args, pool=Pool(processes=1), debug=False):
         #  		      				       --output-file clustering.out -u uclust_file -w seeds
         # "swarm": program_paths["SWARM"] + " \"%s\" --output-file \"%s\" \
         #                                            -u \"%s\" -w \"%s\"",
+
+        # CLUSTER
         inputs = getInputs(args.outdir, "*_counts.fasta")
         debugPrintInputInfo(inputs, "clustered")
         parallel(runProgramRunnerInstance, [ProgramRunner("swarm", [input_,
@@ -550,12 +536,10 @@ def cluster(args, pool=Pool(processes=1), debug=False):
                  [(removeCountsFromNamesFile, input_, "%s/%s_uncount.names" % (args.outdir, strip_ixes(input_)))
                   for input_ in clustered_names_files], pool, debug)
 
-        cleaned_clustered_names_files = getInputs(args.outdir, "*clustered_uncount.names")
         # UPDATE THE NAMES FILES WITH NEW CLUSTERS
+        cleaned_clustered_names_files = getInputs(args.outdir, "*clustered_uncount.names")
         printVerbose("Updating .names files with clustering data")
         # updateNames (old_names_files, new_names_files, updated)
-        print most_recent_names_files
-        print cleaned_clustered_names_files
         updateNames(most_recent_names_files, cleaned_clustered_names_files, args.outdir, "postcluster")
         printVerbose("Done updating .names files.")
 
@@ -654,7 +638,7 @@ def queryNCBI(args, pool=Pool(processes=1), debug=False):
                                                           [input_, coi_db_string,
                                                    "%s/%s.out" % (args.outdir, strip_ixes(input_)),
                                                    "%s/%s.alnout" % (args.outdir, strip_ixes(input_)), aln_user_string],
-                                                          {"exists": [input_]}) for input_ in inputs], pool, debug)
+                                                          {"exists": [input_], "positive": []}) for input_ in inputs], pool, debug)
         # Parse the alignment results and put those that pass the criterion (97 similarity, 85 coverage) in
         # parsed_BIOCODE.out.  Parameters can be changed and this command can be rerun as many times as necessary
         #
@@ -797,16 +781,39 @@ def annotate_matrix(args, pool=Pool(processes=1), debug=False):
                     map      File/folder with .groups files.
     :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
     """
-    makeDirOrdie(args.outdir)
-    matricies = getInputs(args.input)
-    debugPrintInputInfo(matricies, "annotate.")
-    annotations = getInputs(args.annotation)
-    debugPrintInputInfo(annotations, "parse.")
-    printVerbose("Annotating matrix...")
-    # TODO annotationsxs
-    parallel(runPythonInstance, [(annotateMatrix, matrix, annotation, "%s/%s.txt" % (args.outdir, "matrix"))
-                                for matrix, annotation in product(matricies, annotations)], pool, debug)
-    printVerbose("Done Annotating.")
+    try:
+        makeDirOrdie(args.outdir)
+        matricies = getInputs(args.input)
+        debugPrintInputInfo(matricies, "annotate.")
+        annotations = getInputs(args.annotation)
+        debugPrintInputInfo(annotations, "parse.")
+        printVerbose("Annotating matrix...")
+        parallel(runPythonInstance, [(annotateMatrix, matrix, annotation, "%s/%s.txt" % (args.outdir, "matrix"))
+                                    for matrix, annotation in product(matricies, annotations)], pool, debug)
+        printVerbose("Done Annotating.")
+
+    except KeyboardInterrupt:
+        cleanupPool(pool)
+
+
+def makeFasta(args, pool=Pool(processes=1), debug=False):
+    """Converts a fastq file to fasta format.
+    :param args: An argparse object with the following parameters:
+                    input       File/folder with fastq files.
+                    outdir      Directory to put the output files.xs
+    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
+    """
+    try:
+        makeDirOrdie(args.outdir)
+        inputs = getInputs(args.input)
+        debugPrintInputInfo(inputs, "convert to fasta.")
+        printVerbose("Converting to fasta...")
+        parallel(runPythonInstance, [(translateFastqToFasta, input_, "%s/%s.fasta" % (args.outdir, getFileName(input_)))
+                                    for input_ in inputs], pool, debug)
+        printVerbose("Done converting.")
+
+    except KeyboardInterrupt:
+        cleanupPool(pool)
 
 
 '''
@@ -844,19 +851,6 @@ def makeFastq(args, pool=Pool(processes=1)):
     except KeyboardInterrupt:
         cleanupPool(pool)
 
-
-def makeFasta(args, pool=Pool(processes=1)):
-    """Finds chimeric sequences from a fasta file and writes them to an accons file.
-    :param args: An argparse object with the following parameters:
-                    inputFastq	Input Fastq file
-    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
-    """
-    try:
-        parallel(runProgramRunnerInstance, [ProgramRunner("make.fasta", [args.inputFastq], {"exists": [args.inputFastq]})
-                                            ], pool)
-
-    except KeyboardInterrupt:
-        cleanupPool(pool)
 
 
 def assemble(args, pool=Pool(processes=1)):

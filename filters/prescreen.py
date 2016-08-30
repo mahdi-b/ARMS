@@ -2,7 +2,7 @@ import sys
 import re
 
 
-
+# TODO REMOVE THIS
 def flag_frame_shift_seqs(inputFile):
     """Flags sequences with a frameshift in a caln file.
 
