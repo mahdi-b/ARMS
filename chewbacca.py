@@ -148,15 +148,18 @@ def main(argv):
     # "flexbar":  "flexbar -r \"%s\" -t \"%s\" -ae \"%s\" -a \"%s\""
     parser_trim = subparsers.add_parser('trim_adapters', description="Given a single barcodes file, a single adapters \
                             file, and a single fasta/fastq file or a folder containing fasta/fastq files, removes the \
-                            specified barcodes and adapters from all sequences in the given fasta/fastq files.")
+                            specified adapters (and preceeding barcodes) from all sequences in the given fasta/fastq \
+                            files.")
     parser_trim.add_argument('-i', '--input', required=True, help="Input fasta/fastq file or folder.")
     parser_trim.add_argument('-p', '--program', required=True, help="The name of the program to use.")
     parser_trim.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
     parser_trim.set_defaults(func=trim_flexbar)
     flexbar_trim = parser_trim.add_argument_group('flexbar', 'flexbar options')
-    flexbar_trim.add_argument('-b', '--barcodes', help="Barcodes file")
-    flexbar_trim.add_argument('-a', '--adapters', help="Adapters file")
-
+    #flexbar_trim.add_argument('-b', '--barcodes', required=False, help="Barcodes file")
+    flexbar_trim.add_argument('-a', '--adapters', required=False, help="Forwards Adapters file")
+    flexbar_trim.add_argument('-arc', '--adaptersrc',  help="Reverse Complimented Adapters file")
+    flexbar_trim.add_argument('-u', '--allowedns', required=False, default=0, type=int, help="The number of unknown 'N' \
+                            bases a sequence is allowed before being thrown out.  Default: 0.")
     # Mothur
     # "trim.seqs":        "mothur \'#trim.seqs(fasta=\"%s\", oligos=\"%s\", maxambig=1, maxhomop=8, \
     #                                minlength=300, maxlength=550, bdiffs=1, pdiffs=2)\'",

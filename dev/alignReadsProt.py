@@ -1,5 +1,4 @@
 import sys
-from Bio import SeqIO
 from Bio.SubsMat import MatrixInfo as matlist
 from Bio import pairwise2
 from collections import defaultdict
@@ -88,14 +87,6 @@ def guess_table_by_best_hit(mhap_out_hits, ref, ref_index, nuc_prt_names_map, qu
     return ([int(match_table)], table_counts)
 
 
-
-
-def parseNames(names_file):
-    names = {}
-    for line in open(names_file):
-        name, alias = line.split()
-        names[name.rstrip()] = alias.rstrip()
-    return names
 
 
 
@@ -201,7 +192,6 @@ def run(nuc_ref_file, query_file, mhap_out_file, nuc_to_prot_file, prot_ref_file
     if heuristic_option > 0:
         h_name = "h"
     out = open("%s_%s.tab"% (h_name, mhap_out_file), 'w')
-    out_tab_line = ""
     alignment = ""
     allHits = mapAllHits(mhap_out_file)
     nuc_to_prot_map = parseNames(nuc_to_prot_file)

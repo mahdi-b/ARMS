@@ -13,7 +13,8 @@
 grep '>' ~/ARMS/data/bold_coi_11_05_2015_corrected_filtered.faa  |cut -f 1 | sed -s 's/>//' | shuf| head -110000 > ~/ARMS/data/bold110k.faa.names
     # pull them from the file
 seqtk subseq ~/ARMS/data/bold_coi_11_05_2015_corrected_filtered.faa ~/ARMS/data/bold110k.faa.names > ~/ARMS/data/bold110k.faa
-
+cat ~/ARMS/data/bold110k.faa.names |cut -f 1 -d '_' > ~/ARMS/data/bold110k.fna.names
+paste ~/ARMS/data/bold110k.fna.names ~/ARMS/data/bold110k.faa.names > ~/ARMS/data/bold110k_name_pairs.txt
 # from bold110k.faa -> sample 10k.faa, bold10k.faa.names
 grep '>' ~/ARMS/data/bold110k.faa  |cut -f 1 | sed -s 's/>//' | shuf| head -10000 > ~/ARMS/data/bold10k.faa.names
 seqtk subseq ~/ARMS/data/bold110k.faa ~/ARMS/data/bold10k.faa.names > ~/ARMS/data/bold10k.faa
@@ -34,11 +35,10 @@ seqtk subseq ~/ARMS/data/bold_coi_11_05_2015_corrected_filtered.fna ~/ARMS/data/
 
 paste ~/ARMS/data/bold100k.fna.names ~/ARMS/data/bold100k.faa.names > ~/ARMS/data/bold100k_name_pairs.txt
 
-python ~/ARMS/src/ARMS/dev/makeBadSeqs.py ~/ARMS/data/bold10k.fna 1000 bads.fasta
-nice 10 python ~/ARMS/src/ARMS/chewbacca.py minhash -i bads.fasta -o . -d ~/ARMS/data/bold100k.fna -m 32g -s 40,20,5
-#        print "Usage: nuc_ref_fasta  query_fasta  mhap_out_file nuc_to_prot_file  prot_ref_fasta  heuristic_T_F"
-nice 10 python ~/ARMS/src/ARMS/dev/alignReadsProt.py ~/ARMS/data/bold100k.fna bads.fasta bads_40.out  ~/ARMS/data/bold110k_name_pairs.txt ~/ARMS/data/bold100k.faa True > h_rslt.40.out
+nice -10 python ~/ARMS/src/ARMS/dev/makeBadSeqs.py ~/ARMS/data/bold10k.fna 1000 bads.fasta
+nice -10 python ~/ARMS/src/ARMS/chewbacca.py minhash -i bads.fasta -o . -d ~/ARMS/data/bold100k.fna -m 32g -s 40,20,5
+nice -10 python ~/ARMS/src/ARMS/dev/alignReadsProt.py ~/ARMS/data/bold100k.fna bads.fasta bads_40.out  ~/ARMS/data/bold110k_name_pairs.txt ~/ARMS/data/bold100k.faa 1 > h_rslt.40.out
 
-grep Error.*_i.* -B 2 h_rslt.out > h_errors.txt
+#grep Error.*_i.* -B 2 h_rslt.out > h_errors.txt
 
-python ~/ARMS/src/ARMS/dev/indelPositionBadnessAnalysis.py ~/ARMS/testARMS/dev h_bads_40.out.tab
+#nice -10 python ~/ARMS/src/ARMS/dev/indelPositionBadnessAnalysis.py ~/ARMS/testARMS/dev h_bads_40.out.tab

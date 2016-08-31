@@ -65,6 +65,7 @@ class ProgramRunner(object):
         self.stdout = stdout
         self.stderr = stderr
 
+
     def validateConditions(self, conditions):
         """Validates this program's conditions for execution.
 
@@ -184,7 +185,7 @@ class ProgramRunner(object):
                 "make.fasta": program_paths["MOTHUR"] + " \'#fastq.info(fastq=%s)\'",
                 "remove.seqs": program_paths["MOTHUR"] + " \'#remove.seqs(accnos=%s, %s=%s)\'",
                 "screen.seqs": program_paths["MOTHUR"] + " \'#screen.seqs(fasta=%s, %s)\'",
-                "flexbar":  program_paths["FLEXBAR"] + " -r \"%s\" -t \"%s\" -ae \"%s\" -a \"%s\"",
+                "flexbar":  program_paths["FLEXBAR"] + " -r \"%s\" -t \"%s\" -ae \"%s\" -a \"%s\" -u %d",
                 "usearch": program_paths["USEARCH"] + " -derep_fulllength \"%s\" -output \"%s\" -uc \"%s\"",
                 "align.seqs": program_paths["MOTHUR"] + " \'#align.seqs(candidate=%s, template=%s, flip=t)\'",
                 "vsearch.derep": program_paths["VSEARCH"] + " --derep_fulllength \"%s\" --sizeout --fasta_width 0 "

@@ -163,7 +163,8 @@ def trim_flexbar(args, pool=Pool(processes=1), debug=False):
     # "flexbar":  "flexbar -r \"%s\" -t \"%s\" -ae \"%s\" -a \"%s\"",
     try:
         makeDirOrdie(args.outdir)
-
+        # TODO FIX
+        # BC ADAPTER SEQ ADAPTER
         temp_file_name_template = "%s/temp_%s"
         debarcoded_file_name_template = "%s/%s_debarcoded"
 
@@ -176,19 +177,19 @@ def trim_flexbar(args, pool=Pool(processes=1), debug=False):
         parallel(runProgramRunnerInstance, [ProgramRunner("flexbar",
                                                           [input_file,
                                                    temp_file_name_template % (args.outdir, strip_ixes(input_file)),
-                                                   "LEFT", args.barcodes],
-                                                      {"exists": [input_file]}) for input_file in inputs], pool, debug)
+                                                   "LEFT", args.adapters, args.allowedns],
+                                                      {"exists": [input_file, args.adapters]}) for input_file in inputs], pool, debug)
 
         temp_files = getInputs(args.outdir, "temp_*")
-        debugPrintInputInfo(temp_files, "debarcode")
+        debugPrintInputInfo(temp_files, "trim adapters from")
 
         # Trim the right
         parallel(runProgramRunnerInstance, [ProgramRunner("flexbar",
                                                           [input_file,
                                                    debarcoded_file_name_template % (
                                                        args.outdir, strip_ixes(input_file)[5:]),
-                                                   "RIGHT", args.adapters],
-                                                  {"exists": [input_file]}) for input_file in temp_files], pool, debug)
+                                                   "RIGHT", args.adaptersrc, args.allowedns],
+                                                  {"exists": [input_file, args.adaptersrc]}) for input_file in temp_files], pool, debug)
         printVerbose("Done Trimming sequences.")
 
         # Grab all the auxillary files (everything not containing ".assembled."

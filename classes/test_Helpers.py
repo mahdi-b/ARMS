@@ -105,10 +105,9 @@ def test_strip_ixes():
 
 
 def test_enumerateDir():
-    """
     dir = "test_enumerate_Dir"
     files = ["a.txt", "b.fasta", "aa.fasta", "ba.txt", "c"]
-    os.mkdir(dir)
+    makeDirOrdie(dir, False)
     for file_ in files:
         open("%s/%s" % (dir,file_), 'a').close()
     data = [('a.txt',["a.txt"]),
@@ -123,10 +122,10 @@ def test_enumerateDir():
     sols = [item[1] for item in data]
     for i in range(len(sols)):
         for j in range(len(sols[i])):
-            assert_equal()
-        assert_equal()
+            assert_equal(rslts[j], sols[j])
     shutil.rmtree(dir)
-    """
+
+
 def test_mothur_buildOptionString():
     # Mothur option/attribute names (one filter and one update)
     filterName = "maxlength"
