@@ -2,6 +2,8 @@ import glob
 import logging
 import os
 import re
+import signal
+import subprocess
 import sys
 import Validator
 from Bio import SeqIO
@@ -114,12 +116,24 @@ def makeAuxDir(dir_path):
     makeDirOrdie(aux_path)
     return aux_path
 
+def kill_child_processes(signum, frame):
+    parent_id = os.getpid()
+    ps_command = subprocess.Popen("ps -o pid --ppid %d --noheaders" % parent_id, shell=True, stdout=subprocess.PIPE)
+    ps_output = ps_command.stdout.read()
+    retcode = ps_command.wait()
+    for pid_str in ps_output.strip().split("\n")[:-1]:
+        os.kill(int(pid_str), signal.SIGTERM)
+    sys.exit()
+
 
 def cleanupPool(pool):
     """Cleans up a pool object.  Used when the user provides a KeyboardInterrupt
 
     :param pool: A fully initalized multiprocessing.Pool object.
     """
+    # kill the child processes
+    signal.signal(signal.SIGTERM, kill_child_processes)
+    pool.close()
     pool.terminate()
     pool.join()
     exit()
@@ -151,6 +165,8 @@ def enumerateDir(dir_, pattern="*"):
     :param pattern: An optional pattern to match
     :return:
     """
+    if pattern == "":
+        return []
     hits = "%s/%s" % (dir_, pattern)
     return sorted(glob.glob(hits), key=str.lower)
 
