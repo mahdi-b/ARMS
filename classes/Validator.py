@@ -38,11 +38,3 @@ def nonNegative(values):
             raise Exception("Expected positive value.  Found %f." % val)
     return True
 
-
-def installed(prog_name):
-    """Tests if a program is installed, and available on $PATH.
-
-    :param prog_name: Command line monicker of the program to test.
-    :return: True if all programs exist, and raises an Exception if not.
-    """
-    pass

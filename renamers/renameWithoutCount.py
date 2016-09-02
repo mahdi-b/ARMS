@@ -1,7 +1,9 @@
 import sys
 from Bio import SeqIO
+from classes.Helpers import clip_count
 
-def removeCountsFromName(input_file, output_file, file_type, clip_char="_"):
+
+def removeCountsFromFastFile(input_file, output_file, file_type, clip_char="_"):
     """Removes the counts from a fasta/fastq file. e.g. "BALI_4462_0_13" becomes "BALI_4462_0".
 
     :param input_file: Input fasta/fastq file
@@ -15,7 +17,7 @@ def removeCountsFromName(input_file, output_file, file_type, clip_char="_"):
     i = 0
     output_handle = open(output_file, "w")
     for mySeq in SeqIO.parse(input_file, file_type):
-        name = "_".join(mySeq.id.split(clip_char)[:-1])
+        name = clip_count(mySeq.id, clip_char)
         mySeq.id = name
         mySeq.name = ""
         mySeq.description = ""
@@ -26,6 +28,7 @@ def removeCountsFromName(input_file, output_file, file_type, clip_char="_"):
         i += 1
     SeqIO.write(mySeqs, output_handle, file_type)
     return output_file
+
 
 def removeCountsFromNamesFile(input_names_file, output_names_file, clip_char="_"):
     """Removes the counts all names in a names file.  e.g.

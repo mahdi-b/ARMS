@@ -89,7 +89,7 @@ def test_cleanupPool():
     # TERMINATE = 2
     pool = Pool(1)
     assert_equal(pool._state, 0)
-    assert_raises(SystemExit,cleanupPool,pool)
+    assert_raises(SystemExit, kill_pool_and_die, pool)
     assert_equal(pool._state, 2)
 
 def test_strip_ixes():
@@ -105,25 +105,32 @@ def test_strip_ixes():
 
 
 def test_enumerateDir():
-    dir = "test_enumerate_Dir"
+    test_dir = "test_enumerate_Dir"
     files = ["a.txt", "b.fasta", "aa.fasta", "ba.txt", "c"]
-    makeDirOrdie(dir, False)
+    files.sort()
+    makeDirOrdie(test_dir, False)
     for file_ in files:
-        open("%s/%s" % (dir,file_), 'a').close()
+        open("%s/%s" % (test_dir,file_), 'a').close()
     data = [('a.txt',["a.txt"]),
             ('c', ["c"]),
             ('a', []),
             ('a*', ["a.txt", 'aa.fasta']),
             ('*a', ["aa.fasta", "b.fasta"]),
-            ('*a*',["a.txt", "aa.fasta", "b.fasta", "ba.txt"] ),
-            ('*', files.sort()),
+            ('*a*',["a.txt", "aa.fasta", "b.fasta", "ba.txt"]),
+            ('*', files),
             ('', [])]
-    rslts = [enumerateDir(dir,item[0]) for item in data]
-    sols = [item[1] for item in data]
-    for i in range(len(sols)):
-        for j in range(len(sols[i])):
-            assert_equal(rslts[j], sols[j])
-    shutil.rmtree(dir)
+    rslts = [enumerateDir(test_dir,item[0]) for item in data]
+    solution_list = [item[1] for item in data]
+
+    for rslt, solution in zip(rslts, solution_list):
+        print rslt
+        print solution
+        if len(solution) == 0 and rslt is None:
+            pass
+        else:
+            assert_equal(rslt, ["%s/%s" % (test_dir,x) for x in solution])
+
+    shutil.rmtree(test_dir)
 
 
 def test_mothur_buildOptionString():

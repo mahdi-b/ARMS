@@ -5,7 +5,7 @@ from countToDict import parseCountFileToCountDict
 
 
 def renameWithReplicantCounts(input_fasta, names_file, output_fasta, filetype):
-    """Covnerts a fasta and a names file to a sorted, dereplicated,  fasta named by abundance.
+    """Covnerts a fasta and a names file to a sorted, dereplicated, fasta named by abundance.
     Specifically, each seed in the names file has the number of sequences it represents (+1 for itself) appended as a
     suffix.
 

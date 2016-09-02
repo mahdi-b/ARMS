@@ -17,7 +17,7 @@ def annotateMatrix(matrix_file, annotation_file,  out_file, id_col=0, tax_col=5,
         data = line.split()
         id = data[id_col].rstrip()
         if clip_count_from_annotations:
-            id = clip_count(id)
+            id = clip_count(id,'_')
         tax = data[tax_col].rstrip()
         id_to_tax[id] = tax
     identifiable = id_to_tax.keys()

@@ -3,7 +3,6 @@ import logging
 import os
 import subprocess
 from Helpers import printVerbose, helpValidate
-from pipes import quote
 
 
 class ProgramRunner(object):
@@ -34,6 +33,7 @@ class ProgramRunner(object):
         "VSEARCH": os.path.expanduser("~/ARMS/programs/vsearch/vsearch"),
         "SWARM"  : os.path.expanduser("~/ARMS/programs/swarm/swarm-2.1.9-linux-x86_64"),
     }
+
 
     def __init__(self, program, params, conditions=None, stdin="", stdout="", stderr=""):
         """Initalizes a ProgramRunner object.  Reads chewbacca.cfg and loads configuration settings, builds the command
@@ -97,26 +97,19 @@ class ProgramRunner(object):
 
 
     def run(self):
-        """Validates conditions (or prints them for a dry run), sanitizes parameters, and then executes the command.
+        """Validates conditions (or prints them for a dry run) and then executes the command.
 
         :return: None
         """
-        try:
-            self.validateConditions(self.conditions)
-            if printVerbose.VERBOSE or self.dry_run:
-                self.dryRun()
 
-            # call and check_call are blocking, Popen is non-blocking
-            print( "running " + self.command)
-            subprocess.check_call(os.path.expanduser(self.command), shell=True)
-            # commandList = self.splitCommand(self.command)
-            # print commandList
-            # print " ".join(commandList)
-            # subprocess.call(commandList, stderr=fnull, stdout=fnull)
-            # subprocess.call(commandList,stdin=self.stdin,stdout=self.stdout,stderr=self.stderr)
-            # subprocess.call(" ".join(commandList))
-        except KeyboardInterrupt:
-            return
+        self.validateConditions(self.conditions)
+        if printVerbose.VERBOSE or self.dry_run:
+            self.dryRun()
+
+        # call and check_call are blocking, Popen is non-blocking
+        print( "running " + self.command)
+        subprocess.check_call(os.path.expanduser(self.command), shell=True)
+
 
     def dryRun(self, dryValidate=True):
         """Prints the validation procedures that would be performed, and the commands that would be run in an actual
@@ -129,6 +122,7 @@ class ProgramRunner(object):
         else:
             self.ValidateConditions(self.conditions)
         return self.command
+
 
     def loadConfigs(self):
         """Loads configuration settings from the chewbacca configuration file (located in
@@ -153,52 +147,26 @@ class ProgramRunner(object):
             logging.debug("Chewbacca config file not found.  Using defaults.")
 
 
-
     def initalizeCommands(self):
+        """Provides the static definition of the commandTemplates dictionary.
         """
-        Provides the static definition of the commandTemplates dictionary.
-        """
-        # TODO: Mothur doesn't like quoted filenames.  Gross.
-        # TODO: Java jars can't be resolved if string concatenation is used.
+        # NOTE: Mothur doesn't like quoted filenames.  Gross.
+        # NOTE: Java jars can't be resolved if string concatenation is used.
         if not ProgramRunner.configsLoaded:
             program_paths = ProgramRunner.programPaths
             ProgramRunner.commandTemplates = {
-                "barcode.splitter": "cat \"%s\" | " + program_paths["FASTX"] + '  --bcfile "%s" \
+                "barcode.splitter": "cat %s | " + program_paths["FASTX"] + '  --bcfile "%s" \
                                             -prefix "%s" --suffix %s --bol --mismatches 1',
-                "fastx_renamer": program_paths["FASTX"] + "fastx_renamer -n COUNT -i \"%s\" -o \"%s\" -Q 33",
-                "pear": program_paths["PEAR"] + " -f \"%s\" -r \"%s\" -o \"%s\" -v 20 -j %d ",
-                "make.contigs": program_paths["MOTHUR"] + " \'#make.contigs(ffastq=%s, rfastq=%s, bdiffs=1, pdiffs=2, \
-                                            oligos=%s, processors=%s)\'",
-                "trim.seqs": program_paths["MOTHUR"] + " \'#trim.seqs(fasta=%s, oligos=%s, maxambig=1, maxhomop=8, \
-                                    minlength=300, maxlength=550, bdiffs=1, pdiffs=7)\'",
-                "macse_align": "java -jar ~/ARMS/programs/macse/macse_v1.01b.jar -prog enrichAlignment  -seq \"%s\" \
-                                            -align \"%s\" -seq_lr \"%s\" -maxFS_inSeq 0  -maxSTOP_inSeq 0  \
-                                            -maxINS_inSeq 0 -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 \
-                                            -out_NT \"%s\"_NT -out_AA \"%s\"_AA -seqToAdd_logFile \"%s\"_log.csv",
-                "macse_format": "java -jar ~/ARMS/programs/macse/macse_v1.01b.jar  -prog exportAlignment -align \"%s\" \
-                                            -charForRemainingFS - -gc_def 5 -out_AA \"%s\" -out_NT \"%s\" -statFile \
-                                            \"%s\"",
+                "echo": "echo %s",
+                "flexbar":  program_paths["FLEXBAR"] + " -r %s -t %s -ae %s -a %s -u %d",
+                "pear": program_paths["PEAR"] + " -f %s -r %s -o %s -v 20 -j %d ",
+                "swarm": program_paths["SWARM"] + " %s -o %s -u %s -w %s",
                 "trimmomatic": "java -jar ~/ARMS/programs/Trimmomatic-0.33/trimmomatic-0.33.jar SE -phred33 \
-                                            \"%s\" \"%s\" SLIDINGWINDOW:%d:%d MINLEN:%d",
-                "chmimera.uchime": program_paths["MOTHUR"] + " \'#chimera.uchime(fasta=%s, %s=%s)\'",
-                "make.fastq": program_paths["MOTHUR"] + " \'#make.fastq(fasta=%s,qfile=%s)\'",
-                "make.fasta": program_paths["MOTHUR"] + " \'#fastq.info(fastq=%s)\'",
-                "remove.seqs": program_paths["MOTHUR"] + " \'#remove.seqs(accnos=%s, %s=%s)\'",
-                "screen.seqs": program_paths["MOTHUR"] + " \'#screen.seqs(fasta=%s, %s)\'",
-                "flexbar":  program_paths["FLEXBAR"] + " -r \"%s\" -t \"%s\" -ae \"%s\" -a \"%s\" -u %d",
-                "usearch": program_paths["USEARCH"] + " -derep_fulllength \"%s\" -output \"%s\" -uc \"%s\"",
-                "align.seqs": program_paths["MOTHUR"] + " \'#align.seqs(candidate=%s, template=%s, flip=t)\'",
-                "vsearch.derep": program_paths["VSEARCH"] + " --derep_fulllength \"%s\" --sizeout --fasta_width 0 "
-                                            "--output \"%s\" -uc \"%s\"",
-                "swarm": program_paths["SWARM"] + " \"%s\" -o \"%s\" \
-                                            -u \"%s\" -w \"%s\"",
-                "vsearch.usearch_global": program_paths["VSEARCH"] + " --usearch_global \"%s\" --db \"%s\" --id 0.9 \
-                                            --userfields query+target+id+alnlen+qcov --userout \"%s\" --alnout \"%s\"\
+                                            %s %s SLIDINGWINDOW:%d:%d MINLEN:%d",
+                "usearch": program_paths["USEARCH"] + " -derep_fulllength %s -output %s -uc %s",
+                "vsearch.derep": program_paths["VSEARCH"] + " --derep_fulllength %s --sizeout --fasta_width 0 "
+                                            "--output %s -uc %s",
+                "vsearch.usearch_global": program_paths["VSEARCH"] + " --usearch_global %s --db %s --id 0.9 \
+                                            --userfields query+target+id+alnlen+qcov --userout %s --alnout %s\
                                              %s",
-                "echo": "echo \"%s\"",
-                # done only if the existing database dosen't exist
-                "min.hash.build.db": "java -Xmx%s -server -jar ~/ARMS/programs/mhap/mhap-2.1.jar --store-full-id -p \"%s\" -q \"%s\"",
-                "min.hash.query": "java -Xmx%s -server -jar ~/ARMS/programs/mhap/mhap-2.1.jar --store-full-id -s \"%s\" -q \"%s\" \
-                                            --no-self --num-min-matches %d > \"%s\"",
-                 "unique.seqs": program_paths["MOTHUR"] + " \'#unique.seqs(fasta=%s)\'",
             }

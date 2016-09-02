@@ -23,7 +23,7 @@ def diff(fastaA, fastaB, outFile, filetype):
                 i += 1
                 if i % 5000 == 0:
                     SeqIO.write(records, out, filetype)
-                    records =[]
+                    records = []
         SeqIO.write(records, out, filetype)
     return outFile
 

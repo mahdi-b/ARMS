@@ -25,7 +25,7 @@ from nose.tools import *
 
 test_data_dir = os.path.expanduser("~/ARMS/data")
 test_outdir = os.path.expanduser("~/ARMS/testARMS/testData/")
-emptyFile = getInputs(test_data_dir, "empty.file")
+emptyFile = getInputFiles(test_data_dir, "empty.file")
 
 
 def rmPath(path):
@@ -65,8 +65,8 @@ def test_assemble_pear():
         # Valid call
         call_fn(f_read, r_read, out_dir)
 
-    f_read = getInputs(test_data_dir, "*_R1*")[0]
-    r_read = getInputs(test_data_dir, "*_R1*")[0]
+    f_read = getInputFiles(test_data_dir, "*_R1*")[0]
+    r_read = getInputFiles(test_data_dir, "*_R1*")[0]
 
 
 def splitOnBarcodes():
