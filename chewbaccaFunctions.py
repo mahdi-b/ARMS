@@ -1,22 +1,20 @@
+from itertools import product
 from classes.Helpers import *
 from classes.ProgramRunner import ProgramRunner
 from converters.capitalizeSeqs import capitalizeSeqs
 from converters.fastqToFasta import translateFastqToFasta
 from converters.seedToNames import seedToNames
-from filters.ungap import ungap
-from parsers.getSeedSequences import getSeedSequences
-from parsers.getTaxFromId import parseVSearchToTaxa
-from parsers.parseVSearchout import parseVSearchout
+from converters.ungap import ungap
+from otu_tables.annotateOTUtable import annotateOTUtable
+from otu_tables.buildOTUtable import buildOTUtable
+from parsers.parseUCToNames import parseUCtoNames
+from parsers.parseVSearchoutForTaxa import parseVSearchOutputAgainstBIOCODE, parseVSearchOutputAgainstBOLD
+from renamers.renameSerially import serialRename
 from renamers.renameWithReplicantCounts import renameWithReplicantCounts
-from renamers.renameSequences import serialRename
-from renamers._renameWithCount import renameSequencesWithCount
 from renamers.renameWithoutCount import removeCountsFromFastFile, removeCountsFromNamesFile
 from renamers.updateNames import updateNames
-from utils.buildMatrix import buildMatrix
-from utils.annotateMatrix import annotateMatrix
 from utils.joinFiles import joinFiles
 from utils.splitKperFasta import splitK
-from itertools import product
 
 
 def assemble_pear(args, debug=False):
@@ -257,9 +255,9 @@ def dereplicate(args, debug=False):
     debugPrintInputInfo(input_ucs, "parsed")
     printVerbose("Parsing search logs for seed sequences...")
     # Collect seeds
-    # #ls *uc.out | parallel "python ~/ARMS/bin/getSeedSequences.py {} {.}_parsed.out"
+    # #ls *uc.out | parallel "python ~/ARMS/bin/parseUCToNames.py {} {.}_parsed.out"
     parallel(runPythonInstance,
-             [(getSeedSequences, input_, "%s/%s.names" % (args.outdir, strip_ixes(input_))) for
+             [(parseUCtoNames, input_, "%s/%s.names" % (args.outdir, strip_ixes(input_))) for
               input_ in input_ucs], pool, debug)
     printVerbose("Done parsing search logs.")
 
@@ -269,18 +267,20 @@ def dereplicate(args, debug=False):
     # ls * cleaned.fasta | parallel "python ~/ARMS/bin/_renameWithCount.py
     #                   {/.}_derep.fa {/.}_uc_parsed.out {/.}_derep_renamed.fa"
     input_fas = getInputFiles(args.outdir, "*_derep.fa")
-    names_file = getInputFiles(args.outdir, "*.names")
-    inputs = zip(input_fas, names_file)
+    names_files = getInputFiles(args.outdir, "*.names")
+    inputs = zip(input_fas, names_files)
     pool = init_pool(min(len(inputs), args.threads))
     debugPrintInputInfo(inputs, "rename, names file")
 
     # renameSequencesWithCount(input_fasta, count_file, outfile):
     printVerbose("Renaming sequences with replication counts...")
+
+    # renameWithReplicantCounts(input_fasta, names_file, output_fasta, filetype):
     parallel(runPythonInstance,
-             [(renameSequencesWithCount,
-               fasta_file, count_file,
-               "%s/%s_derepCount.fa" % (args.outdir, strip_ixes(getFileName(fasta_file))))
-              for fasta_file, count_file in inputs], pool, debug)
+             [(renameWithReplicantCounts,
+               fasta_file, names_file,
+               "%s/%s_derepCount.fa" % (args.outdir, strip_ixes(getFileName(fasta_file))), 'fasta')
+              for fasta_file, names_file in inputs], pool, debug)
     printVerbose("Done renaming sequences.")
 
     aux_dir = makeAuxDir(args.outdir)
@@ -397,12 +397,12 @@ def cluster(args, debug=False):
 
     # LOG DEREPLICATED SEQUENCES INTO A .NAMES FILE
     # generates a .names file named _uc_parsed.out
-    # python getSeedSequences.py uc.out uc_parsed.out
+    # python parseUCToNames.py uc.out uc_parsed.out
     input_ucs = getInputFiles(args.outdir, "*_uc.out")
     printVerbose("Generating a names file from dereplication.")
     debugPrintInputInfo(inputs, "parsed (into a names file)")
     parallel(runPythonInstance,
-             [(getSeedSequences, input_, "%s/%s_derep.names" % (args.outdir, strip_ixes(input_)))
+             [(parseUCtoNames, input_, "%s/%s_derep.names" % (args.outdir, strip_ixes(input_)))
               for input_ in input_ucs], pool, debug)
 
     most_recent_names_files = getInputFiles(args.outdir, "*_derep.names")
@@ -541,9 +541,9 @@ def queryBiocode(args, debug=False):
     # Parse the alignment results and put those that pass the criterion (97 similarity, 85 coverage) in
     # parsed_BIOCODE.out.  Parameters can be changed and this command can be rerun as many times as necessary
     #
-    # parseVSearchout.py ~/ARMS/data/BiocodePASSED_SAP_tax_info.txt vsearch_out  parsed_BIOCODE.out 97 85
-    parallel(runPythonInstance, [(parseVSearchout, os.path.expanduser("~/ARMS/data/BiocodePASSED_SAP_tax_info.txt"),
-                                  "%s/%s.out" % (args.outdir, strip_ixes(input_)),
+    # parseVSearchOutputAgainstBIOCODE.py  vsearch_out ~/ARMS/data/BiocodePASSED_SAP_tax_info.txt parsed_BIOCODE.out 97 85
+    parallel(runPythonInstance, [(parseVSearchOutputAgainstBIOCODE, "%s/%s.out" % (args.outdir, strip_ixes(input_)),
+                                  os.path.expanduser("~/ARMS/data/BiocodePASSED_SAP_tax_info.txt"),
                                   "%s/%s_result.out" % (args.outdir, strip_ixes(input_)),
                                   97, 85) for input_ in inputs], pool, debug)
     printVerbose("\nDone parsing.")
@@ -587,9 +587,9 @@ def queryNCBI(args, debug=False):
     # Parse the alignment results and put those that pass the criterion (97 similarity, 85 coverage) in
     # parsed_BIOCODE.out.  Parameters can be changed and this command can be rerun as many times as necessary
     #
-    # parseVSearchToTaxa(vsearch_out, ncbi_db, min_coverage, min_similarity)> parsed_nt.out
+    # parseVSearchOutputAgainstBOLD(vsearch_out, ncbi_db, min_coverage, min_similarity)> parsed_nt.out
     parallel(runPythonInstance,
-             [(parseVSearchToTaxa, "%s/%s.out" % (args.outdir, strip_ixes(input_)), ncbi_db_string,
+             [(parseVSearchOutputAgainstBOLD, "%s/%s.out" % (args.outdir, strip_ixes(input_)), ncbi_db_string,
                "%s/%s_result.out" % (args.outdir, strip_ixes(input_)),
                97, 85) for input_ in inputs], pool, debug)
     printVerbose("Done processing.")
@@ -618,7 +618,7 @@ def build_matrix(args, debug=False):
     barcodes = getInputFiles(args.barcodes)
     debugPrintInputInfo(barcodes, "read.")
     printVerbose("Building matrix...")
-    buildMatrix(names, groups, barcodes[0], "%s/%s.txt" % (args.outdir, "matrix"))
+    buildOTUtable(names, groups, barcodes[0], "%s/%s.txt" % (args.outdir, "matrix"))
     printVerbose("Done building.")
 
 
@@ -639,7 +639,7 @@ def annotate_matrix(args, debug=False):
 
     pool = init_pool(min(len(matricies)*len(annotations), args.threads))
     printVerbose("Annotating matrix...")
-    parallel(runPythonInstance, [(annotateMatrix, matrix, annotation, "%s/%s.txt" % (args.outdir, "matrix"))
+    parallel(runPythonInstance, [(annotateOTUtable, matrix, annotation, "%s/%s.txt" % (args.outdir, "matrix"))
                                  for matrix, annotation in inputs], pool, debug)
     printVerbose("Done Annotating.")
 

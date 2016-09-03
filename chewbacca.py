@@ -16,8 +16,8 @@ DATEFMT = "%m/%d %H:%M:%S"
 """
 Supported operations:
     1. assemble
-        pear + renameSequences.py
-        mothur make.contigs + renameSequences.py
+        pear + renameSerially.py
+        mothur make.contigs + renameSerially.py
 
     2 demux
         fastx barcode splitter

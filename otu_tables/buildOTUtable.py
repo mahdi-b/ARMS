@@ -1,7 +1,7 @@
 import sys
 from classes.Helpers import *
 # NOTE: A SEQUENCE MUST NOT APPEAR IN TWO NAMES FILES.
-def buildMatrix(latest_names_files, inital_groups_files, barcodes_file, out_file, padding=15):
+def buildOTUtable(latest_names_files, inital_groups_files, barcodes_file, out_file, padding=15):
     """Given a single barcodes file with all possible \
     sample names, a list of the latest names file(s), and a list of initial groups files \
     (mapping each original, undereplicated sequence to its sample name), builds an OTU \
@@ -87,4 +87,4 @@ if __name__ == "__main__":
     if len(sys.argv) < 5:
         print "Usage: list_of_latest_names_file  list_of_inital_groups_files  barcodes_file  out_file"
         exit()
-    buildMatrix(*sys.argv[1:5])
+    buildOTUtable(*sys.argv[1:5])
