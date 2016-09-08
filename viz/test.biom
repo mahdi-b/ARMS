@@ -1,0 +1,24 @@
+{
+	"id": null,
+        "format": "Biological Observation Matrix 0.9.1-dev",
+        "format_url": "http://biom-format.org/documentation/format_versions/biom-1.0.html",
+        "type": "OTU table",
+        "generated_by": "QIIME revision 1.4.0-dev",
+        "date": "2011-12-19T19:00:00",
+	"rows": [
+		{"id": "OTU_name_1", "metadata": null},
+		{"id": "OTU_name_2", "metadata": null},
+		{"id": "OTU_name_3", "metadata": null}
+	],
+	"columns": [
+		{"id": "Sample1", "metadata": null},
+		{"id": "Sample2", "metadata": null},
+		{"id": "Sample3", "metadata": null}
+	],
+	"matrix_type": "dense",
+        "matrix_element_type": "int",
+        "shape": [3, 3],
+	"data": [[2, 1, 1],
+			[5, 3, 1],
+			[0, 3, 1]]
+}

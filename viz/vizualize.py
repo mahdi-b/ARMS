@@ -1,12 +1,12 @@
 import pandas as pd
+import sys
 from matplotlib import pyplot as plt
 import seaborn as sns
-from otu_to_dataframe import otu_table_to_dataframe
+from utils import otu_table_to_dataframe
 import numpy as np
 
 
-def viz_OTU_composition_barchart(OTU_matrix_file_path, output_file="", as_pct_composition=True):
-    frame = otu_table_to_dataframe(OTU_matrix_file_path)
+def viz_OTU_composition_barchart(frame, output_file="", as_pct_composition=True):
     ncols = len(frame.columns.values)
     nrows = len(frame.index.values)
     if as_pct_composition:
@@ -20,8 +20,8 @@ def viz_OTU_composition_barchart(OTU_matrix_file_path, output_file="", as_pct_co
         plt.show()
 
 
-def viz_OTU_abundance_heatmap(OTU_matrix_file_path, output_file=""):
-    frame = otu_table_to_dataframe(OTU_matrix_file_path)
+def viz_OTU_abundance_heatmap(frame, output_file=""):
+
     ncols = len(frame.columns.values)
     nrows = len(frame.index.values)
     fig, ax = plt.subplots(figsize=( 5+ncols/10.0, nrows/10.0))
@@ -37,7 +37,29 @@ def viz_OTU_abundance_heatmap(OTU_matrix_file_path, output_file=""):
         plt.show()
 
 
+if __name__ == "__main__":
+    if len(sys.argv) < 3:
+        print "Usage: function   input_otu_table   [output_file]"
+    else:
+
+        outfile = ""
+        option = sys.argv[1]
+        OTU_matrix_file_path = sys.argv[2]
+        if len(sys.argv) >= 4:
+            outfile = sys.argv[3]
+
+        frame = otu_table_to_dataframe(OTU_matrix_file_path)
+        frame = select_top_otus(frame, pct=.1)
+        print frame
+        """
+        function = ""
+        if option == "heatmap":
+            viz_OTU_abundance_heatmap(otu_table, outfile)
+        if option == "barchart":
+            viz_OTU_composition_barchart(otu_table, outfile)
+        """
 #path = "testMatrix.txt"
-path = "mat.txt"
+
 #path = "/home/greg/ARMS/testARMS/16_annotate_bold/matrix.txt"
-viz_OTU_abundance_heatmap(path)
+
+#viz_OTU_abundance_heatmap(path)
