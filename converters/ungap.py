@@ -3,21 +3,22 @@ import sys
 from Bio import SeqIO
 from Bio.Seq import Seq
 
-def ungap(file_to_clean, output_file_name, gap_char, file_type):
-    """Remove the reference sequences from the MACSE files and remove the non nucleotide characters from the sequences.
-       we need the database seq. names to remove them from the results files
+def ungap(file_to_clean, output_file_name, gap_chars, file_type):
+    """Removes gap characters from sequences (not sequence names) in an input fasta/fastq.
 
     :param file_to_clean: Filepath to the list of sequences to clean.
-    :param reference_fie: The file containing all reference sequences used to align file_to_clean.
-    :param output_file_name: Filepath to where the cleaned sequences should be written.
-    :return Filepath to the output file.
+    :param output_file_name: Filepath indicating where to write the cleaned file
+    :param gap_char_list: a list of characters to ungap
+    :param file_type: Either 'fasta' or 'fastq'
+    :return: The filepath to the cleaned file
     """
 
     cleaned_seqs=[]
     output = open(output_file_name, 'w')
     i = 0
     for mySeq in SeqIO.parse(file_to_clean, file_type):
-        mySeq.seq = mySeq.seq.ungap(gap_char)
+        for gapchar in gap_chars:
+            mySeq.seq = mySeq.seq.ungap(gapchar)
         cleaned_seqs.append(mySeq)
         if i % 5000 ==0:
             SeqIO.write(cleaned_seqs, output, file_type)

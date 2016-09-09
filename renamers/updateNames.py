@@ -2,6 +2,8 @@ import os
 import sys
 from parseNamesFileToDict import parseNamesFileToDictOfChilden
 from utils.joinFiles import joinFiles
+from classes.Helpers import debugPrint
+
 
 def updateNames(old_names_files, new_names_files, out_dir, out_prefix):
     """Updates an old_names file with the results of a new_names file, and writes the results to out_names.
@@ -61,8 +63,9 @@ def updateNames(old_names_files, new_names_files, out_dir, out_prefix):
             all_my_children = list(set(my_old_children + my_new_children + children_of_my_new_children))
             output.write("%s\t%s\n" % (new_seed, " ".join(all_my_children)))
             # print "Seed %s has %d children" % (new_seed, len(all_my_children))
-            print "%s_%d = %d old  +  %d new  +   %d children of new" % (new_seed, len(all_my_children),
-                                         len(my_old_children), len(my_new_children), len(children_of_my_new_children))
+            debugPrint("%s_%d = %d old  +  %d new  +   %d children of new" % (new_seed, len(all_my_children),
+                                         len(my_old_children), len(my_new_children), len(children_of_my_new_children)))
+
     output.close()
     #os.remove(old_names_temp_file)
     #os.remove(new_names_temp_file)

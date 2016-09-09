@@ -175,8 +175,6 @@ def main(argv):
                             renames it with the number of duplicates as '<longest_sequence_name>_<duplicate count>'.")
     parser_derep.add_argument('-i', '--input', required=True, help="Input fasta file or folder of fasta files.")
     parser_derep.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved.")
-    parser_derep.add_argument('-f', '--filetype', required=True, help="The filetype of the input files.  Either \
-                                            'fasta' or 'fastq'.")
     parser_derep.set_defaults(func=dereplicate)
 
 
@@ -219,7 +217,8 @@ def main(argv):
     parser_cat.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
     parser_cat.add_argument('-f', '--fileext', required=True, help="File extension for the output file.  Either \
                             'fasta', or 'fastq'.")
-    parser_cat.add_argument('-g', '--gapchar', required=True, help="Character to remove from sequences.")
+    parser_cat.add_argument('-g', '--gapchar', required=True, help="A string of one or more characters to remove from \
+                            the sequences (but not sequence names) in the input files.")
     parser_cat.set_defaults(func=ungapFasta)
 
     # ==========================================

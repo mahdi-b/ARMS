@@ -59,7 +59,7 @@ def runPythonInstance(params):
     return func(*args)
 
 
-def parallel(function, data, pool, debug=False):
+def parallel(function, data, pool):
     """Executes jobs in parallel.
     :param function:    The function to call.  Generally runInstance() for ProgramRunner objects, or a local python
                             function.
@@ -68,13 +68,12 @@ def parallel(function, data, pool, debug=False):
     :return: A list of results.
     """
     try:
-        if debug:
-            return data
-        else:
-            return pool.map_async(function, data).get(999999999)
+        debugPrint("Running %s in parallel with the following parameter list:\n%s" % (str(function), str(data)))
+        return pool.map_async(function, data).get(999999999)
 
     except KeyboardInterrupt:
         kill_pool_and_die(pool)
+
 
 def makeDirOrdie(dir_path, orDie=True):
     """Creates a directory 'dirPath' or exits if the 'dirPath' directory already exists.  Prevents unnecessary execution.
@@ -263,6 +262,13 @@ def move(origin, destination):
     :param destination: File path to the file's new destination.  e.g. "dirB/a.txt"
     """
     os.rename(origin, destination)
+
+def debugPrint(message):
+    """Logs debug messages.
+
+    :param message: The debug message to log
+    """
+    logging.debug(message)
 
 
 def debugPrintInputInfo(input_, action_suffix):

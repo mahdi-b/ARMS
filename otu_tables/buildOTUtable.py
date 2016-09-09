@@ -1,7 +1,7 @@
 import sys
 from classes.Helpers import *
 # NOTE: A SEQUENCE MUST NOT APPEAR IN TWO NAMES FILES.
-def buildOTUtable(latest_names_files, inital_groups_files, barcodes_file, out_file, padding=15):
+def buildOTUtable(latest_names_files, inital_groups_files, barcodes_file, out_file):
     """Given a single barcodes file with all possible \
     sample names, a list of the latest names file(s), and a list of initial groups files \
     (mapping each original, undereplicated sequence to its sample name), builds an OTU \
@@ -14,7 +14,6 @@ def buildOTUtable(latest_names_files, inital_groups_files, barcodes_file, out_fi
     :param out_file:            Filepath to the output directory
     """
     seq_to_sample = {}
-    max_row_name_length = 30 #TODO compute max name length
     # read the initaial groups/samples file (from rename)
     # make a single dict from all the groups/samples files mapping seqname to group
     for groups_file in inital_groups_files:
@@ -33,9 +32,9 @@ def buildOTUtable(latest_names_files, inital_groups_files, barcodes_file, out_fi
     printVerbose(str(all_sample_names))
 
     with open(out_file, 'w') as out:
-        header_line = "%-*s" % (max_row_name_length, "OTU")
+        header_line = "OTU"
         for sample in all_sample_names:
-            header_line += "%*s" % (padding, sample)
+            header_line += "\t%s" % sample
         out.write(header_line + "\n")
         # GENERATE A DICTIONARY MAPPING SEQUENCE NAMES TO THE SAMPLE THEY CAME FROM
         # for each line in the latest names files,
@@ -78,9 +77,9 @@ def buildOTUtable(latest_names_files, inital_groups_files, barcodes_file, out_fi
 
                     # WRITE THE COUNTS TO THE OUT FILE
                     # for each sample in the barcodes list, write otu to a txt file as a single line
-                    out_line = "%-*s" % (max_row_name_length, otu)
+                    out_line = otu
                     for sample_name in all_sample_names:
-                        out_line += "%*s" % (padding, sample_counts[sample_name])
+                        out_line += "\t%s" % sample_counts[sample_name]
                     out.write(out_line + "\n")
     out.close()
 if __name__ == "__main__":

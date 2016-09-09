@@ -2,7 +2,32 @@ import ConfigParser
 import logging
 import os
 import subprocess
-from Helpers import printVerbose, helpValidate
+from enum import Enum
+from Helpers import printVerbose, helpValidate, debugPrint
+
+
+# Names of available programs
+class ProgramRunnerPrograms(Enum):
+    FASTX = "FASTX"
+    FLEXBAR = "FLEXBAR"
+    PEAR = "PEAR"
+    SWARM = "SWARM"
+    TRIMMOMATIC = "TRIMMOMATIC"
+    USEARCH = "USEARCH"
+    VSEARCH = "VSEARCH"
+
+
+# Names of available commands
+class ProgramRunnerCommands(Enum):
+    ALIGN_VSEARCH = "ALIGN_VSEARCH"
+    ASSEMBLE_PEAR = "ASSEMBLE_PEAR"
+    CLEAN_TRIMMOMATIC = "CLEAN_TRIMMOMATIC"
+    CLUSTER_SWARM = "CLUSTER_SWARM"
+    DEMUX_FASTX = "DEMUX_FASTX"
+    DEREP_USEARCH = "DEREP_USEARCH"
+    DEREP_VSEARCH = "DEREP_VSEARCH"
+    TRIM_FLEXBAR = "TRIM_FLEXBAR"
+    TEST_ECHO = "TEST_ECHO"
 
 
 class ProgramRunner(object):
@@ -15,23 +40,24 @@ class ProgramRunner(object):
                                         paths to exectuables.
         configsLoaded               Specifies that all config variables have been loaded, and that the file should not
                                         be read again durring the execution of this instance.
-        programPaths                Specifies the default location of executibles used in the commands dictionary.
+        program_paths               Specifies the default location of executibles used in the commands dictionary.
         commandTemplates            A dictionary mapping chewbacca commands to un-paramaterized command line strings.
                                         Used as templates for commands.
     """
     DEFAULT_CONFIG_FILEPATH = "chewbacca.cfg"
     configsLoaded = False
-    commandTemplates = {}
     dry_run = False
-    type =""
-    programPaths = {
-        "FASTX"  : os.path.expanduser("/usr/bin/fastx_barcode_splitter.pl"),
-        "PEAR"   : os.path.expanduser("~/ARMS/programs/pear/pear-0.9.5-bin-64"),
-        "USEARCH": os.path.expanduser("~/ARMS/programs/usearch/usearch7.0.1090"),
-        "MOTHUR" : os.path.expanduser("~/ARMS/programs/mothur/mothur"),
-        "FLEXBAR": os.path.expanduser("~/ARMS/programs/flexbar/flexbar"),
-        "VSEARCH": os.path.expanduser("~/ARMS/programs/vsearch/vsearch"),
-        "SWARM"  : os.path.expanduser("~/ARMS/programs/swarm/swarm-2.1.9-linux-x86_64"),
+    # Actual commands
+    commandTemplates = {}
+
+    # Map of Programs to their executables
+    program_paths = {
+        ProgramRunnerPrograms.FASTX: os.path.expanduser("/usr/bin/fastx_barcode_splitter.pl"),
+        ProgramRunnerPrograms.FLEXBAR: os.path.expanduser("~/ARMS/programs/flexbar/flexbar"),
+        ProgramRunnerPrograms.PEAR: os.path.expanduser("~/ARMS/programs/pear/pear-0.9.5-bin-64"),
+        ProgramRunnerPrograms.SWARM: os.path.expanduser("~/ARMS/programs/swarm/swarm-2.1.9-linux-x86_64"),
+        ProgramRunnerPrograms.USEARCH: os.path.expanduser("~/ARMS/programs/usearch/usearch7.0.1090"),
+        ProgramRunnerPrograms.VSEARCH: os.path.expanduser("~/ARMS/programs/vsearch/vsearch")
     }
 
 
@@ -53,12 +79,11 @@ class ProgramRunner(object):
         """
         if conditions is None:
             conditions = {}
-        if not ProgramRunner.configsLoaded:
-            ProgramRunner.loadConfigs(self)
-            ProgramRunner.initalizeCommands(self)
-            ProgramRunner.configsLoaded = True
-        logging.error(params)
+        ProgramRunner.loadConfigs(self)
+        ProgramRunner.initalizeCommands(self)
+        ProgramRunner.configsLoaded = True
         self.program = program
+        print self.commandTemplates
         self.command = self.commandTemplates[program] % tuple(params)
         self.conditions = conditions
         self.stdin = stdin
@@ -89,11 +114,8 @@ class ProgramRunner(object):
                                 All parameters must satisfy their <Validator>.function in order for the specified
                                 program to execute.
         """
-        # if any of the conditions fails, stop execution
-        # TODO ask Mahdi if this is the intended behavior
         for condition in conditions.iteritems():
             print "\t\tvalidating that %s, %s" % (str(condition[1]), condition[0])
-            # TODO: add code
 
 
     def run(self):
@@ -107,7 +129,7 @@ class ProgramRunner(object):
             self.dryRun()
 
         # call and check_call are blocking, Popen is non-blocking
-        print( "running " + self.command)
+        debugPrint("Running " + self.command)
         subprocess.check_call(os.path.expanduser(self.command), shell=True)
 
 
@@ -120,7 +142,7 @@ class ProgramRunner(object):
         if dryValidate:
             self.dryValidateConditions(self.conditions)
         else:
-            self.ValidateConditions(self.conditions)
+            self.validateConditions(self.conditions)
         return self.command
 
 
@@ -128,7 +150,7 @@ class ProgramRunner(object):
         """Loads configuration settings from the chewbacca configuration file (located in
             ProgramRunner.DEFAULT_CONFIG_FILEPATH).  If the file is not found, default values are used. Overwrites the
             default values of any found entries.  Currently loads the [Program  Paths] section, updating the
-            programPaths dictionary.
+            program_paths dictionary.
         """
         config_file_path = ProgramRunner.DEFAULT_CONFIG_FILEPATH
         config_section = "Program Paths"
@@ -136,11 +158,10 @@ class ProgramRunner(object):
             logging.debug("Loaded Chewbacca config files from %s" % config_file_path)
             config = ConfigParser.RawConfigParser()
             config.read(config_file_path)
-
-            for program in ProgramRunner.programPaths.keys():
-                if config.has_option(config_section, program):
-                    config_setting = config.get(config_section, program)
-                    ProgramRunner.programPaths[program] = os.path.expanduser(config_setting)
+            for program_name, program_enum in ProgramRunnerPrograms.__members__.iteritems():
+                if config.has_option(config_section, program_name):
+                    config_setting = config.get(config_section, program_name)
+                    ProgramRunner.program_paths[program_enum] = os.path.expanduser(config_setting)
                     # logging.debug("Read %s filepath as %s" % (program, config_setting))
 
         else:
@@ -152,21 +173,26 @@ class ProgramRunner(object):
         """
         # NOTE: Mothur doesn't like quoted filenames.  Gross.
         # NOTE: Java jars can't be resolved if string concatenation is used.
-        if not ProgramRunner.configsLoaded:
-            program_paths = ProgramRunner.programPaths
-            ProgramRunner.commandTemplates = {
-                "barcode.splitter": "cat %s | " + program_paths["FASTX"] + '  --bcfile "%s" \
-                                            -prefix "%s" --suffix %s --bol --mismatches 1',
-                "echo": "echo %s",
-                "flexbar":  program_paths["FLEXBAR"] + " -r %s -t %s -ae %s -a %s -u %d",
-                "pear": program_paths["PEAR"] + " -f %s -r %s -o %s -v 20 -j %d ",
-                "swarm": program_paths["SWARM"] + " %s -o %s -u %s -w %s",
-                "trimmomatic": "java -jar ~/ARMS/programs/Trimmomatic-0.33/trimmomatic-0.33.jar SE -phred33 \
-                                            %s %s SLIDINGWINDOW:%d:%d MINLEN:%d",
-                "usearch": program_paths["USEARCH"] + " -derep_fulllength %s -output %s -uc %s",
-                "vsearch.derep": program_paths["VSEARCH"] + " --derep_fulllength %s --sizeout --fasta_width 0 "
-                                            "--output %s -uc %s",
-                "vsearch.usearch_global": program_paths["VSEARCH"] + " --usearch_global %s --db %s --id 0.9 \
-                                            --userfields query+target+id+alnlen+qcov --userout %s --alnout %s\
-                                             %s",
-            }
+
+        self.commandTemplates = {
+            ProgramRunnerCommands.DEMUX_FASTX: "cat %s | " + self.program_paths[ProgramRunnerPrograms.FASTX] +
+                                        '  --bcfile "%s" -prefix "%s" --suffix %s --bol --mismatches 1',
+            ProgramRunnerCommands.TEST_ECHO: "echo %s",
+            ProgramRunnerCommands.TRIM_FLEXBAR: self.program_paths[ProgramRunnerPrograms.FLEXBAR] +
+                                        " -r %s -t %s -ae %s -a %s -u %d",
+            ProgramRunnerCommands.ASSEMBLE_PEAR: self.program_paths[ProgramRunnerPrograms.PEAR] +
+                                        " -f %s -r %s -o %s -v 20 -j %d ",
+            ProgramRunnerCommands.CLUSTER_SWARM: self.program_paths[ProgramRunnerPrograms.SWARM] +
+                                        " %s -o %s -u %s -w %s",
+            ProgramRunnerCommands.CLEAN_TRIMMOMATIC:
+                                        "java -jar ~/ARMS/programs/Trimmomatic-0.33/trimmomatic-0.33.jar \
+                                        SE -phred33 %s %s SLIDINGWINDOW:%d:%d MINLEN:%d",
+            ProgramRunnerCommands.DEREP_USEARCH: self.program_paths[ProgramRunnerPrograms.USEARCH] +
+                                        " -derep_fulllength %s -output %s -uc %s",
+            ProgramRunnerCommands.DEREP_VSEARCH: self.program_paths[ProgramRunnerPrograms.VSEARCH] +
+                                        " --derep_fulllength %s --sizeout --fasta_width 0 --output %s -uc %s",
+            ProgramRunnerCommands.ALIGN_VSEARCH: self.program_paths[ProgramRunnerPrograms.VSEARCH] +
+                                        " --usearch_global %s --db %s --id 0.9 --userfields \
+                                        query+target+id+alnlen+qcov --userout %s --alnout %s %s"
+        }
+
