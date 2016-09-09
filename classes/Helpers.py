@@ -56,6 +56,7 @@ def runPythonInstance(params):
     printVerbose(str(params))
     func = params[0]
     args = params[1:]
+    printVerbose("Running: %s" % str(params))
     return func(*args)
 
 
@@ -68,7 +69,6 @@ def parallel(function, data, pool):
     :return: A list of results.
     """
     try:
-        debugPrint("Running %s in parallel with the following parameter list:\n%s" % (str(function), str(data)))
         return pool.map_async(function, data).get(999999999)
 
     except KeyboardInterrupt:

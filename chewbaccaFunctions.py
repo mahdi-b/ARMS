@@ -7,8 +7,8 @@ from converters.seedToNames import seedToNames
 from converters.ungap import ungap
 from otu_tables.annotateOTUtable import annotateOTUtable
 from otu_tables.buildOTUtable import buildOTUtable
-from parsers.parseUCToNames import parseUCtoNames
-from parsers.parseVSearchoutForTaxa import parseVSearchOutputAgainstBIOCODE, parseVSearchOutputAgainstBOLD
+from parsers.parseUCtoNames import parseUCtoNames
+from parsers.parseVSearchoutForTaxa import parseVSearchOutputAgainstFasta, parseVSearchOutputAgainstNCBI
 from renamers.renameSerially import serialRename
 from renamers.renameWithReplicantCounts import renameWithReplicantCounts
 from renamers.renameWithoutCount import removeCountsFromFastFile, removeCountsFromNamesFile
@@ -218,14 +218,13 @@ def trimmomatic(args, debug=False):
     cleanup_pool(pool)
 
 
-# TODO We should probably move the fasta conversion out to a different step
 def dereplicate(args, debug=False):
-    """Uses a sliding window to identify and trim away areas of low quality.
+    makeDirOrdie(args.outdir)
 
-       :param args: An argparse object with the following parameters:
-                       inputFile	Input Fastq file
-                       outdir	    Output Fastq file
-       """
+
+
+def u_dereplicate(args, debug=False):
+    # TODO DOC
     # ls *cleaned.fasta  | parallel  "/ARMS/bin/usearch7.0.1090 -derep_fulllength {} -output {/.}_derep.fa
     #                                           -uc {/.}_uc.out"
     makeDirOrdie(args.outdir)
@@ -252,7 +251,7 @@ def dereplicate(args, debug=False):
     debugPrintInputInfo(input_ucs, "parsed")
     printVerbose("Parsing search logs for seed sequences...")
     # Collect seeds
-    # #ls *uc.out | parallel "python ~/ARMS/bin/parseUCToNames.py {} {.}_parsed.out"
+    # #ls *uc.out | parallel "python ~/ARMS/bin/parseUCtoNames.py {} {.}_parsed.out"
     parallel(runPythonInstance,
              [(parseUCtoNames, input_, "%s/%s.names" % (args.outdir, strip_ixes(input_))) for
               input_ in input_ucs], pool)
@@ -394,7 +393,7 @@ def cluster(args, debug=False):
 
     # LOG DEREPLICATED SEQUENCES INTO A .NAMES FILE
     # generates a .names file named _uc_parsed.out
-    # python parseUCToNames.py uc.out uc_parsed.out
+    # python parseUCtoNames.py uc.out uc_parsed.out
     input_ucs = getInputFiles(args.outdir, "*_uc.out")
     printVerbose("Generating a names file from dereplication.")
     debugPrintInputInfo(inputs, "parsed (into a names file)")
@@ -507,14 +506,13 @@ def cluster(args, debug=False):
     cleanup_pool(pool)
 
 
-def queryBiocode(args, debug=False):
+def query_fasta(args, debug=False):
     """Compare reference sequences to the fasta-formatted query sequences, using global pairwise alignment.
 
     :param args: An argparse object with the following parameters:
                     accnosFile  List of sequence names to remove
                     outdir      Directory to put the output files
     """
-    db_string = os.path.expanduser("~/ARMS/data/BiocodePASSED_SAP.txt")
     aln_user_string = ""
     makeDirOrdie(args.outdir)
 
@@ -522,28 +520,46 @@ def queryBiocode(args, debug=False):
     #       --userfields query+target+id+alnlen+qcov --userout %sout --alnout %s alnout.txt
 
     # expecting a fasta to annotate
-    inputs = getInputFiles(args.input)
-    pool = init_pool(min(len(inputs), args.threads))
-    debugPrintInputInfo(inputs, "queried against Biocode.")
-    printVerbose("Querying Biocode...")
+    query_fastas = getInputFiles(args.input)
+    debugPrintInputInfo(query_fastas, "queried for identification.")
+    ref_fastas = getInputFiles(args.referencefasta)
+    debugPrintInputInfo(ref_fastas, "referenced for sequence identification.")
+    tax_info_files = getInputFiles(args.taxinfo)
+    debugPrintInputInfo(tax_info_files, "referenced for taxanomic names.")
+
+
+
+    # make sure the number of reference fasta files is the same as the number of tax_info files
+    if len(tax_info_files) != len(ref_fastas):
+        print "Error: The number of reference fastas and taxonomic mapping files is not the same.  There must be one \
+                taxonomic mapping file for each reference fasta."
+        sys.exit()
+
+    ref_data_pairs = zip(ref_fastas, tax_info_files)
+    inputs = [x for x in product(query_fastas, ref_data_pairs)]
+
+    pool = init_pool(min(len(query_fastas), args.threads))
+    printVerbose("Querying...")
     # input, db, userout, alnout, aln_userfield
     parallel(runProgramRunnerInstance, [ProgramRunner(ProgramRunnerCommands.ALIGN_VSEARCH,
-                                                      [input_, db_string,
-                                                       "%s/%s.out" % (args.outdir, strip_ixes(input_)),
-                                                       "%s/%s.alnout" % (args.outdir, strip_ixes(input_)),
-                                                       aln_user_string],
-                                                      {"exists": [input_]}) for input_ in inputs], pool)
+                                            [args.threads, query_fasta, ref_fasta,
+                                            "%s/%s.out" % (args.outdir, strip_ixes(query_fasta)),
+                                            "%s/%s.alnout" % (args.outdir, strip_ixes(query_fasta)), aln_user_string],
+                                            {"exists": [query_fasta, ref_fasta], "positive":[args.threads]})
+                                            for query_fasta, (ref_fasta, tax_info) in inputs], pool)
     printVerbose("Done querying.")
     printVerbose("Parsing output...")
+
+
     # Parse the alignment results and put those that pass the criterion (97 similarity, 85 coverage) in
     # parsed_BIOCODE.out.  Parameters can be changed and this command can be rerun as many times as necessary
     #
-    # parseVSearchOutputAgainstBIOCODE.py vsearch_out ~/ARMS/data/BiocodePASSED_SAP_tax_info.txt parsed_BIOCODE.out 97 85
-    parallel(runPythonInstance, [(parseVSearchOutputAgainstBIOCODE, "%s/%s.out" % (args.outdir, strip_ixes(input_)),
-                                  os.path.expanduser("~/ARMS/data/BiocodePASSED_SAP_tax_info.txt"),
-                                  "%s/%s_result.out" % (args.outdir, strip_ixes(input_)),
-                                  97, 85) for input_ in inputs], pool)
-    printVerbose("\nDone parsing.")
+    # parseVSearchOutputAgainstFasta(vsearch_outfile, taxInfo, output_file, min_simmilarity, min_coverage):
+    parallel(runPythonInstance, [(parseVSearchOutputAgainstFasta, "%s/%s.out" % (args.outdir, strip_ixes(query_fasta)),
+                                            tax_info, "%s/%s_result.out" % (args.outdir, strip_ixes(query_fasta)),
+                                            args.simmilarity, args.coverage)
+                                            for query_fasta, (ref_fasta, tax_info) in inputs], pool)
+    printVerbose("\nDone parsing...")
     # Gather and move auxillary files
     aux_files = getInputFiles(args.outdir, "*", "*_result.out")
     bulk_move_to_dir(aux_files, makeAuxDir(args.outdir))
@@ -558,7 +574,7 @@ def queryNCBI(args, debug=False):
                     input       Input file/folder with fasta sequences
                     outdir      Directory to put the output files
     """
-    coi_db_string = os.path.expanduser("~/ARMS/refs/COI.fasta")
+    coi_fasta = os.path.expanduser("~/ARMS/refs/COI.fasta")
     ncbi_db_string = os.path.expanduser("~/ARMS/refs/ncbi.db")
     aln_user_string = "--userfields query+target+id+alnlen+qcov"
     makeDirOrdie(args.outdir)
@@ -567,29 +583,31 @@ def queryNCBI(args, debug=False):
     #		--userfields query+target+id+alnlen+qcov --userout %sout --alnout %s alnout.txt
 
     # expecting a fasta to annotate
-    inputs = getInputFiles(args.input)
-    debugPrintInputInfo(inputs, "queried agains BOLD.")
-    pool = init_pool(min(len(inputs), args.threads))
-    printVerbose("Querying BOLD...")
+    query_fastas = getInputFiles(args.input)
+    debugPrintInputInfo(query_fastas, "queried agains NCBI.")
+    pool = init_pool(min(len(query_fastas), args.threads))
+    printVerbose("Querying NCBI...")
     # input, db, userout, alnout, aln_userfield
     parallel(runProgramRunnerInstance, [ProgramRunner(ProgramRunnerCommands.ALIGN_VSEARCH,
-                                                      [input_, coi_db_string,
-                                                       "%s/%s.out" % (args.outdir, strip_ixes(input_)),
-                                                       "%s/%s.alnout" % (args.outdir, strip_ixes(input_)),
-                                                       aln_user_string],
-                                                      {"exists": [input_], "positive": []}) for input_ in inputs],
-             pool)
+                                                        [args.threads, query_fasta, coi_fasta,
+                                                        "%s/%s.out" % (args.outdir, strip_ixes(query_fasta)),
+                                                        "%s/%s.alnout" % (args.outdir, strip_ixes(query_fasta)),
+                                                        aln_user_string],
+                                                        {"exists": [query_fasta, coi_fasta], "positive": [args.threads]})
+                                                        for query_fasta in query_fastas], pool)
+
     printVerbose("Done with query.")
     printVerbose("Parsing output...")
     # Parse the alignment results and put those that pass the criterion (97 similarity, 85 coverage) in
     # parsed_BIOCODE.out.  Parameters can be changed and this command can be rerun as many times as necessary
     #
-    # parseVSearchOutputAgainstBOLD(vsearch_out, ncbi_db, min_coverage, min_similarity)> parsed_nt.out
+    # parseVSearchOutputAgainstNCBI(vsearch_out, ncbi_db, min_coverage, min_similarity)> parsed_nt.out
     parallel(runPythonInstance,
-             [(parseVSearchOutputAgainstBOLD, "%s/%s.out" % (args.outdir, strip_ixes(input_)), ncbi_db_string,
-               "%s/%s_result.out" % (args.outdir, strip_ixes(input_)),
-               97, 85) for input_ in inputs], pool)
+             [(parseVSearchOutputAgainstNCBI, "%s/%s.out" % (args.outdir, strip_ixes(query_fasta)), ncbi_db_string,
+               "%s/%s_result.out" % (args.outdir, strip_ixes(query_fasta)),
+               97, 85) for query_fasta in query_fastas], pool)
     printVerbose("Done processing.")
+
     # Gather and move auxillary files
     aux_dir = makeAuxDir(args.outdir)
     aux_files = getInputFiles(args.outdir, "*", "*_result.out")

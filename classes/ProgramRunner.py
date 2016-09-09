@@ -83,7 +83,6 @@ class ProgramRunner(object):
         ProgramRunner.initalizeCommands(self)
         ProgramRunner.configsLoaded = True
         self.program = program
-        print self.commandTemplates
         self.command = self.commandTemplates[program] % tuple(params)
         self.conditions = conditions
         self.stdin = stdin
@@ -190,9 +189,9 @@ class ProgramRunner(object):
             ProgramRunnerCommands.DEREP_USEARCH: self.program_paths[ProgramRunnerPrograms.USEARCH] +
                                         " -derep_fulllength %s -output %s -uc %s",
             ProgramRunnerCommands.DEREP_VSEARCH: self.program_paths[ProgramRunnerPrograms.VSEARCH] +
-                                        " --derep_fulllength %s --sizeout --fasta_width 0 --output %s -uc %s",
+                                        " --threads %d --derep_fulllength %s --sizeout --fasta_width 0 --output %s -uc %s",
             ProgramRunnerCommands.ALIGN_VSEARCH: self.program_paths[ProgramRunnerPrograms.VSEARCH] +
-                                        " --usearch_global %s --db %s --id 0.9 --userfields \
+                                        " --threads %d --usearch_global %s --db %s --id 0.9 --userfields \
                                         query+target+id+alnlen+qcov --userout %s --alnout %s %s"
         }
 

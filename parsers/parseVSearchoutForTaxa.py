@@ -1,7 +1,7 @@
 import sys
 import sqlite3
 from ete2 import NCBITaxa
-
+from classes.Helpers import printVerbose
 # sys.argv[1] = BiocodePASSED_SAP_tax_info.txt
 # sys.argv[2] = vsearch output file with 5 fields
 # sys.argv[3] = min similarity
@@ -19,9 +19,9 @@ def printErrorMissingID(out, ID):
     out.write(err)
 
 
-def buildTaxaDictBIOCODE(tax_map_file):
-    """Takes in a two column tabular file mapping BIOCODE sequence names to taxonomic identifier strings and converts it
-        to a dict.
+def buildTaxaDict(tax_map_file):
+    """Takes in a two column tabular file mapping BIOCODE sequence names to semi-colon-delimited taxonomic identifier
+        strings and converts it to a dict.
 
     :param tax_map_file: A two column tabular file mapping BIOCODE sequence names to taxonomic identifier strings.
     :return: A dict where BIOCODE sequence names are keys and map to taxonomic identifier strings.
@@ -31,18 +31,12 @@ def buildTaxaDictBIOCODE(tax_map_file):
         line = line.rstrip()
         data = line.split("\t")
         biocodeId = data[0]
-        taxonomy = []
-        for val in data[1].split(", "):
-            tax = val.split(": ")
-            if len(tax) > 1:
-                taxonomy.append(tax[1])
-            else:
-                taxonomy.append("")
-        biocodeTax[biocodeId] = ":".join(taxonomy)
+        taxonomy = data[1]
+        biocodeTax[biocodeId] = taxonomy
     return biocodeTax
 
 # TODO these two be merged
-def parseVSearchOutputAgainstBIOCODE(vsearch_outfile, taxInfo, output_file, min_simmilarity, min_coverage):
+def parseVSearchOutputAgainstFasta(vsearch_outfile, taxInfo, output_file, min_simmilarity, min_coverage):
     """Resolves vsearch matches in a vsearch output file to the taxonomic name taken from BIOCODE.
         Takes in a vsearch output file from usearch__global, parses the result for good matches, and
         writes an output file mapping sequence name to taxa name.
@@ -53,16 +47,18 @@ def parseVSearchOutputAgainstBIOCODE(vsearch_outfile, taxInfo, output_file, min_
     :param min_coverage: The minimum coverage for an acceptable vsearch match.
     :param min_similarity: The minimum simmilarity for an acceptable vsearch match.
     """
+    printVerbose("Parsing Vsearch Output")
     min_simm = float(min_simmilarity)
     min_coverage = float(min_coverage)
 
-    biocodeTax = buildTaxaDictBIOCODE(taxInfo)
+    biocodeTax = buildTaxaDict(taxInfo)
     with open(output_file, 'w') as out:
         for line in open(vsearch_outfile, 'r'):
             data = line.split()
             if float(data[2]) < min_simm or float(data[4]) < min_coverage:
 
                 if biocodeTax.has_key(data[1]):
+                    print "Found %s as %s" % (data[1], biocodeTax[data[1]])
                     data.append(biocodeTax[data[1]])
 
                     out.write( "\t".join(data))
@@ -71,7 +67,7 @@ def parseVSearchOutputAgainstBIOCODE(vsearch_outfile, taxInfo, output_file, min_
                     printErrorMissingID(out, data[1])
 
 
-def parseVSearchOutputAgainstBOLD(vsearch_out, database, output_file, min_coverage, min_similarity):
+def parseVSearchOutputAgainstNCBI(vsearch_out, database, output_file, min_coverage, min_similarity):
     """Resolves vsearch matches in a vsearch output file to the taxonomic name taken from BOLD.
         Takes in a vsearch output file from usearch__global, parses the result for good matches, and
         writes an output file mapping sequence name to taxa name.

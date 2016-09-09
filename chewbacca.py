@@ -175,7 +175,21 @@ def main(argv):
                             renames it with the number of duplicates as '<longest_sequence_name>_<duplicate count>'.")
     parser_derep.add_argument('-i', '--input', required=True, help="Input fasta file or folder of fasta files.")
     parser_derep.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved.")
-    parser_derep.set_defaults(func=dereplicate)
+    parser_derep.set_defaults(func=u_dereplicate)
+
+    # ============================================
+    # ==  6 Dereplicate sequences with vsearch  ==
+    # ============================================
+    #" vsearch --threads %d --derep_fulllength %s --sizeout --fasta_width 0 --output %s -uc %s",
+    parser_vderep = subparsers.add_parser('dereplicate_vsearch', description="Given an fasta file or folder, removes \
+                            identical duplicates and subsequences WITHIN EACH FILE, keeping the longest sequence, and \
+                            renames it with the number of duplicates as '<longest_sequence_name>_<duplicate count>'.")
+    parser_vderep.add_argument('-i', '--input', required=True, help="Input fasta file or folder of fasta files.")
+    parser_vderep.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved.")
+    parser_vderep.add_argument('-p', '--threads', required=False, type=int, default=2,
+                            help="Number of threads to use per query process.")
+    parser_vderep.set_defaults(func=dereplicate)
+
 
 
     # ==============================================
@@ -239,28 +253,40 @@ def main(argv):
     parser_align.set_defaults(func=cluster)
 
 
-    # ==========================================
-    # ==  12 Closed Ref Picking with BIOCODE  ==
-    # ==========================================
-    # TODO description
+    # ===================================================
+    # ==  12 Closed Ref Picking with fasta references  ==
+    # ===================================================
     # --usearch_global  ../9_p_uchime/seeds.pick.fasta  --db ../data/BiocodePASSED_SAP.txt --id 0.9 \
     #	--userfields query+target+id+alnlen+qcov --userout out  --alnout alnout.txt
-    parser_biocode = subparsers.add_parser('query_biocode', description="Given a fasta file, or folder containing \
+    parser_biocode = subparsers.add_parser('query_fasta', description="Given a fasta file, or folder containing \
                             fasta files, aligns sequences asgainst the BIOCODE database.")
     parser_biocode.add_argument('-i', '--input', required=True, help="Input file/folder with fasta files")
     parser_biocode.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
-    parser_biocode.set_defaults(func=queryBiocode)
+    parser_biocode.add_argument('-r', '--referencefasta', required=True, help="Filepath to the curated fasta file to \
+                            use as a reference.")
+    parser_biocode.add_argument('-x', '--taxinfo', required=True, help="Filepath to a two-column, tab-delimited file \
+                            mapping a sequence's fasta id (in the referencefasta file) to a taxonomic identification.")
+    parser_biocode.add_argument('-s', '--simmilarity', required=False, default=97, type=int, help="Minimum %  \
+                            simmilarity (integer between 0 and 100) between query and reference sequences required for \
+                            positive identification. Default: 97")
+    parser_biocode.add_argument('-c', '--coverage', required=False, default=85, type=int, help="Minimum % coverage \
+                            (integer between 0 and 100) required query and reference sequences required for positive \
+                            identification. Default: 85")
+    parser_biocode.add_argument('-p', '--threads', required=False, type=int, default=2,
+                            help="Number of threads to use per query process.")
+    parser_biocode.set_defaults(func=query_fasta)
 
 
     # =======================================
     # ==  13 Closed Ref Picking with NCBI  ==
     # =======================================
-    # TODO description
     # --usearch_global ../9_p_uchime/seeds.pick.fasta  --db /home/mahdi/refs/COI_DOWNLOADED/COI.fasta -id 0.9 \
     #          --userfields query+target+id+alnlen+qcov --userout out --alnout alnout.txt --userfields query+target+id+alnlen+qcov
     parcer_ncbi = subparsers.add_parser('query_ncbi')
     parcer_ncbi.add_argument('-i', '--input', required=True, help="Input Fasta File to clean")
     parcer_ncbi.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
+    parcer_ncbi.add_argument('-p', '--threads', required=False, type=int, default=2,
+                             help="Number of threads to use per query process.")
     parcer_ncbi.set_defaults(func=queryNCBI)
 
 
