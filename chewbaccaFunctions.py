@@ -220,72 +220,82 @@ def trimmomatic(args, debug=False):
 
 def dereplicate(args, debug=False):
     makeDirOrdie(args.outdir)
-
-
-
-def u_dereplicate(args, debug=False):
-    # TODO DOC
-    # ls *cleaned.fasta  | parallel  "/ARMS/bin/usearch7.0.1090 -derep_fulllength {} -output {/.}_derep.fa
-    #                                           -uc {/.}_uc.out"
-    makeDirOrdie(args.outdir)
-    # grab all the _cleaned files and turn the fastqs into fastas
     inputs = getInputFiles(args.input)
     pool = init_pool(min(len(inputs), args.threads))
-    debugPrintInputInfo(inputs, "searched for replicants")
-    printVerbose("Searching for identical reads...")
-    # parse the number of identical reads included in each sequence and write them to the
-    #       {sample_file}_parsed.out
-    # ls *cleaned.fasta  | parallel  "~/ARMS/bin/usearch7.0.1090 -derep_fulllength {} -output {/.}_derep.fa
-    #                                                   -uc {/.}_uc.out"
-    parallel(runProgramRunnerInstance, [ProgramRunner(ProgramRunnerCommands.DEREP_USEARCH, [input_,
-                                                    "%s/%s_derep.fa" % (
-                                                    args.outdir, strip_ixes(input_)),
-                                                    "%s/%s_uc.out" % (
-                                                    args.outdir, strip_ixes(input_))],
-                                                    {"exists": [args.outdir, input_]})
-                                                    for input_ in inputs], pool)
-    printVerbose("Done searching.")
+    # REMOVES COUNTS FROM SEQUENCE NAMES IN ORDER TO CLUSTER PROPERLY
+    # strip counts if we need to.
+    stripCounts = args.stripcounts
+    print stripCounts
+    if stripCounts:
+        printVerbose("Removing counts from sequence names...")
+        debugPrintInputInfo(inputs, "renamed")
+        parallel(runPythonInstance, [(removeCountsFromFastFile, input_,
+                                      "%s/%s_uncount.fasta" % (args.outdir, strip_ixes(input_)), 'fasta')
+                                     for input_ in inputs], pool)
+        printVerbose("Done removing counts.")
 
-    # Collect .uc files
+        # Grab the cleaned files as input for the next step
+        inputs = getInputFiles(args.outdir, "*_uncount.fasta")
+
+    # DEREPLICATE ONE MORE TIME
+    printVerbose("Dereplicating before clustering...")
+    debugPrintInputInfo(inputs, "dereplicated")
+    parallel(runProgramRunnerInstance, [ProgramRunner(ProgramRunnerCommands.DEREP_VSEARCH,
+                                                      [args.threads, input_,
+                                                       "%s/%s_derep.fasta" % (args.outdir, strip_ixes(input_)),
+                                                       "%s/%s_uc.out" % (args.outdir, strip_ixes(input_))],
+                                                      {"exists": [input_], "positive": [args.threads]})
+                                                      for input_ in inputs], pool)
+    printVerbose("Done dereplicating")
+
+    # LOG DEREPLICATED SEQUENCES INTO A .NAMES FILE
+    # generates a .names file named _uc_parsed.out
+    # python parseUCtoNames.py uc.out uc_parsed.out
     input_ucs = getInputFiles(args.outdir, "*_uc.out")
-    debugPrintInputInfo(input_ucs, "parsed")
-    printVerbose("Parsing search logs for seed sequences...")
-    # Collect seeds
-    # #ls *uc.out | parallel "python ~/ARMS/bin/parseUCtoNames.py {} {.}_parsed.out"
+    printVerbose("Generating a names file from dereplication.")
+    debugPrintInputInfo(inputs, "parsed (into a names file)")
     parallel(runPythonInstance,
-             [(parseUCtoNames, input_, "%s/%s.names" % (args.outdir, strip_ixes(input_))) for
-              input_ in input_ucs], pool)
-    printVerbose("Done parsing search logs.")
+             [(parseUCtoNames, input_, "%s/%s_derep.names" % (args.outdir, strip_ixes(input_)))
+              for input_ in input_ucs], pool)
 
-    # Rename the sequences to include the the number of identical reads.
-    #  Ex. in the fasta file {sample_file}_derep_renamed.fa, read 123_10 indicate that for sequence
-    # which id is 123, there 10 sequences that identical to it and which were discarded.
-    # ls * cleaned.fasta | parallel "python ~/ARMS/bin/_renameWithCount.py
-    #                   {/.}_derep.fa {/.}_uc_parsed.out {/.}_derep_renamed.fa"
-    input_fas = getInputFiles(args.outdir, "*_derep.fa")
-    names_files = getInputFiles(args.outdir, "*.names")
-    inputs = zip(input_fas, names_files)
-    pool = init_pool(min(len(inputs), args.threads))
-    debugPrintInputInfo(inputs, "rename, names file")
+    most_recent_names_files = getInputFiles(args.outdir, "*_derep.names")
 
-    # renameSequencesWithCount(input_fasta, count_file, outfile):
-    printVerbose("Renaming sequences with replication counts...")
+    # UPDATE THE MOST CURRENT NAMES FILES WITH DEREPLICATION COUNTS
+    if args.namesfile is not None:
+        # Grab the old names file and the dereplicated names file
+        old_names_files = getInputFiles(args.namesfile)
+        derep_names_files = getInputFiles(args.outdir, "*_derep.names")
 
-    # renameWithReplicantCounts(input_fasta, names_file, output_fasta, filetype):
+        printVerbose("Updating .names files with dereplicated data")
+        logging.debug("%d Reference (old) names files to be read:" % len(old_names_files))
+        logging.debug(str(old_names_files))
+        logging.debug("%d Dereplicated (new) names files to be read:" % len(derep_names_files))
+        logging.debug(str(derep_names_files))
+        # updateNames (old_names_files, new_names_files, updated)
+        updateNames(old_names_files, derep_names_files, args.outdir, "dereplicated")
+        most_recent_names_files = getInputFiles(args.outdir, "dereplicated*")
+        printVerbose("Done updating .names files.")
+
+    if len(inputs) != len(most_recent_names_files):
+        print ("Error: Number of input fastas (%d) is not equal to the number of names files (%d)." %
+               (len(inputs), len(most_recent_names_files)))
+        exit()
+    fasta_names_pairs = zip(inputs, most_recent_names_files)
+    # ADD COUNT TO SEQUENCE NAMES AND SORT BY COUNT
+    # python renameWithReplicantCounts.py
+    #               8_macse_out/MACSEOUT_MERGED.fasta uc_parsed.out dereplicated_renamed.fasta
+    printVerbose("Adding dereplication data to unique fasta")
     parallel(runPythonInstance,
-             [(renameWithReplicantCounts,
-               fasta_file, names_file,
-               "%s/%s_derepCount.fa" % (args.outdir, strip_ixes(getFileName(fasta_file))), 'fasta')
-              for fasta_file, names_file in inputs], pool)
-    printVerbose("Done renaming sequences.")
+             [(renameWithReplicantCounts, fasta, names,
+               "%s/%s_counts.fasta" % (args.outdir, strip_ixes(fasta)), 'fasta')
+              for fasta, names in fasta_names_pairs], pool)
+    printVerbose("Done adding data")
 
     aux_dir = makeAuxDir(args.outdir)
-    aux_files = getInputFiles(args.outdir, "*", "*_derepCount.*")
+    names_dir = makeDirOrdie("%s_names_files" % args.outdir)
+    bulk_move_to_dir(most_recent_names_files, names_dir)
+    aux_files = getInputFiles(args.outdir, '*', "*_counts.fasta")
     bulk_move_to_dir(aux_files, aux_dir)
-    # separate names folder
-    bulk_move_to_dir(getInputFiles(aux_dir, "*.names"), makeDirOrdie("%s_%s" % (args.outdir, "names_files")))
-
-    cleanup_pool(pool)
 
 
 def partition(args, debug=False):
@@ -364,75 +374,6 @@ def cluster(args, debug=False):
                     stripcounts If False, leaves any abbundance suffixes (_###) intact.  This may hurt clustering.
                                     Defaults to True.
     """
-    makeDirOrdie(args.outdir)
-    inputs = getInputFiles(args.input)
-    pool = init_pool(min(len(inputs), args.threads))
-    # REMOVES COUNTS FROM SEQUENCE NAMES IN ORDER TO CLUSTER PROPERLY
-    # strip counts if we need to.
-    if args.stripcounts:
-        printVerbose("Removing counts from sequence names...")
-        debugPrintInputInfo(inputs, "renamed")
-
-        parallel(runPythonInstance, [(removeCountsFromFastFile, input_,
-                                      "%s/%s_uncount.fasta" % (args.outdir, strip_ixes(input_)), 'fasta')
-                                        for input_ in inputs], pool)
-        printVerbose("Done removing counts.")
-
-        # Grab the cleaned files as input for the next step
-        inputs = getInputFiles(args.outdir, "*_uncount.fasta")
-
-    # DEREPLICATE ONE MORE TIME
-    printVerbose("Dereplicating before clustering...")
-    debugPrintInputInfo(inputs, "dereplicated")
-    parallel(runProgramRunnerInstance, [ProgramRunner(ProgramRunnerCommands.DEREP_VSEARCH,
-                                                      [input_,
-                                                       "%s/%s_derep.fasta" % (args.outdir, strip_ixes(input_)),
-                                                       "%s/%s_uc.out" % (args.outdir, strip_ixes(input_))],
-                                                      {"exists": [input_]}) for input_ in inputs], pool)
-    printVerbose("Done dereplicating")
-
-    # LOG DEREPLICATED SEQUENCES INTO A .NAMES FILE
-    # generates a .names file named _uc_parsed.out
-    # python parseUCtoNames.py uc.out uc_parsed.out
-    input_ucs = getInputFiles(args.outdir, "*_uc.out")
-    printVerbose("Generating a names file from dereplication.")
-    debugPrintInputInfo(inputs, "parsed (into a names file)")
-    parallel(runPythonInstance,
-             [(parseUCtoNames, input_, "%s/%s_derep.names" % (args.outdir, strip_ixes(input_)))
-              for input_ in input_ucs], pool)
-
-    most_recent_names_files = getInputFiles(args.outdir, "*_derep.names")
-
-    # UPDATE THE MOST CURRENT NAMES FILES WITH DEREPLICATION COUNTS
-    if args.namesfile is not None:
-        # Grab the old names file and the dereplicated names file
-        old_names_files = getInputFiles(args.namesfile)
-        derep_names_files = getInputFiles(args.outdir, "*_derep.names")
-
-        printVerbose("Updating .names files with dereplicated data")
-        logging.debug("%d Reference (old) names files to be read:" % len(old_names_files))
-        logging.debug(str(old_names_files))
-        logging.debug("%d Dereplicated (new) names files to be read:" % len(derep_names_files))
-        logging.debug(str(derep_names_files))
-        # updateNames (old_names_files, new_names_files, updated)
-        updateNames(old_names_files, derep_names_files, args.outdir, "precluster")
-        most_recent_names_files = getInputFiles(args.outdir, "precluster*")
-        printVerbose("Done updating .names files.")
-
-    if len(inputs) != len(most_recent_names_files):
-        print ("Error: Number of input fastas (%d) is not equal to the number of names files (%d)." %
-               (len(inputs), len(most_recent_names_files)))
-        exit()
-    fasta_names_pairs = zip(inputs, most_recent_names_files)
-    # ADD COUNT TO SEQUENCE NAMES AND SORT BY COUNT
-    # python renameWithReplicantCounts.py
-    #               8_macse_out/MACSEOUT_MERGED.fasta uc_parsed.out dereplicated_renamed.fasta
-    printVerbose("Adding dereplication data to unique fasta")
-    parallel(runPythonInstance,
-             [(renameWithReplicantCounts, fasta, names,
-               "%s/%s_counts.fasta" % (args.outdir, strip_ixes(fasta)), 'fasta')
-              for fasta, names in fasta_names_pairs], pool)
-    printVerbose("Done adding data")
 
     # TODO IMPORTANT: make sure that the abundances in dereplicated_renamed.fasta are sorted in decreasing order
     # We need to explore this more. Run by default for now....
@@ -446,10 +387,21 @@ def cluster(args, debug=False):
     #  		      				       --output-file clustering.out -u uclust_file -w seeds
     # "swarm": program_paths["SWARM"] + " \"%s\" --output-file \"%s\" \
     #                                            -u \"%s\" -w \"%s\"",
-
     # CLUSTER
-    inputs = getInputFiles(args.outdir, "*_counts.fasta")
+
+    makeDirOrdie(args.outdir)
+    # Grab the fasta file(s) to cluster
+    inputs = getInputFiles(args.input)
+    pool = init_pool(min(len(inputs), args.threads))
+    # Try to grab a names file
+    most_recent_names_files = getInputFiles(args.namesfile, critical=False)
     debugPrintInputInfo(inputs, "clustered")
+    if len(most_recent_names_files) != 0:
+        debugPrintInputInfo(most_recent_names_files, "used as group listings")
+        printVerbose("Input names files: %s\n" % most_recent_names_files)
+    else:
+        printVerbose("No name files provided, assuming singletons...\n")
+
     parallel(runProgramRunnerInstance, [ProgramRunner(ProgramRunnerCommands.CLUSTER_SWARM, [input_,
                                                                 "%s/%s_clustered.names" % (
                                                                     args.outdir, strip_ixes(input_)),

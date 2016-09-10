@@ -167,27 +167,21 @@ def main(argv):
 
 
     # ============================================
-    # ==  6 Dereplicate sequences with usearch  ==
-    # ============================================
-    # "usearch": programPaths["USEARCH"] + " -derep_fulllength \"%s\" -output \"%s\" -uc \"%s\"",
-    parser_derep = subparsers.add_parser('dereplicate_fasta', description="Given an fasta file or folder, removes \
-                            identical duplicates and subsequences WITHIN EACH FILE, keeping the longest sequence, and \
-                            renames it with the number of duplicates as '<longest_sequence_name>_<duplicate count>'.")
-    parser_derep.add_argument('-i', '--input', required=True, help="Input fasta file or folder of fasta files.")
-    parser_derep.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved.")
-    parser_derep.set_defaults(func=u_dereplicate)
-
-    # ============================================
     # ==  6 Dereplicate sequences with vsearch  ==
     # ============================================
     #" vsearch --threads %d --derep_fulllength %s --sizeout --fasta_width 0 --output %s -uc %s",
-    parser_vderep = subparsers.add_parser('dereplicate_vsearch', description="Given an fasta file or folder, removes \
+    parser_vderep = subparsers.add_parser('dereplicate_fasta', description="Given an fasta file or folder, removes \
                             identical duplicates and subsequences WITHIN EACH FILE, keeping the longest sequence, and \
                             renames it with the number of duplicates as '<longest_sequence_name>_<duplicate count>'.")
     parser_vderep.add_argument('-i', '--input', required=True, help="Input fasta file or folder of fasta files.")
     parser_vderep.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved.")
     parser_vderep.add_argument('-p', '--threads', required=False, type=int, default=2,
                             help="Number of threads to use per query process.")
+    parser_vderep.add_argument('-n', '--namesfile', required=False, help="A .names file to update.  If no .names file \
+                            is provided, then sequences are assumed to be singletons.")
+    parser_vderep.add_argument('-s', '--stripcounts', required=False, type=bool, default=False, help="If included, \
+                            strip counts from sequence names before clustering.  This allows for the recognition of \
+                            sequence names that are annotated with dereplication counts.")
     parser_vderep.set_defaults(func=dereplicate)
 
 

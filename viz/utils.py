@@ -63,7 +63,7 @@ def select_top_otus(dataframe, pct=.1, n=0):
     num_rows = len(dataframe.index.values)
     rslt_row_count = num_rows
     if n < 1:
-        rslt_row_count = round(pct*num_rows)
+        rslt_row_count = int(pct*num_rows)
     else:
         rslt_row_count = n
 
