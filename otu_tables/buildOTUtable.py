@@ -1,22 +1,22 @@
 import sys
 from classes.Helpers import *
-# NOTE: A SEQUENCE MUST NOT APPEAR IN TWO NAMES FILES.
-def buildOTUtable(latest_names_files, inital_groups_files, barcodes_file, out_file):
+# NOTE: A SEQUENCE MUST NOT APPEAR IN TWO GROUPS FILES.
+def buildOTUtable(latest_groups_files, inital_samples_files, barcodes_file, out_file):
     """Given a single barcodes file with all possible \
-    sample names, a list of the latest names file(s), and a list of initial groups files \
+    sample names, a list of the latest groups file(s), and a list of initial samples files \
     (mapping each original, undereplicated sequence to its sample name), builds an OTU \
     table and writes it to out_file.
 
-    :param latest_names_files:  A list of the latest names files.  Any sequence name must not occur in more than one \
-                                    names file.
-    :param inital_groups_files: A list of the inital groups files.  This should map each sequence to its parent group.
+    :param latest_groups_files:  A list of the latest groups files.  No sequence name may occur in more than one \
+                                    groups file.
+    :param inital_samples_files: A list of the inital samples files.  This should map each sequence to its parent sample.
     :param barcodes_file:       A single barcodes file listing all valid sample names.
     :param out_file:            Filepath to the output directory
     """
     seq_to_sample = {}
     # read the initaial groups/samples file (from rename)
     # make a single dict from all the groups/samples files mapping seqname to group
-    for groups_file in inital_groups_files:
+    for groups_file in inital_samples_files:
         with open(groups_file, 'r') as current_groups_file:
             for line in current_groups_file:
                 name, sample = line.split("\t")
@@ -28,7 +28,7 @@ def buildOTUtable(latest_names_files, inital_groups_files, barcodes_file, out_fi
         for line in barcodes:
             all_sample_names.append(line.split()[0].rstrip())
     all_sample_names.sort()
-    printVerbose("Done finding keynames.  Found:")
+    printVerbose("Done finding sample names.  Found:")
     printVerbose(str(all_sample_names))
 
     with open(out_file, 'w') as out:
@@ -37,13 +37,13 @@ def buildOTUtable(latest_names_files, inital_groups_files, barcodes_file, out_fi
             header_line += "\t%s" % sample
         out.write(header_line + "\n")
         # GENERATE A DICTIONARY MAPPING SEQUENCE NAMES TO THE SAMPLE THEY CAME FROM
-        # for each line in the latest names files,
-        for names_file in latest_names_files:
-            with open(names_file, 'r') as current_names_file:
+        # for each line in the latest groups files,
+        for groups_file in latest_groups_files:
+            with open(groups_file, 'r') as current_groups_file:
                 otu = ""
                 children = ""
-                # read the latest names file
-                for line in current_names_file:
+                # read the latest groups file
+                for line in current_groups_file:
                     data = line.split("\t")
                     # found a cluster
                     if len(data) == 2:
@@ -84,6 +84,6 @@ def buildOTUtable(latest_names_files, inital_groups_files, barcodes_file, out_fi
     out.close()
 if __name__ == "__main__":
     if len(sys.argv) < 5:
-        print "Usage: list_of_latest_names_file  list_of_inital_groups_files  barcodes_file  out_file"
+        print "Usage: list_of_latest_groups_file  list_of_inital_groups_files  barcodes_file  out_file"
         exit()
     buildOTUtable(*sys.argv[1:5])

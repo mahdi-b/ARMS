@@ -30,25 +30,25 @@ def removeCountsFromFastFile(input_file, output_file, file_type, clip_char="_"):
     return output_file
 
 
-def removeCountsFromNamesFile(input_names_file, output_names_file, clip_char="_"):
+def removeCountsFromGroupsFile(input_groups_file, output_groups_file, clip_char="_"):
     """Removes the counts all names in a names file.  e.g.
     "BALI_4462_0_ID_13_13  BALI_4462_0_ID_14_5 BALI_4462_0_ID_15_8"
     becomes
     "BALI_4462_0_ID_13  BALI_4462_0_ID_14 BALI_4462_0_ID_15".
 
 
-    :param input_file: Input names file
-    :param output_file: Output names file
+    :param input_groups_file: Input groups file
+    :param output_groups_file: Output names file
     :param clip_char: The character that delimits the count.  Identifies the suffix to cut at.
                         Defaults to '-'.
     :return: The output filename
     """
-    with open(output_names_file, "w") as output:
-        for line in open(input_names_file, 'r'):
+    with open(output_groups_file, "w") as output:
+        for line in open(input_groups_file, 'r'):
             data = line.split(" ")
             seed_name = clip_char.join(data[0].split(clip_char)[:-1])
             children = []
             for item in data[1:]:
                 children.append(clip_char.join(item.split(clip_char)[:-1]))
             output.write("%s\t%s\n" % (seed_name, " ".join(children)))
-    return output_names_file
+    return output_groups_file

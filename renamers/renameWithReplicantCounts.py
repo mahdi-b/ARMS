@@ -1,31 +1,31 @@
 import operator
 import sys
 from Bio import SeqIO
-from parseNamesFileToDict import parseNamesFileToDictOfCounts
+from parseGroupsFileToDict import parseGroupsFileToDictOfCounts
 
 
-def renameWithReplicantCounts(input_fasta, names_file, output_fasta, filetype):
-    """Covnerts a fasta and a names file to a sorted, dereplicated, fasta named by abundance.
-    Specifically, each seed in the names file has the number of sequences it represents (+1 for itself) appended as a
+def renameWithReplicantCounts(input_fasta, groups_file, output_fasta, filetype):
+    """Covnerts a fasta and a groups file to a sorted, dereplicated, fasta named by abundance.
+    Specifically, each seed in the groups file has the number of sequences it represents (including itself) appended as a
     suffix.
 
      e.g.
 
-    The names file entry:
+    The groups file entry:
           BALI_113_ID1  BALI_113_ID2 BALI_113_ID3
 
     would be named as
          >BALI_113_ID1_3  in the fasta file to show that it represents 3 sequences (itself, and two other sequences)
 
-    :param input_fasta: Input fasta/fastq file with entries for all items in the names file.
-    :param names_file:  Input names file showing clustering/grouping.
+    :param input_fasta: Input fasta/fastq file with entries for all items in the groups file.
+    :param groups_file:  Input groups file showing clustering/grouping.
     :param output_fasta: Output file path.
     :param filetype: Either 'fasta' or 'fastq'
     :return: Filepath to the output fasta.
     """
 
     seeds = []
-    seedSizes = parseNamesFileToDictOfCounts(names_file)
+    seedSizes = parseGroupsFileToDictOfCounts(groups_file)
 
     print "Indexing reads"
     reads = SeqIO.index(input_fasta, filetype)

@@ -9,12 +9,14 @@ from classes.Helpers import printVerbose
 
 
 def printErrorMissingID(out, ID):
-    """Simple error printing for an unresolved/missing ID.
+    """Simple error printing for an unresolved/missing reference ID.
 
     :param out: Outfile handler.
     :param ID: String ID of the unresolved/missing sequence.
     """
-    err = "***********************    Id %s not found ****************************" % ID
+    err = "***********************    Id %s not found ****************************\n\
+            Missing Taxonomic info for a reference sequence.\n\
+            Check that you have provided the correct mapping/reference files.." % ID
     sys.stderr.write(err)
     out.write(err)
 

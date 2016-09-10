@@ -1,55 +1,55 @@
 import os
 import sys
-from parseNamesFileToDict import parseNamesFileToDictOfChilden
+from parseGroupsFileToDict import parseGroupsFileToDictOfChilden
 from utils.joinFiles import joinFiles
 from classes.Helpers import debugPrint
 
 
-def updateNames(old_names_files, new_names_files, out_dir, out_prefix):
-    """Updates an old_names file with the results of a new_names file, and writes the results to out_names.
-    E.g. Given the old_names file lists:
-    old_names:
+def updateGroups(old_groups_files, new_groups_files, out_dir, out_prefix):
+    """Updates an old_groups file with the results of a new_groups file, and writes the results to a new groups file.
+    E.g. Given the old_groups file lists:
+    old_groups:
     1   2 3
     4   5 6
-    and the new_names file lists
-    new_names:
+    and the new_groups file lists
+    new_groups:
     1   4
-    Then return an out_names file listing
-    out_names
+    Then return an out_groups file listing
+    out_groups
     1   2 3 4 5 6
 
     Finer points:
     1. The list of child sequences following the seed should not contain the seed.
     2. The size of the cluster represented by the seed is the number of children succeeding the seed,
             plus one for the seed.
-    :param new_names: The current iteration of the names file.
-    :param old_names: The previous iteration of the names file.
-    :param out_names: The resulting updated names file.
+    :param new_groups: The current iteration of the groups file.
+    :param old_groups: The previous iteration of the groups file.
+    :param out_dir: The resulting updated groups file.
     :param out_prefix: The prefix for the output filename.
 
 
-    :return: Filepath to the updated names file
+    :return: Filepath to the updated groups file
     """
-    if not (len(old_names_files)  and len(new_names_files)):
+    if not (len(old_groups_files)  and len(new_groups_files)):
         print "Received empty file lists.  Aborting."
         exit()
-    print "Using %s and %s to generate updated names file %s_updated.names" % \
-          (old_names_files[0], new_names_files[0], out_prefix)
-    old_names_temp_file = "%s/temp_old_merged.names" % out_dir
-    new_names_temp_file = "%s/temp_new_merged.names" % out_dir
-    output_name = "%s/%s_updated.names" % (out_dir, out_prefix)
+    print "Using %s and %s to generate updated groups file %s_updated.groups" % \
+          (old_groups_files[0], new_groups_files[0], out_prefix)
+    old_groups_temp_file = "%s/temp_old_merged.groups" % out_dir
+    new_groups_temp_file = "%s/temp_new_merged.groups" % out_dir
+    output_file = "%s/%s_updated.groups" % (out_dir, out_prefix)
 
-    # Concat the old and new names files respectively
-    joinFiles(old_names_files, old_names_temp_file)
-    joinFiles(new_names_files, new_names_temp_file)
+    # Concat the old and new groups files respectively
+    joinFiles(old_groups_files, old_groups_temp_file)
+    joinFiles(new_groups_files, new_groups_temp_file)
 
-    # parse the names files to dictionaries of children
-    old_seeds = parseNamesFileToDictOfChilden(old_names_temp_file)
-    new_seeds = parseNamesFileToDictOfChilden(new_names_temp_file)
+    # parse the groups files to dictionaries of children
+    old_seeds = parseGroupsFileToDictOfChilden(old_groups_temp_file)
+    new_seeds = parseGroupsFileToDictOfChilden(new_groups_temp_file)
 
 
     old_keys = old_seeds.keys()
-    with open(output_name, 'w') as output:
+    with open(output_file, 'w') as output:
         for new_seed in new_seeds.keys():
             my_old_children = []
             children_of_my_new_children = []
@@ -65,14 +65,14 @@ def updateNames(old_names_files, new_names_files, out_dir, out_prefix):
             # print "Seed %s has %d children" % (new_seed, len(all_my_children))
             debugPrint("%s_%d = %d old  +  %d new  +   %d children of new" % (new_seed, len(all_my_children),
                                          len(my_old_children), len(my_new_children), len(children_of_my_new_children)))
-
     output.close()
-    #os.remove(old_names_temp_file)
-    #os.remove(new_names_temp_file)
-    return output_name
+    os.remove(old_groups_temp_file)
+    os.remove(new_groups_temp_file)
+    return output_file
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 4:
         print "Usage: fasta count_file outfile"
     else:
-        updateNames(*sys.argv[1:4])
+        updateGroups(*sys.argv[1:4])

@@ -83,8 +83,8 @@ def main(argv):
     # "pear": programPaths["PEAR"] + " -f \"%s\" -r \"%s\" -o \"%s\" -j %d "
     parser_assemble = subparsers.add_parser('assemble', description="Given a pair of left and right fasta/fastq reads, \
                             or a pair of folder containing the left and right fasta/fastq files, assembles the left \
-                            and right read files into contiguous sequence files.  Forwards reads filenames should \
-                            end in '_forward.<ext>' or '_R1.<ext>'.  Reverse reads filenames should end in \
+                            and right read files into contiguous sequence files.  Forwards reads filegroups should \
+                            end in '_forward.<ext>' or '_R1.<ext>'.  Reverse reads filegroups should end in \
                             '_reverse.<ext>' or '_R2.<ext>'.  (where <ext> is the file extension).")
     parser_assemble.add_argument('-f', '--input_f', required=True, help="Forward Fastq Reads file or folder.")
     parser_assemble.add_argument('-r', '--input_r', required=True, help="Reverse Fastq Reads file or folder.")
@@ -108,7 +108,7 @@ def main(argv):
     parser_demux.add_argument('-b', '--barcodes', required=True,
                               help="Tab delimted files of barcodes and corresponding samples.")
     parser_demux.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
-    parser_demux.set_defaults(func=splitOnBarcodes)
+    parser_demux.set_defaults(func=split_on_barcodes)
 
 
     # ====================================================
@@ -116,15 +116,15 @@ def main(argv):
     # ====================================================
     # renameSequences(input, output)
     parser_rename = subparsers.add_parser('rename', description="Given a fasta/fastq file or directory of fasta/fastq \
-                            files, serially renames each sequence in each file serially, with the filename as a prefix.")
+                            files, serially regroups each sequence in each file serially, with the filename as a prefix.")
     parser_rename.add_argument('-i', '--input', required=True, help="Input fasta/fastq file or folder.")
     parser_rename.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
     parser_rename.add_argument('-f', '--filetype', required=True, help="The filetype of the input files.  Either \
                             'fasta' or 'fastq'.")
-    parser_rename.add_argument('-c', '--clip', required=False, default=True, help="True if input file names \
+    parser_rename.add_argument('-c', '--clip', required=False, default=True, help="True if input file groups \
                                 contain trailing demux_seqs identifiers.  e.g. True if file name contains '_0', '_1', \
                                 '_2', etc..")
-    parser_rename.set_defaults(func=renameSequences)
+    parser_rename.set_defaults(func=rename_sequences)
 
 
     # ===================================================
@@ -172,16 +172,16 @@ def main(argv):
     #" vsearch --threads %d --derep_fulllength %s --sizeout --fasta_width 0 --output %s -uc %s",
     parser_vderep = subparsers.add_parser('dereplicate_fasta', description="Given an fasta file or folder, removes \
                             identical duplicates and subsequences WITHIN EACH FILE, keeping the longest sequence, and \
-                            renames it with the number of duplicates as '<longest_sequence_name>_<duplicate count>'.")
+                            regroups it with the number of duplicates as '<longest_sequence_name>_<duplicate count>'.")
     parser_vderep.add_argument('-i', '--input', required=True, help="Input fasta file or folder of fasta files.")
     parser_vderep.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved.")
     parser_vderep.add_argument('-p', '--threads', required=False, type=int, default=2,
                             help="Number of threads to use per query process.")
-    parser_vderep.add_argument('-n', '--namesfile', required=False, help="A .names file to update.  If no .names file \
+    parser_vderep.add_argument('-g', '--groupsfile', required=False, help="A .groups file to update.  If no .groups file \
                             is provided, then sequences are assumed to be singletons.")
     parser_vderep.add_argument('-s', '--stripcounts', required=False, type=bool, default=False, help="If included, \
-                            strip counts from sequence names before clustering.  This allows for the recognition of \
-                            sequence names that are annotated with dereplication counts.")
+                            strip counts from sequence groups before clustering.  This allows for the recognition of \
+                            sequence groups that are annotated with dereplication counts.")
     parser_vderep.set_defaults(func=dereplicate)
 
 
@@ -226,8 +226,8 @@ def main(argv):
     parser_cat.add_argument('-f', '--fileext', required=True, help="File extension for the output file.  Either \
                             'fasta', or 'fastq'.")
     parser_cat.add_argument('-g', '--gapchar', required=True, help="A string of one or more characters to remove from \
-                            the sequences (but not sequence names) in the input files.")
-    parser_cat.set_defaults(func=ungapFasta)
+                            the sequences (but not sequence groups) in the input files.")
+    parser_cat.set_defaults(func=ungap_fasta)
 
     # ==========================================
     # ==  10 Cluster using vsearch and swarm  ==
@@ -235,15 +235,15 @@ def main(argv):
     # "vsearch": program_paths["VSEARCH"] + "--derep_fulllength \"%s\" --sizeout --fasta_width 0  \
     #
     parser_align = subparsers.add_parser('cluster_seqs', description="Given a fasta file or a folder containing fasta \
-                            files, performs clustering on each input file individually.  Outputs a .names file listing \
-                            unique representative sequences from each cluster, and the names of the sequences they \
+                            files, performs clustering on each input file individually.  Outputs a .groups file listing \
+                            unique representative sequences from each cluster, and the groups of the sequences they \
                             represent.  Also outputs a <input_file_name>_seeds.fasta file of the unique representatives.")
     parser_align.add_argument('-i', '--input', required=True, help="Input fasta file/folder")
     parser_align.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
-    parser_align.add_argument('-n', '--namesfile', required=False, help="A .names file to update.")
+    parser_align.add_argument('-g', '--groupsfile', required=False, help="A .groups file to update.")
     parser_align.add_argument('-s', '--stripcounts', required=False, type=bool, default=True, help="If True, strip \
-                            counts from sequence names before clustering.  This allows for the recognition of \
-                            sequence names.")
+                            counts from sequence groups before clustering.  This allows for the recognition of \
+                            sequence groups.")
     parser_align.set_defaults(func=cluster)
 
 
@@ -281,18 +281,18 @@ def main(argv):
     parcer_ncbi.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
     parcer_ncbi.add_argument('-p', '--threads', required=False, type=int, default=2,
                              help="Number of threads to use per query process.")
-    parcer_ncbi.set_defaults(func=queryNCBI)
+    parcer_ncbi.set_defaults(func=query_ncbi)
 
 
     # ========================
     # ==  xx Build Matrix  ==
     # ========================
     parser_build_matrix = subparsers.add_parser('build_matrix', description="Given a single barcodes file with all possible \
-                                sample names, a list of the latest names file(s), and a list of initial groups files \
+                                sample groups, a list of the latest groups file(s), and a list of initial samples files \
                                 (mapping each original, undereplicated sequence to its sample name), builds an OTU \
                                 table..  ")
+    parser_build_matrix.add_argument('-s', '--samples', required=True, help="Input samples file or folder.")
     parser_build_matrix.add_argument('-g', '--groups', required=True, help="Input groups file or folder.")
-    parser_build_matrix.add_argument('-n', '--names', required=True, help="Input names file or folder.")
     parser_build_matrix.add_argument('-b', '--barcodes', required=True, help="Input barcodes file.")
     parser_build_matrix.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
     parser_build_matrix.set_defaults(func=build_matrix)
@@ -302,10 +302,10 @@ def main(argv):
     # ==  xx Annotate Matrix  ==
     # ==========================
     parser_annotate_matrix = subparsers.add_parser('annotate_matrix', description="Given a tabular file mapping sequence IDs \
-                                to taxonomic names, and an OTU matrix, renames the identifiable sequence IDs with \
-                                taxonomic names.")
+                                to taxonomic groups, and an OTU matrix, regroups the identifiable sequence IDs with \
+                                taxonomic groups.")
     parser_annotate_matrix.add_argument('-i', '--input', required=True, help="Input matrix file or folder of matrix files.")
-    parser_annotate_matrix.add_argument('-a', '--annotation', required=True, help="File mapping sequence IDs to taxonomic names.")
+    parser_annotate_matrix.add_argument('-a', '--annotation', required=True, help="File mapping sequence IDs to taxonomic groups.")
     parser_annotate_matrix.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
     parser_annotate_matrix.set_defaults(func=annotate_matrix)
 
@@ -318,7 +318,7 @@ def main(argv):
     parser_toFasta.add_argument('-i', '--input', required=True, help="Fastq file or folder containing fastq files to "
                                  "translate")
     parser_toFasta.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
-    parser_toFasta.set_defaults(func=makeFasta)
+    parser_toFasta.set_defaults(func=make_fasta)
 
     global args
     args, unknown = parser.parse_known_args()
@@ -334,7 +334,7 @@ def main(argv):
     print("\t\t")
     dryRun = args.dryRun
     signal.signal(signal.SIGTSTP, signal.SIG_IGN)
-    args.func(args, args.debugtest)
+    args.func(args)
 
 
 if __name__ == "__main__":
