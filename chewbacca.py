@@ -121,7 +121,8 @@ def main(argv):
     parser_rename.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
     parser_rename.add_argument('-f', '--filetype', required=True, help="The filetype of the input files.  Either \
                             'fasta' or 'fastq'.")
-    parser_rename.add_argument('-c', '--clip', required=False, default=True, help="True if input file groups \
+    # TODO this could be bad if you don't want it enabled.  (Default True).  Test this.
+    parser_rename.add_argument('-c', '--clip', required=False, default=True, help="Set True if input file groups \
                                 contain trailing demux_seqs identifiers.  e.g. True if file name contains '_0', '_1', \
                                 '_2', etc..")
     parser_rename.set_defaults(func=rename_sequences)

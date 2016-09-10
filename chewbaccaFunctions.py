@@ -12,27 +12,38 @@ from parsers.parseVSearchoutForTaxa import parseVSearchOutputAgainstFasta, parse
 from renamers.renameSerially import serialRename
 from renamers.renameWithReplicantCounts import renameWithReplicantCounts
 from renamers.renameWithoutCount import removeCountsFromFastFile, removeCountsFromGroupsFile
-from renamers.updateGroups import updateGroups
+from renamers.updateGroups import update_groups
 from utils.joinFiles import joinFiles
 from utils.splitKperFasta import splitK
 
 
 def assemble_pear(args):
-    """Assembles reads from two (left and right) fastq files/directories.
+    """Assembles reads from two (left and right) fastq files/directories.  For a set of k forward read files, and k
+        reverse read files, return k assembled files.  Matching forward and reverse files should be identically named,
+        except for a <forward>/<reverse> suffix that indicates the read orientation.  Two suffix pairs are supported:
+        '_forwards' and '_reverse',
+        and
+        '_R1' and 'R2'
+        Choose ONE suffix style and stick to it.
+        e.g. Sample_100_forwards.fq and Sample_100_reverse.fq will be assembled into Sample_100_assembled.fq.
+          Alternatively, Sample_100_R1.fq and Sample_100_R2.fq will be assembled into Sample_100_assembled.fq.
+          You can provide as many pairs of files as you wish as long as they follow exactly on of the above naming
+          conventions.  If a 'name' parameter is provided, it will be used as a suffix for all assembled sequence files.
     :param args: An argparse object with the following parameters:
                     name            Textual ID for the data set.
                     input_f         Forward Fastq Reads file or directory.
                     input_r         Reverse Fastq Reads file or directory.
                     threads         The number of threads to use durring assembly.
                     outdir          Directory where outputs will be saved.
-
     """
     # "~/programs/pear-0.9.4-bin-64/pear-0.9.4-64 -f %s -r %s -o %s -j %s -m %d"
     makeDirOrdie(args.outdir)
     forwards_reads = getInputFiles(args.input_f, "*_forward*", critical=False)
-    forwards_reads += getInputFiles(args.input_f, "*_R1*", critical=False)
     reverse_reads = getInputFiles(args.input_r, "*_reverse*", critical=False)
-    reverse_reads += getInputFiles(args.input_r, "*_R2*", critical=False)
+
+    if len(forwards_reads) == 0 and len(reverse_reads) == 0:
+        forwards_reads = getInputFiles(args.input_f, "*_R1*", critical=False)
+        reverse_reads = getInputFiles(args.input_r, "*_R2*", critical=False)
 
     # Ensure that we have matching left and right reads
     if len(forwards_reads) != len(reverse_reads):
@@ -120,6 +131,9 @@ def rename_sequences(args):
                     input       Input file or folder containing only fasta or fastq files.
                     outdir      Directory where outputs will be saved.
                     filetype    File type of the input files.  Either 'fasta' or 'fastq'.
+                    clip        True if input file names contain trailing demux_seqs identifiers.
+                                    e.g. True if file name were 'Sample_395_0.split.out', 'Sample_395_1.split.out', etc.
+                                    Important because sample names are derived from input file names.
     """
     # Make the output directory, or abort if it already exists
     makeDirOrdie(args.outdir)
@@ -144,13 +158,19 @@ def rename_sequences(args):
 
 
 def trim_flexbar(args):
-    """Use Flexbar to trim adapters (and preceeding barcodes) from sequences in input file(s).  Sequences should be in
+    """Trim adapters (and preceeding barcodes) from sequences in input file(s).  Sequences should be in
         the following format: <BARCODE><ADAPTER><SEQUENCE><RC_ADAPTER>, where ADAPTER is defined in the adapters file,
         and RC_ADAPTER is defined in the rcadapters file.  By default, Flexbar does not allow any 'N' characters in
         SEQUENCE, and will toss any sequences that do contain 'N'.  To avoid this, use the -u or --allowedns flags to
-        specify the maximum number of 'N's to allow.
-    # TODO fill this in.
-    :param args:
+        specify the maximum number of 'N's to allow
+    :param args: An argparse object with the following parameters:
+                    input       Input file or folder containing only fasta or fastq files.
+                    outdir      Directory where outputs will be saved.
+                    adapters    Filepath to a single file listing forwards adapters, or directory of such file(s).
+                    adaptersrc  Filepath to a single file listing reverse complemented adapters, or directory of such
+                                    file(s).
+                    allowedns   Non-negative integer value indicating the maximum number of 'N's to tolerate in a
+                                    sequence.
     """
     # "flexbar":  "flexbar -r \"%s\" -t \"%s\" -ae \"%s\" -a \"%s\"",
     makeDirOrdie(args.outdir)
@@ -161,7 +181,8 @@ def trim_flexbar(args):
     inputs = getInputFiles(args.input)
     pool = init_pool(min(len(inputs), args.threads))
     debugPrintInputInfo(inputs, "trim adapters from")
-    # Trim the left
+
+    # Trim adapters from the left
     parallel(runProgramRunnerInstance, [ProgramRunner(ProgramRunnerCommands.TRIM_FLEXBAR,
                                                       [input_file,
                                                        temp_file_name_template % (args.outdir, strip_ixes(input_file)),
@@ -172,7 +193,7 @@ def trim_flexbar(args):
     temp_files = getInputFiles(args.outdir, "temp_*")
     debugPrintInputInfo(temp_files, "trim adapters from")
 
-    # Trim the right
+    # Trim the reverse complemented adapters from the right
     parallel(runProgramRunnerInstance, [ProgramRunner(ProgramRunnerCommands.TRIM_FLEXBAR,
                                                       [input_file,
                                                        debarcoded_file_name_template % (args.outdir,
@@ -273,8 +294,8 @@ def dereplicate(args):
         logging.debug(str(old_groups_files))
         logging.debug("%d Dereplicated (new)groups files to be read:" % len(derep_groups_files))
         logging.debug(str(derep_groups_files))
-        # updateGroups (old_groups_files, new_groups_files, updated)
-        updateGroups(old_groups_files, derep_groups_files, args.outdir, "dereplicated")
+        # update_groups (old_groups_files, new_groups_files, updated)
+        update_groups(old_groups_files, derep_groups_files, args.outdir, "dereplicated")
         most_recent_groups_files = getInputFiles(args.outdir, "dereplicated*")
         printVerbose("Done updating .groups files.")
 
@@ -365,16 +386,13 @@ def ungap_fasta(args):
 
 
 def cluster(args):
-    # TODO what is the correct default behavior if nogroups file is supplied? Currently singletons.
     """Clusters sequences.
     :param args: An argparse object with the following parameters:
                     input       A file or folder containing fasta files to cluster.
                     output      The output directory results will be written to.
                     gropusfile	Agroups file or folder containinggroups files that describe the input.
-                                Note: if nogroups file is supplied, then entries in the fasta file are assumed to be
+                                Note: if no groups file is supplied, then entries in the fasta file are assumed to be
                                     singleton sequences. See <http://www.mothur.org/wiki/Name_file>
-                    stripcounts If False, leaves any abbundance suffixes (_###) intact.  This may hurt clustering.
-                                    Defaults to True.
     """
 
     # TODO IMPORTANT: make sure that the abundances in dereplicated_renamed.fasta are sorted in decreasing order
@@ -390,7 +408,6 @@ def cluster(args):
     # "swarm": program_paths["SWARM"] + " \"%s\" --output-file \"%s\" \
     #                                            -u \"%s\" -w \"%s\"",
     # CLUSTER
-
     makeDirOrdie(args.outdir)
     # Grab the fasta file(s) to cluster
     inputs = getInputFiles(args.input)
@@ -429,8 +446,8 @@ def cluster(args):
     # UPDATE THE NAMES FILES WITH NEW CLUSTERS
     cleaned_clustered_groups_files = getInputFiles(args.outdir, "*clustered_uncount.groups")
     printVerbose("Updating .groups files with clustering data")
-    # updateGroups (old_groups_files, new_groups_files, updated)
-    updateGroups(most_recent_groups_files, cleaned_clustered_groups_files, args.outdir, "postcluster")
+    # update_groups (old_groups_files, new_groups_files, updated)
+    update_groups(most_recent_groups_files, cleaned_clustered_groups_files, args.outdir, "postcluster")
     printVerbose("Done updating .groups files.")
 
     printVerbose("Capitalizing sequences")

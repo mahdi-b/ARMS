@@ -1,7 +1,8 @@
 import operator
 import sys
 from Bio import SeqIO
-from parseGroupsFileToDict import parseGroupsFileToDictOfCounts
+
+from ARMS.parsers.parseGroupsFileToDict import parseGroupsFileToDictOfCounts
 
 
 def renameWithReplicantCounts(input_fasta, groups_file, output_fasta, filetype):
