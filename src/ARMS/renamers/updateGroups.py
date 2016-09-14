@@ -46,38 +46,43 @@ def update_groups(old_groups_files, new_groups_files, out_dir, out_prefix):
     # parse the groups files to dictionaries of children
     old_seeds = parseGroupsFileToDictOfChilden(old_groups_temp_file)
     new_seeds = parseGroupsFileToDictOfChilden(new_groups_temp_file)
-    old_keys = old_seeds.keys()
     new_keys = new_seeds.keys()
+    total = len(new_keys)
+    i = 0
+    outstring = ""
     with open(output_file, 'w') as output:
         for new_seed in new_keys:
+            i += 1
+            if i % 100000 == 0:
+                print "Processed %d / %d lines\n" % (i, total)
+                output.write(outstring)
+                outstring = ""
             my_old_children = []
             children_of_my_new_children = []
             # Back in my day, I used to be a seed!
-            if new_seed in old_keys:
+            if old_seeds.has_key(new_seed):
                 my_old_children = old_seeds[new_seed].split(" ")
             my_new_children = new_seeds[new_seed].split(" ")
             for entry in my_new_children:
-                if entry in old_keys:
+                if old_seeds.has_key(entry):
                     children_of_my_new_children += old_seeds[entry].split(" ")
-            #list(set(my_old_children + my_new_children + children_of_my_new_children))
-            all_my_children = []
-            all_my_children = all_my_children.extend(my_old_children)
-            all_my_children = all_my_children.extend(my_new_children)
-            all_my_children = all_my_children.extend(children_of_my_new_children)
+            # list(set(my_old_children + my_new_children + children_of_my_new_children))
+            all_my_children = my_old_children + my_new_children + children_of_my_new_children
 
-            output.write("%s\t%s\n" % (new_seed, " ".join(set(all_my_children))))
+            outstring += "%s\t%s\n" % (new_seed, " ".join(set(all_my_children)))
             # print "Seed %s has %d children" % (new_seed, len(all_my_children))
-            debugPrint("%s_%d = %d old  +  %d new  +   %d children of new" %
-                       (new_seed, len(all_my_children), len(my_old_children), len(my_new_children),
-                        len(children_of_my_new_children)))
-    output.close()
+            # debugPrint("%s_%d = %d old  +  %d new  +   %d children of new" %
+            #           (new_seed, len(all_my_children), len(my_old_children), len(my_new_children),
+            #            len(children_of_my_new_children)))
+        output.write(outstring)
+        output.close()
     os.remove(old_groups_temp_file)
     os.remove(new_groups_temp_file)
     return output_file
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 4:
-        print "Usage: fasta count_file outfile"
+    if len(sys.argv) < 5:
+        print "Usage: old_groups_files, new_groups_files, out_dir, out_prefix"
     else:
-        update_groups(*sys.argv[1:4])
+        update_groups(*sys.argv[1:5])
