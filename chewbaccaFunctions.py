@@ -275,7 +275,7 @@ def dereplicate(args):
     # generates a .groups file named _uc_parsed.out
     # python parseUCtoGroups.py uc.out uc_parsed.out
     input_ucs = getInputFiles(args.outdir, "*_uc.out")
-    printVerbose("Generating agroups file from dereplication.")
+    printVerbose("Generating a groups file from dereplication.")
     debugPrintInputInfo(inputs, "parsed (into agroups file)")
     parallel(runPythonInstance,
              [(parseUCtoGroups, input_, "%s/%s_derep.groups" % (args.outdir, strip_ixes(input_)))

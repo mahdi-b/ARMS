@@ -28,6 +28,6 @@ def parseUCtoGroups(input_uc_file, output_groups_file):
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print "Usage: fastaA fastaB outfile"
+        print "Usage: input_uc_file, output_groups_file"
     else:
         parseUCtoGroups(*sys.argv[1:3])

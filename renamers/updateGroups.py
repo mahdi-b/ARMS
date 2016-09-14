@@ -46,10 +46,10 @@ def update_groups(old_groups_files, new_groups_files, out_dir, out_prefix):
     # parse the groups files to dictionaries of children
     old_seeds = parseGroupsFileToDictOfChilden(old_groups_temp_file)
     new_seeds = parseGroupsFileToDictOfChilden(new_groups_temp_file)
-
     old_keys = old_seeds.keys()
+    new_keys = new_seeds.keys()
     with open(output_file, 'w') as output:
-        for new_seed in new_seeds.keys():
+        for new_seed in new_keys:
             my_old_children = []
             children_of_my_new_children = []
             # Back in my day, I used to be a seed!
@@ -59,8 +59,13 @@ def update_groups(old_groups_files, new_groups_files, out_dir, out_prefix):
             for entry in my_new_children:
                 if entry in old_keys:
                     children_of_my_new_children += old_seeds[entry].split(" ")
-            all_my_children = list(set(my_old_children + my_new_children + children_of_my_new_children))
-            output.write("%s\t%s\n" % (new_seed, " ".join(all_my_children)))
+            #list(set(my_old_children + my_new_children + children_of_my_new_children))
+            all_my_children = []
+            all_my_children = all_my_children.extend(my_old_children)
+            all_my_children = all_my_children.extend(my_new_children)
+            all_my_children = all_my_children.extend(children_of_my_new_children)
+
+            output.write("%s\t%s\n" % (new_seed, " ".join(set(all_my_children))))
             # print "Seed %s has %d children" % (new_seed, len(all_my_children))
             debugPrint("%s_%d = %d old  +  %d new  +   %d children of new" %
                        (new_seed, len(all_my_children), len(my_old_children), len(my_new_children),

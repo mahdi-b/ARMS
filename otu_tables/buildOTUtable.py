@@ -84,6 +84,6 @@ def buildOTUtable(latest_groups_files, inital_samples_files, barcodes_file, out_
     out.close()
 if __name__ == "__main__":
     if len(sys.argv) < 5:
-        print "Usage: list_of_latest_groups_file  list_of_inital_groups_files  barcodes_file  out_file"
+        print "Usage: list_of_latest_groups_file  list_of_inital_samples_files  barcodes_file  out_file"
         exit()
     buildOTUtable(*sys.argv[1:5])
