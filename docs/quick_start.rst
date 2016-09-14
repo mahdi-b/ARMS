@@ -10,10 +10,8 @@ Contents:
 
 .. toctree::
    :maxdepth: 2
-
    intro
-   file_types/file_types
-   quick_start
+   tutorial
 
 Indices and tables
 ==================

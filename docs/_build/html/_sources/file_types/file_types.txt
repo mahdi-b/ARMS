@@ -1,0 +1,70 @@
+File Types
+==========
+Chewbacca uses several common filetypes throughout its functions.
+Getting acquainted with these filetypes will save you time and a lot of headaches.
+
+Fasta Files
+-----------
+**common extensions: .fa, .fasta, .FASTA**
+
+Fasta files are commonly used in Biological sciences to store data and metadat about genetic sequences.
+  Read more here: https://en.wikipedia.org/wiki/FASTA_format
+
+
+FastQ Files
+-----------
+**extensions: .fq, .fastq, .FASTQ**
+
+FastQ files are very simmiliar to fasta files, but include quality scores for the integrity of the genetic sequences.
+  Read more here: https://en.wikipedia.org/wiki/FASTQ_format
+
+Groups Files
+------------
+**extensions: .groups**
+
+Groups files are used by Chewbacca to keep track of groups or clusters of related sequences.
+A Groups file consists of one or more lines in the following format:
+
+  *GROUPNAME <tab> SequenceName <space> SequenceName space* ...
+
+As an example:
+
+| Rodent_gutID111	Rodent_gutID111 Rodent_gutID112 Rodent_gutID113
+| Rodent_noseID115	Rodent_stomachID115 Rodent_gutID117
+| Rodent_gutID119	Rodent_gutID119
+
+*Notes:*
+
+1. The GROUPNAME for a group/cluster will likely be the name of a sample within that group/cluster.
+	This means that one sequence name will likely appear twice on a line (once as a GROUPNAME, and once as a SequenceName).
+	This is not an error, but the intended behavior.
+
+2. See the "naming conventions" section for more info on chewbacca sequence naming standards.
+
+Samples Files
+-------------
+**extensions: .samples**
+
+Samples files are used by Chewbacca to map sequences to the the sample name that they belong to.
+A Samples file consists of one or more lines in the following format:
+
+  *SequenceName <tab> SampleName*
+
+As an example:
+
+|  Rodent_gutID111	GUT_SAMPLE_21
+|  Rodent_gutID112 GUT_SAMPLE_21
+|  Rodent_gutID113 GUT_SAMPLE_22
+|  Rodent_noseID115	NOSE_SAMPLE_1
+|  Rodent_stomachID115	STOMACH_SAMPLE_2
+
+Barcodes Files
+--------------
+**extensions: .barcodes, .txt**
+
+
+Adapters files
+--------------
+**extensions: .adapters, .txt**
+
+

@@ -460,11 +460,12 @@ def cluster(args):
     printVerbose("Converting seeds files to .groups files")
     # delete seeds file
     for input_ in inputs:
-        os.remove(input_)
         inputs = getInputFiles(args.outdir, "*_seeds.fasta")
         parallel(runPythonInstance,
                  [(seedToGroups, input_, "%s/%s.groups" % (args.outdir, getFileName(input_))) for input_ in inputs],
                  pool)
+        os.remove(input_)
+
     printVerbose("Done converting seeds files.")
 
     printVerbose("Moving aux files")

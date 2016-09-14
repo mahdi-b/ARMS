@@ -1,0 +1,190 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>File Types &mdash; Chewbacca 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Chewbacca 0.1 documentation" href="../index.html" />
+    <link rel="next" title="Welcome to Chewbacca’s documentation!" href="../quick_start.html" />
+    <link rel="prev" title="Intro" href="../intro.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../quick_start.html" title="Welcome to Chewbacca’s documentation!"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../intro.html" title="Intro"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Chewbacca 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="file-types">
+<h1>File Types<a class="headerlink" href="#file-types" title="Permalink to this headline">¶</a></h1>
+<p>Chewbacca uses several common filetypes throughout its functions.
+Getting acquainted with these filetypes will save you time and a lot of headaches.</p>
+<div class="section" id="fasta-files">
+<h2>Fasta Files<a class="headerlink" href="#fasta-files" title="Permalink to this headline">¶</a></h2>
+<p><strong>common extensions: .fa, .fasta, .FASTA</strong></p>
+<dl class="docutils">
+<dt>Fasta files are commonly used in Biological sciences to store data and metadat about genetic sequences.</dt>
+<dd>Read more here: <a class="reference external" href="https://en.wikipedia.org/wiki/FASTA_format">https://en.wikipedia.org/wiki/FASTA_format</a></dd>
+</dl>
+</div>
+<div class="section" id="fastq-files">
+<h2>FastQ Files<a class="headerlink" href="#fastq-files" title="Permalink to this headline">¶</a></h2>
+<p><strong>extensions: .fq, .fastq, .FASTQ</strong></p>
+<dl class="docutils">
+<dt>FastQ files are very simmiliar to fasta files, but include quality scores for the integrity of the genetic sequences.</dt>
+<dd>Read more here: <a class="reference external" href="https://en.wikipedia.org/wiki/FASTQ_format">https://en.wikipedia.org/wiki/FASTQ_format</a></dd>
+</dl>
+</div>
+<div class="section" id="groups-files">
+<h2>Groups Files<a class="headerlink" href="#groups-files" title="Permalink to this headline">¶</a></h2>
+<p><strong>extensions: .groups</strong></p>
+<p>Groups files are used by Chewbacca to keep track of groups or clusters of related sequences.
+A Groups file consists of one or more lines in the following format:</p>
+<blockquote>
+<div><em>GROUPNAME &lt;tab&gt; SequenceName &lt;space&gt; SequenceName space</em> ...</div></blockquote>
+<p>As an example:</p>
+<div class="line-block">
+<div class="line">Rodent_gutID111       Rodent_gutID111 Rodent_gutID112 Rodent_gutID113</div>
+<div class="line">Rodent_noseID115      Rodent_stomachID115 Rodent_gutID117</div>
+<div class="line">Rodent_gutID119       Rodent_gutID119</div>
+</div>
+<p><em>Notes:</em></p>
+<ol class="arabic">
+<li><dl class="first docutils">
+<dt>The GROUPNAME for a group/cluster will likely be the name of a sample within that group/cluster.</dt>
+<dd><p class="first last">This means that one sequence name will likely appear twice on a line (once as a GROUPNAME, and once as a SequenceName).
+This is not an error, but the intended behavior.</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">See the &#8220;naming conventions&#8221; section for more info on chewbacca sequence naming standards.</p>
+</li>
+</ol>
+</div>
+<div class="section" id="samples-files">
+<h2>Samples Files<a class="headerlink" href="#samples-files" title="Permalink to this headline">¶</a></h2>
+<p><strong>extensions: .samples</strong></p>
+<p>Samples files are used by Chewbacca to map sequences to the the sample name that they belong to.
+A Samples file consists of one or more lines in the following format:</p>
+<blockquote>
+<div><em>SequenceName &lt;tab&gt; SampleName</em></div></blockquote>
+<p>As an example:</p>
+<div class="line-block">
+<div class="line">Rodent_gutID111      GUT_SAMPLE_21</div>
+<div class="line">Rodent_gutID112 GUT_SAMPLE_21</div>
+<div class="line">Rodent_gutID113 GUT_SAMPLE_22</div>
+<div class="line">Rodent_noseID115     NOSE_SAMPLE_1</div>
+<div class="line">Rodent_stomachID115  STOMACH_SAMPLE_2</div>
+</div>
+</div>
+<div class="section" id="barcodes-files">
+<h2>Barcodes Files<a class="headerlink" href="#barcodes-files" title="Permalink to this headline">¶</a></h2>
+<p><strong>extensions: .barcodes, .txt</strong></p>
+</div>
+<div class="section" id="adapters-files">
+<h2>Adapters files<a class="headerlink" href="#adapters-files" title="Permalink to this headline">¶</a></h2>
+<p><strong>extensions: .adapters, .txt</strong></p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">File Types</a><ul>
+<li><a class="reference internal" href="#fasta-files">Fasta Files</a></li>
+<li><a class="reference internal" href="#fastq-files">FastQ Files</a></li>
+<li><a class="reference internal" href="#groups-files">Groups Files</a></li>
+<li><a class="reference internal" href="#samples-files">Samples Files</a></li>
+<li><a class="reference internal" href="#barcodes-files">Barcodes Files</a></li>
+<li><a class="reference internal" href="#adapters-files">Adapters files</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../intro.html"
+                        title="previous chapter">Intro</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../quick_start.html"
+                        title="next chapter">Welcome to Chewbacca&#8217;s documentation!</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/file_types/file_types.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../quick_start.html" title="Welcome to Chewbacca’s documentation!"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../intro.html" title="Intro"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Chewbacca 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Mahdi Belcaid Greg Burgess.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.5.
+    </div>
+  </body>
+</html>
