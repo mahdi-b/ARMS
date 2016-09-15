@@ -7,6 +7,7 @@ from converters.seedToGroups import seedToGroups
 from converters.ungap import ungap
 from otu_tables.annotateOTUtable import annotateOTUtable
 from otu_tables.buildOTUtable import buildOTUtable
+from parsers.parseCROPoutToGroups import parseCROPoutToGroups
 from parsers.parseUCtoGroups import parseUCtoGroups
 from parsers.parseVSearchoutForTaxa import parseVSearchOutputAgainstFasta, parseVSearchOutputAgainstNCBI
 from renamers.renameSerially import serialRename
@@ -386,13 +387,81 @@ def ungap_fasta(args):
 
 
 def cluster(args):
-    """Clusters sequences.
+    if args.program == "crop":
+        cluster_crop(args)
+    else:
+        cluster_swarm(args)
+
+
+def cluster_crop(args):
+    """Clusters sequences using CROP.
     :param args: An argparse object with the following parameters:
                     input       A file or folder containing fasta files to cluster.
                     output      The output directory results will be written to.
-                    gropusfile	Agroups file or folder containinggroups files that describe the input.
+                    groupsfile	A groups file or folder containinggroups files that describe the input.
                                 Note: if no groups file is supplied, then entries in the fasta file are assumed to be
-                                    singleton sequences. See <http://www.mothur.org/wiki/Name_file>
+                                    singleton sequences.
+    """
+    # CLUSTER
+    #makeDirOrdie(args.outdir)
+    # Grab the fasta file(s) to cluster
+    inputs = getInputFiles(args.input)
+    debugPrintInputInfo(inputs, "clustered")
+    pool = init_pool(min(len(inputs), args.threads))
+    blockcount = ""
+    if args.blockcount:
+        blockcount = args.blockcount
+
+    # crop -i %s -o %s -z %s -c %s -e %s -m %s%s
+    parallel(runProgramRunnerInstance,
+             [ProgramRunner(ProgramRunnerCommands.CLUSTER_CROP,
+                            [input_, "%s/%s" % (args.outdir, strip_ixes(input_)), args.blocksize, args.clustpct,
+                                args.maxmcmc, args.maxsm, blockcount],
+                            {"exists": [input_]}) for input_ in inputs], pool)
+
+    # CLEAN THE OUTPUT GROUPS FILE
+    clustered_groups_files = getInputFiles(args.outdir, "*.cluster.list")
+    debugPrintInputInfo(clustered_groups_files, "converted to groups files")
+    parallel(runPythonInstance,
+             [(parseCROPoutToGroups, input_, "%s/%s_uncount.groups" % (args.outdir, strip_ixes(input_)))
+              for input_ in clustered_groups_files], pool)
+
+    # UPDATE THE GROUPS FILES WITH NEW CLUSTERS
+    cleaned_clustered_groups_files = getInputFiles(args.outdir, "*.groups")
+
+    # Try to grab groups files
+    most_recent_groups_files = []
+    if args.groupsfile:
+        most_recent_groups_files = getInputFiles(args.groupsfile, critical=False)
+        debugPrintInputInfo(most_recent_groups_files, "used as groups references")
+        printVerbose("Input groups files: %s\n" % most_recent_groups_files)
+        printVerbose("Updating .groups files with clustering data")
+        update_groups(most_recent_groups_files, cleaned_clustered_groups_files, args.outdir, "postcluster")
+        printVerbose("Done updating .groups files.")
+        most_recent_groups_files = getInputFiles(args.outdir, "postcluster*.groups")
+    else:
+        printVerbose("No name files provided, assuming singletons...\n")
+        most_recent_groups_files = getInputFiles(args.outdir, "*.groups")
+    printVerbose("Moving aux files")
+    # Gather and move the post-clusteringgroups file
+    groups_dir = makeDirOrdie(args.outdir + "_groups_files")
+    bulk_move_to_dir(most_recent_groups_files, groups_dir)
+
+    # Gather and move auxillary files
+    aux_files = getInputFiles(args.outdir, "*", "*.fasta")
+    bulk_move_to_dir(aux_files, makeAuxDir(args.outdir))
+
+    cleanup_pool(pool)
+
+
+def cluster_swarm(args):
+    """Clusters sequences using SWARM.
+    :param args: An argparse object with the following parameters:
+                    input       A file or folder containing fasta files to cluster.
+                    output      The output directory results will be written to.
+                    groupsfile	A groups file or folder containinggroups files that describe the input.
+                                Note: if no groups file is supplied, then entries in the fasta file are assumed to be
+                                    singleton sequences.
     """
 
     # TODO IMPORTANT: make sure that the abundances in dereplicated_renamed.fasta are sorted in decreasing order
@@ -416,8 +485,8 @@ def cluster(args):
     most_recent_groups_files = getInputFiles(args.groupsfile, critical=False)
     debugPrintInputInfo(inputs, "clustered")
     if len(most_recent_groups_files) != 0:
-        debugPrintInputInfo(most_recent_groups_files, "used as sample listings")
-        printVerbose("Inputgroups files: %s\n" % most_recent_groups_files)
+        debugPrintInputInfo(most_recent_groups_files, "used as groups references")
+        printVerbose("Input groups files: %s\n" % most_recent_groups_files)
     else:
         printVerbose("No name files provided, assuming singletons...\n")
 
@@ -443,7 +512,7 @@ def cluster(args):
              [(removeCountsFromGroupsFile, input_, "%s/%s_uncount.groups" % (args.outdir, strip_ixes(input_)))
               for input_ in clustered_groups_files], pool)
 
-    # UPDATE THE NAMES FILES WITH NEW CLUSTERS
+    # UPDATE THE GROUPS FILES WITH NEW CLUSTERS
     cleaned_clustered_groups_files = getInputFiles(args.outdir, "*clustered_uncount.groups")
     printVerbose("Updating .groups files with clustering data")
     # update_groups (old_groups_files, new_groups_files, updated)
@@ -457,6 +526,7 @@ def cluster(args):
              [(capitalizeSeqs, input_, "%s.fasta" % input_) for input_ in inputs], pool)
     printVerbose("Done capitalizing sequences")
 
+    # GENERATE THE OUTPUT FASTA FILE
     printVerbose("Converting seeds files to .groups files")
     # delete seeds file
     for input_ in inputs:
@@ -464,7 +534,7 @@ def cluster(args):
         parallel(runPythonInstance,
                  [(seedToGroups, input_, "%s/%s.groups" % (args.outdir, getFileName(input_))) for input_ in inputs],
                  pool)
-        os.remove(input_)
+        # os.remove(input_)
 
     printVerbose("Done converting seeds files.")
 
@@ -601,7 +671,7 @@ def build_matrix(args):
     makeDirOrdie(args.outdir)
     groups = getInputFiles(args.groups)
     debugPrintInputInfo(groups, "read.")
-    samples = getInputFiles(args.groups)
+    samples = getInputFiles(args.samples)
     debugPrintInputInfo(samples, "read.")
     barcodes = getInputFiles(args.barcodes)
     debugPrintInputInfo(barcodes, "read.")

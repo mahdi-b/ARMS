@@ -32,7 +32,7 @@ def update_groups(old_groups_files, new_groups_files, out_dir, out_prefix):
     """
     if not (len(old_groups_files) and len(new_groups_files)):
         print "Received empty file lists.  Aborting."
-        exit()
+        return
     print "Using %s and %s to generate updated groups file %s_updated.groups" % \
           (old_groups_files[0], new_groups_files[0], out_prefix)
     old_groups_temp_file = "%s/temp_old_merged.groups" % out_dir

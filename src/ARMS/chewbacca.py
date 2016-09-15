@@ -2,7 +2,6 @@ import argparse
 from chewbaccaFunctions import *
 import signal
 
-
 # Program Version
 version = "0.01"
 # Time format for printing
@@ -61,6 +60,7 @@ Supported operations:
         ~/bin/builMatrix.py
 """
 
+
 # TODO parser args should probably live next to their program strings (I.E. in Program Runner or another class)
 def main(argv):
     """Parses command line args, builds an argparse.ArgumentParser, and runs the chosen command.
@@ -73,9 +73,8 @@ def main(argv):
     parser.add_argument("--verbose", default=True, help="increase output verbosity", action="store_true")
     parser.add_argument('-t', '--threads', type=int, default=1)
     parser.add_argument('--dryRun', default=False)
-    parser.add_argument('--debugtest',default=False)
+    parser.add_argument('--debugtest', default=False)
     subparsers = parser.add_subparsers(dest='action', help='Available commands')
-
 
     # ===================================
     # ==  1 Assemble Reads using pear  ==
@@ -88,19 +87,18 @@ def main(argv):
                             '_reverse.<ext>' or '_R2.<ext>'.  (where <ext> is the file extension).")
     parser_assemble.add_argument('-f', '--input_f', required=True, help="Forward Fastq Reads file or folder.")
     parser_assemble.add_argument('-r', '--input_r', required=True, help="Reverse Fastq Reads file or folder.")
-    parser_assemble.add_argument('-n', '--name',    required=True, help="Assembled File Prefix.")
-    parser_assemble.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved.")
+    parser_assemble.add_argument('-n', '--name', required=True, help="Assembled File Prefix.")
+    parser_assemble.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
     parser_assemble.add_argument('-p', '--pearthreads', type=int, required=False, default=1, help="The number of threads \
                             to use per pear process (default is 1")
     parser_assemble.set_defaults(func=assemble_pear)
-
 
     # ======================================
     # ==  2  Split by barcode with FastX  ==
     # ======================================
     # "barcode.splitter": "cat \"%s\" | " + programPaths["FASTX"] + "fastx_barcode_splitter.pl  --bcfile \"%s\" \
     #                                    -prefix \"%s\" --suffix .fastq --bol --mismatches 1",
-    parser_demux = subparsers.add_parser('demux_samples', description ="Given a single barcodes file, and a \
+    parser_demux = subparsers.add_parser('demux_samples', description="Given a single barcodes file, and a \
                             fasta/fastq file or a folder containing fasta/fastq files, splits each input fasta/fastq \
                             file into separate sample files (based on each sequence's barcode), for each barcode in \
                             the barcodes file.  Sample files of size zero are ignored.")
@@ -109,7 +107,6 @@ def main(argv):
                               help="Tab delimted files of barcodes and corresponding samples.")
     parser_demux.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
     parser_demux.set_defaults(func=split_on_barcodes)
-
 
     # ====================================================
     # ==  3 Rename reads serially with renameSequences  ==
@@ -127,7 +124,6 @@ def main(argv):
                                 '_2', etc..")
     parser_rename.set_defaults(func=rename_sequences)
 
-
     # ===================================================
     # ==  4 Trims barcodes and adapters using flexbar  ==
     # ===================================================
@@ -139,12 +135,10 @@ def main(argv):
     parser_trim.add_argument('-i', '--input', required=True, help="Input fasta/fastq file or folder.")
     parser_trim.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
     parser_trim.add_argument('-a', '--adapters', required=True, help="Forwards Adapters file.")
-    parser_trim.add_argument('-arc', '--adaptersrc',  required=True, help="Reverse Complimented Adapters file.")
+    parser_trim.add_argument('-arc', '--adaptersrc', required=True, help="Reverse Complimented Adapters file.")
     parser_trim.add_argument('-u', '--allowedns', required=False, default=0, type=int, help="The number of unknown 'N' \
                             bases a sequence is allowed before being thrown out.  Default: 0.")
     parser_trim.set_defaults(func=trim_flexbar)
-
-
 
     # ======================================
     # ==  5 Clean Reads with Trimmomatic  ==
@@ -159,33 +153,30 @@ def main(argv):
     parser_trimmomatic.add_argument('-i', '--input', required=True, help="Input fastq file or folder")
     parser_trimmomatic.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
     parser_trimmomatic.add_argument('-m', '--minLen', type=int, default=200,
-                                            help="Minimum length for cleaned sequences")
-    parser_trimmomatic.add_argument('-w', '--windowSize', type = int, default=5,
-                                            help="Size of the sliding window")
-    parser_trimmomatic.add_argument('-q', '--quality', type = int, default=25,
-                                            help="Minimum average quality for items in the sliding window")
+                                    help="Minimum length for cleaned sequences")
+    parser_trimmomatic.add_argument('-w', '--windowSize', type=int, default=5,
+                                    help="Size of the sliding window")
+    parser_trimmomatic.add_argument('-q', '--quality', type=int, default=25,
+                                    help="Minimum average quality for items in the sliding window")
     parser_trimmomatic.set_defaults(func=trimmomatic)
-
 
     # ============================================
     # ==  6 Dereplicate sequences with vsearch  ==
     # ============================================
-    #" vsearch --threads %d --derep_fulllength %s --sizeout --fasta_width 0 --output %s -uc %s",
+    # " vsearch --threads %d --derep_fulllength %s --sizeout --fasta_width 0 --output %s -uc %s",
     parser_vderep = subparsers.add_parser('dereplicate_fasta', description="Given an fasta file or folder, removes \
                             identical duplicates and subsequences WITHIN EACH FILE, keeping the longest sequence, and \
                             regroups it with the number of duplicates as '<longest_sequence_name>_<duplicate count>'.")
     parser_vderep.add_argument('-i', '--input', required=True, help="Input fasta file or folder of fasta files.")
-    parser_vderep.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved.")
+    parser_vderep.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
     parser_vderep.add_argument('-p', '--threads', required=False, type=int, default=2,
-                            help="Number of threads to use per query process.")
+                               help="Number of threads to use per query process.")
     parser_vderep.add_argument('-g', '--groupsfile', required=False, help="A .groups file to update.  If no .groups file \
                             is provided, then sequences are assumed to be singletons.")
     parser_vderep.add_argument('-s', '--stripcounts', required=False, type=bool, default=False, help="If included, \
                             strip counts from sequence groups before clustering.  This allows for the recognition of \
                             sequence groups that are annotated with dereplication counts.")
     parser_vderep.set_defaults(func=dereplicate)
-
-
 
     # ==============================================
     # ==  7 Partition fastas with splitKperFasta  ==
@@ -196,7 +187,7 @@ def main(argv):
                             <filename>_part_x.<ext>, where each subfile contains at most <--chunksize> sequences. \
                             (Where <ext> is the file extension of the original file.")
     parser_split.add_argument('-i', '--input', required=True, help="Input fasta/fastq file or folder.")
-    parser_split.add_argument('-o', '--outdir',  required=True, help="Directory where outputs will be saved.")
+    parser_split.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
     parser_split.add_argument('-c', '--chunksize', type=int, required=True, help="Chunksize. (Max number of sequences \
                             per file).")
     parser_split.add_argument('-f', '--filetype', required=True, help="The filetype of the input files.  Either \
@@ -230,23 +221,32 @@ def main(argv):
                             the sequences (but not sequence groups) in the input files.")
     parser_cat.set_defaults(func=ungap_fasta)
 
-    # ==========================================
-    # ==  10 Cluster using vsearch and swarm  ==
-    # ==========================================
-    # "vsearch": program_paths["VSEARCH"] + "--derep_fulllength \"%s\" --sizeout --fasta_width 0  \
+    # ======================================
+    # ==  10 Cluster using CROP OR SWARM  ==
+    # ======================================
     #
-    parser_align = subparsers.add_parser('cluster_seqs', description="Given a fasta file or a folder containing fasta \
-                            files, performs clustering on each input file individually.  Outputs a .groups file listing \
-                            unique representative sequences from each cluster, and the groups of the sequences they \
-                            represent.  Also outputs a <input_file_name>_seeds.fasta file of the unique representatives.")
-    parser_align.add_argument('-i', '--input', required=True, help="Input fasta file/folder")
-    parser_align.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
-    parser_align.add_argument('-g', '--groupsfile', required=False, help="A .groups file to update.")
-    parser_align.add_argument('-s', '--stripcounts', required=False, type=bool, default=True, help="If True, strip \
-                            counts from sequence groups before clustering.  This allows for the recognition of \
-                            sequence groups.")
-    parser_align.set_defaults(func=cluster)
+    parser_cluster = subparsers.add_parser('cluster_seqs', description="Given a fasta file or a folder containing \
+                            fasta files, performs clustering on each input file individually.  Outputs a .groups file \
+                            listing unique representative sequences from each cluster, and the groups of the sequences \
+                            they represent.  Also outputs a <input_file_name>_seeds.fasta file of the unique \
+                            representatives.")
+    parser_cluster.add_argument('-i', '--input', required=True, help="Input fasta file/folder")
+    parser_cluster.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
+    parser_cluster.add_argument('-p', '--program', required=False, default="swarm", help="Either 'crop' or 'swarm' to\
+                            indicate which clustering program to use.  Default: 'swarm'.")
 
+    parser_cluster.add_argument('-g', '--groupsfile', required=False, help="A .groups file to update.")
+    parser_cluster.add_argument('-s', '--stripcounts', required=False, type=bool, default=True, help="If True, strip \
+                            counts from sequence groups before clustering.  This allows for the recognition of \
+                            group names in cases where dereplication counts have been added to group names.")
+
+    parser_cluster.add_argument('-z', '--blocksize', required=False, type=int, default=500, help="CROP only: Size of blocks to be used for all rounds (if -b is specified, then -z will not affect the first round.  For data set with different average sequence length, this parameter should be tuned such that it won't take too long for each block to do pariwise alignment.  Hint for choosing z: z*L<150,000, where L is the average length of the sequences.  Default: 500.")
+    parser_cluster.add_argument('-b', '--blockcount', required=False, type=int, help="CROP only: The size of blocks in the first round of clustering. Hint of choosing -b: Each block in the first round should contain about 50 sequences.  i.e. b=N/50, where N is the number of input sequences.  Default: # input sequences / z.")
+    parser_cluster.add_argument('-e', '--maxmcmc', required=False, type=int, default=2000, help="CROP only: This parameter specifies the number of iterations of MCMC. Default value is 2000. Increase this value to enhance accuracy (recommended value is at least 10*block size).")
+    parser_cluster.add_argument('-c', '--clustpct', required=False, default="g", help="CROP only: The minimum similarity threshold for clustering.  Either 'g' for 95% or 's' for 97%.  Default: 'g'.")
+    parser_cluster.add_argument('-m', '--maxsm', required=False, type=int, default=20, help="CROP only: This parameter specifies the maximum number of 'split and merge' process to run. Default value is 20, which is also the maximum allowed.")
+    parser_cluster.add_argument('-r', '--rare', required=False, type=int, default=2, help="CROP only: The maximum cluster size allowed to be classified as 'rare'. Clusters are defined as either 'abundant' or 'rare'. 'Abundant' clusters will be clustered first, then the 'rare' clusters are mapped to the 'abundant' clusters.  Finally, 'rare' clusters which cannot be mapped will be clustered separately. e.g. If r=5, the clusters with size <=5 will be considered 'rare' in above procedure. and r=0 will yield the best accuracy. If you believe your data is not too diverse to be handled, then r=0 will be the best choice. Default: 2.rge' process to run. Default value is 20, which is also the maximum allowed.")
+    parser_cluster.set_defaults(func=cluster)
 
     # ===================================================
     # ==  12 Closed Ref Picking with fasta references  ==
@@ -268,9 +268,8 @@ def main(argv):
                             (integer between 0 and 100) required query and reference sequences required for positive \
                             identification. Default: 85")
     parser_biocode.add_argument('-p', '--threads', required=False, type=int, default=2,
-                            help="Number of threads to use per query process.")
+                                help="Number of threads to use per query process.")
     parser_biocode.set_defaults(func=query_fasta)
-
 
     # =======================================
     # ==  13 Closed Ref Picking with NCBI  ==
@@ -283,7 +282,6 @@ def main(argv):
     parcer_ncbi.add_argument('-p', '--threads', required=False, type=int, default=2,
                              help="Number of threads to use per query process.")
     parcer_ncbi.set_defaults(func=query_ncbi)
-
 
     # ========================
     # ==  xx Build Matrix  ==
@@ -298,18 +296,18 @@ def main(argv):
     parser_build_matrix.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
     parser_build_matrix.set_defaults(func=build_matrix)
 
-
     # ==========================
     # ==  xx Annotate Matrix  ==
     # ==========================
     parser_annotate_matrix = subparsers.add_parser('annotate_matrix', description="Given a tabular file mapping sequence IDs \
                                 to taxonomic groups, and an OTU matrix, regroups the identifiable sequence IDs with \
                                 taxonomic groups.")
-    parser_annotate_matrix.add_argument('-i', '--input', required=True, help="Input matrix file or folder of matrix files.")
-    parser_annotate_matrix.add_argument('-a', '--annotation', required=True, help="File mapping sequence IDs to taxonomic groups.")
+    parser_annotate_matrix.add_argument('-i', '--input', required=True,
+                                        help="Input matrix file or folder of matrix files.")
+    parser_annotate_matrix.add_argument('-a', '--annotation', required=True,
+                                        help="File mapping sequence IDs to taxonomic groups.")
     parser_annotate_matrix.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
     parser_annotate_matrix.set_defaults(func=annotate_matrix)
-
 
     # =================================
     # ==  xx Convert fastq to fasta  ==
@@ -317,14 +315,14 @@ def main(argv):
     # translateFastqToFasta(inputFastQ, outputFasta):
     parser_toFasta = subparsers.add_parser('convert_fastq_to_fasta')
     parser_toFasta.add_argument('-i', '--input', required=True, help="Fastq file or folder containing fastq files to "
-                                 "translate")
+                                                                     "translate")
     parser_toFasta.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
     parser_toFasta.set_defaults(func=make_fasta)
 
     global args
     args, unknown = parser.parse_known_args()
     if unknown:
-        print "\nIgnoring unknown args: " + ', '.join(['%s']*len(unknown))% tuple(unknown)
+        print "\nIgnoring unknown args: " + ', '.join(['%s'] * len(unknown)) % tuple(unknown)
     if args.verbose:
         logging.basicConfig(format=FORMAT, level=logging.DEBUG, datefmt=DATEFMT)
     else:
