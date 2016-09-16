@@ -223,6 +223,14 @@ def getInputFiles(path, match_pattern="*", mismatch_pattern="", critical=True, i
     return rslt
 
 
+def getDirName(path):
+    """If a file path is provided, returns the last dir in that path.  If a directory path is provided, returns that
+        directory name."""
+    if os.path.isdir(path):
+        return path
+    return os.path.dirname(path)
+
+
 def getFileName(path):
     """Returns the filename (no trailing extension, no preceeding directory) in an absoloute filepath.
 

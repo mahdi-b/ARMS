@@ -8,6 +8,7 @@ from Helpers import printVerbose, helpValidate, debugPrint
 
 # Names of available programs
 class ProgramRunnerPrograms(Enum):
+    CROP = "CROP"
     FASTX = "FASTX"
     FLEXBAR = "FLEXBAR"
     PEAR = "PEAR"
@@ -22,6 +23,7 @@ class ProgramRunnerCommands(Enum):
     ALIGN_VSEARCH = "ALIGN_VSEARCH"
     ASSEMBLE_PEAR = "ASSEMBLE_PEAR"
     CLEAN_TRIMMOMATIC = "CLEAN_TRIMMOMATIC"
+    CLUSTER_CROP = "CLUSTER_CROP"
     CLUSTER_SWARM = "CLUSTER_SWARM"
     DEMUX_FASTX = "DEMUX_FASTX"
     DEREP_USEARCH = "DEREP_USEARCH"
@@ -52,6 +54,7 @@ class ProgramRunner(object):
 
     # Map of Programs to their executables
     program_paths = {
+        ProgramRunnerPrograms.CROP: os.path.expanduser("~/ARMS/programs/crop/crop"),
         ProgramRunnerPrograms.FASTX: os.path.expanduser("/usr/bin/fastx_barcode_splitter.pl"),
         ProgramRunnerPrograms.FLEXBAR: os.path.expanduser("~/ARMS/programs/flexbar/flexbar"),
         ProgramRunnerPrograms.PEAR: os.path.expanduser("~/ARMS/programs/pear/pear-0.9.5-bin-64"),
@@ -181,6 +184,8 @@ class ProgramRunner(object):
                                         " -r %s -t %s -ae %s -a %s -u %d",
             ProgramRunnerCommands.ASSEMBLE_PEAR: self.program_paths[ProgramRunnerPrograms.PEAR] +
                                         " -f %s -r %s -o %s -v 20 -j %d ",
+            ProgramRunnerCommands.CLUSTER_CROP: self.program_paths[ProgramRunnerPrograms.CROP] +
+                                                 " -i %s -o %s -z %d -%s -e %d -m %d -r %d %s",
             ProgramRunnerCommands.CLUSTER_SWARM: self.program_paths[ProgramRunnerPrograms.SWARM] +
                                         " %s -o %s -u %s -w %s",
             ProgramRunnerCommands.CLEAN_TRIMMOMATIC:

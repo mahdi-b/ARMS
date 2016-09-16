@@ -49,12 +49,12 @@ def assemble_pear(args):
     # Ensure that we have matching left and right reads
     if len(forwards_reads) != len(reverse_reads):
         print "Error: Unequal number of forwards/reverse reads."
-        exit()
+        return
 
     if len(forwards_reads) == 0:
         print "Forwards reads should include the filename suffix \"_forward\" or \"R1\".  Reverse reads should \
                         include the filename suffix \"_reverse\" or \"R2\"."
-
+        return
     inputs = zip(set(forwards_reads), set(reverse_reads))
     pool = init_pool(min(len(inputs), args.threads))
     printVerbose("\tAssembling reads with pear")
@@ -375,7 +375,7 @@ def ungap_fasta(args):
                        fileext      Either 'fastq' or 'fasta'.
        """
     makeDirOrdie(args.outdir)
-    input_files = getInputFiles(args.input)
+    input_files = getInputFiles(args.input,"*.fasta")
     debugPrintInputInfo(input_files, "ungap.")
     pool = init_pool(min(len(input_files), args.threads))
     printVerbose("Removing all '%s' from sequences..." % args.gapchar)
@@ -403,31 +403,32 @@ def cluster_crop(args):
                                     singleton sequences.
     """
     # CLUSTER
-    #makeDirOrdie(args.outdir)
+    makeDirOrdie(args.outdir)
     # Grab the fasta file(s) to cluster
     inputs = getInputFiles(args.input)
     debugPrintInputInfo(inputs, "clustered")
     pool = init_pool(min(len(inputs), args.threads))
     blockcount = ""
     if args.blockcount:
-        blockcount = args.blockcount
+        blockcount = "-b %d" % args.blockcount
 
     # crop -i %s -o %s -z %s -c %s -e %s -m %s%s
     parallel(runProgramRunnerInstance,
              [ProgramRunner(ProgramRunnerCommands.CLUSTER_CROP,
                             [input_, "%s/%s" % (args.outdir, strip_ixes(input_)), args.blocksize, args.clustpct,
-                                args.maxmcmc, args.maxsm, blockcount],
+                                args.maxmcmc, args.maxsm, args.rare, blockcount],
                             {"exists": [input_]}) for input_ in inputs], pool)
 
     # CLEAN THE OUTPUT GROUPS FILE
     clustered_groups_files = getInputFiles(args.outdir, "*.cluster.list")
     debugPrintInputInfo(clustered_groups_files, "converted to groups files")
+
     parallel(runPythonInstance,
-             [(parseCROPoutToGroups, input_, "%s/%s_uncount.groups" % (args.outdir, strip_ixes(input_)))
+             [(parseCROPoutToGroups, input_, "%s_uncount.groups" % strip_ixes(input_))
               for input_ in clustered_groups_files], pool)
 
     # UPDATE THE GROUPS FILES WITH NEW CLUSTERS
-    cleaned_clustered_groups_files = getInputFiles(args.outdir, "*.groups")
+    cleaned_clustered_groups_files = getInputFiles(".", "*_uncount.groups")
 
     # Try to grab groups files
     most_recent_groups_files = []
@@ -448,7 +449,17 @@ def cluster_crop(args):
     bulk_move_to_dir(most_recent_groups_files, groups_dir)
 
     # Gather and move auxillary files
-    aux_files = getInputFiles(args.outdir, "*", "*.fasta")
+    input_dir = getDirName(args.input)
+    print "With input dir: %s" % input_dir
+    aux_files = cleaned_clustered_groups_files
+    aux_files += getInputFiles(input_dir, "*.unique")
+    aux_files += getInputFiles(input_dir, "*.unique.list")
+    aux_files += getInputFiles(input_dir, "*.unique.TempCenters.Rare")
+    aux_files += getInputFiles(args.outdir, "*.cluster")
+    aux_files += getInputFiles(args.outdir, "*.cluster.list")
+    aux_files += getInputFiles(args.outdir, "*.log")
+    print "AUX FILES:\n"
+    print "aux_files"
     bulk_move_to_dir(aux_files, makeAuxDir(args.outdir))
 
     cleanup_pool(pool)
