@@ -20,8 +20,7 @@ def parseUCtoGroups(input_uc_file, output_groups_file):
 
     with open(output_groups_file, 'w')  as outFile:
         for key in seeds:
-            outFile.write(key+"\t")
-            outFile.write(" ".join(list(set(seeds[key]))))
+            outFile.write("%s\t%s" % (key, " ".join(list(set(seeds[key])))))
             outFile.write("\n")
     return output_groups_file
 

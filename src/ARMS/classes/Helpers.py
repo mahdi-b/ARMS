@@ -260,7 +260,11 @@ def move_to_dir(target_file_path, dest_dir_path):
     """
     target_file = target_file_path.split('/')[-1]
     dest_file_path = "%s/%s" % (dest_dir_path, target_file)
-    move(target_file_path, dest_file_path)
+    try:
+        move(target_file_path, dest_file_path)
+    except:
+        print "Warning: Couldn't move %s to %s\n" % (target_file, dest_dir_path)
+        pass
 
 
 def move(origin, destination):

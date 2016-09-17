@@ -45,10 +45,10 @@ def removeCountsFromGroupsFile(input_groups_file, output_groups_file, clip_char=
     """
     with open(output_groups_file, "w") as output:
         for line in open(input_groups_file, 'r'):
-            data = line.split(" ")
+            data = line.split("\t")
             seed_name = clip_char.join(data[0].split(clip_char)[:-1])
             children = []
-            for item in data[1:]:
+            for item in data[1].split():
                 children.append(clip_char.join(item.split(clip_char)[:-1]))
             output.write("%s\t%s\n" % (seed_name, " ".join(children)))
     return output_groups_file

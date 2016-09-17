@@ -221,9 +221,9 @@ def main(argv):
                             the sequences (but not sequence groups) in the input files.")
     parser_cat.set_defaults(func=ungap_fasta)
 
-    # ======================================
-    # ==  10 Cluster using CROP OR SWARM  ==
-    # ======================================
+    # ===============================================
+    # ==  10 Cluster using CROP, SWARM, OR VSEARCH ==
+    # ===============================================
     #
     parser_cluster = subparsers.add_parser('cluster_seqs', description="Given a fasta file or a folder containing \
                             fasta files, performs clustering on each input file individually.  Outputs a .groups file \
@@ -232,20 +232,40 @@ def main(argv):
                             representatives.")
     parser_cluster.add_argument('-i', '--input', required=True, help="Input fasta file/folder")
     parser_cluster.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
-    parser_cluster.add_argument('-p', '--program', required=False, default="swarm", help="Either 'crop' or 'swarm' to\
-                            indicate which clustering program to use.  Default: 'swarm'.")
-
+    parser_cluster.add_argument('-p', '--program', required=False, default="swarm", help="One of 'crop', 'swarm', or \
+                            'vsearch' to indicate which clustering program to use.  Default: 'swarm'.")
     parser_cluster.add_argument('-g', '--groupsfile', required=False, help="A .groups file to update.")
     parser_cluster.add_argument('-s', '--stripcounts', required=False, type=bool, default=True, help="If True, strip \
                             counts from sequence groups before clustering.  This allows for the recognition of \
                             group names in cases where dereplication counts have been added to group names.")
-
-    parser_cluster.add_argument('-z', '--blocksize', required=False, type=int, default=500, help="CROP only: Size of blocks to be used for all rounds (if -b is specified, then -z will not affect the first round.  For data set with different average sequence length, this parameter should be tuned such that it won't take too long for each block to do pariwise alignment.  Hint for choosing z: z*L<150,000, where L is the average length of the sequences.  Default: 500.")
-    parser_cluster.add_argument('-b', '--blockcount', required=False, type=int, help="CROP only: The size of blocks in the first round of clustering. Hint of choosing -b: Each block in the first round should contain about 50 sequences.  i.e. b=N/50, where N is the number of input sequences.  Default: # input sequences / z.")
-    parser_cluster.add_argument('-e', '--maxmcmc', required=False, type=int, default=2000, help="CROP only: This parameter specifies the number of iterations of MCMC. Default value is 2000. Increase this value to enhance accuracy (recommended value is at least 10*block size).")
-    parser_cluster.add_argument('-c', '--clustpct', required=False, default="g", help="CROP only: The minimum similarity threshold for clustering.  Either 'g' for 95% or 's' for 97%.  Default: 'g'.")
-    parser_cluster.add_argument('-m', '--maxsm', required=False, type=int, default=20, help="CROP only: This parameter specifies the maximum number of 'split and merge' process to run. Default value is 20, which is also the maximum allowed.")
-    parser_cluster.add_argument('-r', '--rare', required=False, type=int, default=2, help="CROP only: The maximum cluster size allowed to be classified as 'rare'. Clusters are defined as either 'abundant' or 'rare'. 'Abundant' clusters will be clustered first, then the 'rare' clusters are mapped to the 'abundant' clusters.  Finally, 'rare' clusters which cannot be mapped will be clustered separately. e.g. If r=5, the clusters with size <=5 will be considered 'rare' in above procedure. and r=0 will yield the best accuracy. If you believe your data is not too diverse to be handled, then r=0 will be the best choice. Default: 2.")
+    # CROP options
+    parser_cluster.add_argument('-z', '--blocksize', required=False, type=int, default=500, help="CROP only: Size of \
+                            blocks to be used for all rounds (if -b is specified, then -z will not affect the first \
+                            round.  For data set with different average sequence length, this parameter should be \
+                            tuned such that it won't take too long for each block to do pariwise alignment.  Hint for \
+                            choosing z: z*L<150,000, where L is the average length of the sequences.  Default: 500.")
+    parser_cluster.add_argument('-b', '--blockcount', required=False, type=int, help="CROP only: The size of blocks in \
+                            the first round of clustering. Hint of choosing -b: Each block in the first round should \
+                            contain about 50 sequences.  i.e. b=N/50, where N is the number of input sequences.  \
+                            Default: # input sequences / z.")
+    parser_cluster.add_argument('-e', '--maxmcmc', required=False, type=int, default=2000, help="CROP only: This \
+                            parameter specifies the number of iterations of MCMC. Default value is 2000. Increase this \
+                            value to enhance accuracy (recommended value is at least 10*block size).")
+    parser_cluster.add_argument('-c', '--clustpct', required=False, default="g", help="CROP only: The minimum \
+                            similarity threshold for clustering.  Either 'g' for 95% or 's' for 97%.  Default: 'g'.")
+    parser_cluster.add_argument('-m', '--maxsm', required=False, type=int, default=20, help="CROP only: This parameter \
+                            specifies the maximum number of 'split and merge' process to run. Default value is 20, \
+                            which is also the maximum allowed.")
+    parser_cluster.add_argument('-r', '--rare', required=False, type=int, default=2, help="CROP only: The maximum \
+                            cluster size allowed to be classified as 'rare'. Clusters are defined as either 'abundant' \
+                            or 'rare'. 'Abundant' clusters will be clustered first, then the 'rare' clusters are \
+                            mapped to the 'abundant' clusters.  Finally, 'rare' clusters which cannot be mapped will \
+                            be clustered separately. e.g. If r=5, the clusters with size <=5 will be considered 'rare' \
+                            in above procedure. and r=0 will yield the best accuracy. If you believe your data is not \
+                            too diverse to be handled, then r=0 will be the best choice. Default: 2.")
+    # Vsearch options
+    parser_cluster.add_argument('-v', '--idpct', required=False, type=float, default=.95, help="VSEARCH only: % match \
+                            required for clustering.  Real number in the range (0,1]. Default: 0.95")
     parser_cluster.set_defaults(func=cluster)
 
     # ===================================================

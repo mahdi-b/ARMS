@@ -14,7 +14,6 @@ class ProgramRunnerPrograms(Enum):
     PEAR = "PEAR"
     SWARM = "SWARM"
     TRIMMOMATIC = "TRIMMOMATIC"
-    USEARCH = "USEARCH"
     VSEARCH = "VSEARCH"
 
 
@@ -25,8 +24,8 @@ class ProgramRunnerCommands(Enum):
     CLEAN_TRIMMOMATIC = "CLEAN_TRIMMOMATIC"
     CLUSTER_CROP = "CLUSTER_CROP"
     CLUSTER_SWARM = "CLUSTER_SWARM"
+    CLUSTER_VSEARCH = "CLUSTER_VSEARCH"
     DEMUX_FASTX = "DEMUX_FASTX"
-    DEREP_USEARCH = "DEREP_USEARCH"
     DEREP_VSEARCH = "DEREP_VSEARCH"
     TRIM_FLEXBAR = "TRIM_FLEXBAR"
     TEST_ECHO = "TEST_ECHO"
@@ -59,7 +58,6 @@ class ProgramRunner(object):
         ProgramRunnerPrograms.FLEXBAR: os.path.expanduser("~/ARMS/programs/flexbar/flexbar"),
         ProgramRunnerPrograms.PEAR: os.path.expanduser("~/ARMS/programs/pear/pear-0.9.5-bin-64"),
         ProgramRunnerPrograms.SWARM: os.path.expanduser("~/ARMS/programs/swarm/swarm-2.1.9-linux-x86_64"),
-        ProgramRunnerPrograms.USEARCH: os.path.expanduser("~/ARMS/programs/usearch/usearch7.0.1090"),
         ProgramRunnerPrograms.VSEARCH: os.path.expanduser("~/ARMS/programs/vsearch/vsearch")
     }
 
@@ -105,7 +103,6 @@ class ProgramRunner(object):
         """
         #return True
         return helpValidate(conditions)
-
 
 
     def dryValidateConditions(self, conditions):
@@ -188,15 +185,15 @@ class ProgramRunner(object):
                                                  " -i %s -o %s -z %d -%s -e %d -m %d -r %d %s",
             ProgramRunnerCommands.CLUSTER_SWARM: self.program_paths[ProgramRunnerPrograms.SWARM] +
                                         " %s -o %s -u %s -w %s",
+            ProgramRunnerCommands.CLUSTER_VSEARCH: self.program_paths[ProgramRunnerPrograms.VSEARCH] +
+                                        " --cluster_size %s -id %f --centroids %s --uc %s",
             ProgramRunnerCommands.CLEAN_TRIMMOMATIC:
                                         "java -jar ~/ARMS/programs/Trimmomatic-0.33/trimmomatic-0.33.jar \
                                         SE -phred33 %s %s SLIDINGWINDOW:%d:%d MINLEN:%d",
-            ProgramRunnerCommands.DEREP_USEARCH: self.program_paths[ProgramRunnerPrograms.USEARCH] +
-                                        " -derep_fulllength %s -output %s -uc %s",
             ProgramRunnerCommands.DEREP_VSEARCH: self.program_paths[ProgramRunnerPrograms.VSEARCH] +
-                                        " --threads %d --derep_fulllength %s --sizeout --fasta_width 0 --output %s -uc %s",
+                                        " --threads %d --derep_fulllength %s --sizeout --fasta_width 0 --output %s \
+                                        -uc %s",
             ProgramRunnerCommands.ALIGN_VSEARCH: self.program_paths[ProgramRunnerPrograms.VSEARCH] +
                                         " --threads %d --usearch_global %s --db %s --id 0.9 --userfields \
                                         query+target+id+alnlen+qcov --userout %s --alnout %s %s"
         }
-
