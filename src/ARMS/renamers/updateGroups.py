@@ -1,6 +1,5 @@
 import os
 import sys
-from classes.Helpers import debugPrint
 from utils.joinFiles import joinFiles
 from parsers.parseGroupsFileToDict import parseGroupsFileToDictOfChilden
 
@@ -71,7 +70,7 @@ def update_groups(old_groups_files, new_groups_files, out_dir, out_prefix):
 
             outstring += "%s\t%s\n" % (new_seed, " ".join(set(all_my_children)))
             # print "Seed %s has %d children" % (new_seed, len(all_my_children))
-            # debugPrint("%s_%d = %d old  +  %d new  +   %d children of new" %
+            # print("%s_%d = %d old  +  %d new  +   %d children of new" %
             #           (new_seed, len(all_my_children), len(my_old_children), len(my_new_children),
             #            len(children_of_my_new_children)))
         output.write(outstring)

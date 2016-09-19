@@ -70,10 +70,7 @@ def buildOTUtable(latest_groups_files, inital_samples_files, barcodes_file, out_
                         my_sample = seq_to_sample[child]
                         # increment the abundance in that sample
                         sample_counts[my_sample] += 1
-                    # don't forget the representative sequence
-                    #   (the representative of the cluster is not in the child list)
-                    my_sample = seq_to_sample[otu]
-                    sample_counts[my_sample] += 1
+
 
                     # WRITE THE COUNTS TO THE OUT FILE
                     # for each sample in the barcodes list, write otu to a txt file as a single line
