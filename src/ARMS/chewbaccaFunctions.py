@@ -3,7 +3,6 @@ from classes.Helpers import *
 from classes.ProgramRunner import ProgramRunner, ProgramRunnerCommands
 from converters.capitalizeSeqs import capitalizeSeqs
 from converters.fastqToFasta import translateFastqToFasta
-from converters.seedToGroups import seedToGroups
 from converters.ungap import ungap
 from otu_tables.annotateOTUtable import annotateOTUtable
 from otu_tables.buildOTUtable import buildOTUtable
@@ -16,6 +15,56 @@ from renamers.renameWithoutCount import removeCountsFromFastFile, removeCountsFr
 from renamers.updateGroups import update_groups
 from utils.joinFiles import joinFiles
 from utils.splitKperFasta import splitK
+
+def preclean_spades(args):
+    """Assembles reads from two (left and right) fastq files/directories.  For a set of k forward read files, and k
+        reverse read files, return k assembled files.  Matching forward and reverse files should be identically named,
+        except for a <forward>/<reverse> suffix that indicates the read orientation.  Two suffix pairs are supported:
+        '_forwards' and '_reverse',
+        and
+        '_R1' and 'R2'
+        Choose ONE suffix style and stick to it.
+        e.g. Sample_100_forwards.fq and Sample_100_reverse.fq will be assembled into Sample_100_assembled.fq.
+          Alternatively, Sample_100_R1.fq and Sample_100_R2.fq will be assembled into Sample_100_assembled.fq.
+          You can provide as many pairs of files as you wish as long as they follow exactly on of the above naming
+          conventions.  If a 'name' parameter is provided, it will be used as a suffix for all assembled sequence files.
+    :param args: An argparse object with the following parameters:
+                    name            Textual ID for the data set.
+                    input_f         Forward Fastq Reads file or directory.
+                    input_r         Reverse Fastq Reads file or directory.
+                    threads         The number of threads to use durring assembly.
+                    outdir          Directory where outputs will be saved.
+    """
+
+    makeDirOrdie(args.outdir)
+    # Collect input files, and validate that they match
+    inputs = validate_paired_fastq_reads(args.input_f, args.input_r)
+    pool = init_pool(min(len(inputs), args.threads))
+    printVerbose("\tPrecleaning reads with Spades-Baye's Hammer...")
+    debugPrintInputInfo(inputs, "preclean/fix.")
+
+    parallel(runProgramRunnerInstance,
+             [ProgramRunner(ProgramRunnerCommands.PRECLEAN_SPADES,
+                            [forwards, reverse, args.outdir, args.spadesthreads],
+                            {"exists": [forwards, reverse], "positive": [args.spadesthreads]})
+                for forwards, reverse in inputs], pool)
+    printVerbose("Done cleaning reads.")
+
+    # Grab all the auxillary files (everything not containing ".assembled."
+    #aux_files = getInputFiles(args.outdir, "*", "*.assembled.*", ignore_empty_files=False)
+    # make aux dir for extraneous files and move them there
+    #bulk_move_to_dir(aux_files, makeAuxDir(args.outdir))
+
+    # Select output files
+    cleaned_reads = getInputFiles("%s/corrected" % (args.outdir), "*.gz")
+    bulk_move_to_dir(cleaned_reads, args.outdir)
+
+    aux_dir = makeAuxDir(args.outdir)
+    aux_files = getInputFiles(args.outdir, "*", "*.gz")
+    aux_files += getInputFiles(args.outdir, "*unpaired*")
+    bulk_move_to_dir(aux_files, aux_dir)
+    # Gather aux files
+    cleanup_pool(pool)
 
 
 def assemble_pear(args):
@@ -39,23 +88,9 @@ def assemble_pear(args):
     """
     # "~/programs/pear-0.9.4-bin-64/pear-0.9.4-64 -f %s -r %s -o %s -j %s -m %d"
     makeDirOrdie(args.outdir)
-    forwards_reads = getInputFiles(args.input_f, "*_forward*", critical=False)
-    reverse_reads = getInputFiles(args.input_r, "*_reverse*", critical=False)
 
-    if len(forwards_reads) == 0 and len(reverse_reads) == 0:
-        forwards_reads = getInputFiles(args.input_f, "*_R1*", critical=False)
-        reverse_reads = getInputFiles(args.input_r, "*_R2*", critical=False)
-
-    # Ensure that we have matching left and right reads
-    if len(forwards_reads) != len(reverse_reads):
-        print "Error: Unequal number of forwards/reverse reads."
-        return
-
-    if len(forwards_reads) == 0:
-        print "Forwards reads should include the filename suffix \"_forward\" or \"R1\".  Reverse reads should \
-                        include the filename suffix \"_reverse\" or \"R2\"."
-        return
-    inputs = zip(set(forwards_reads), set(reverse_reads))
+    # Collect input files, and validate that they match
+    inputs = validate_paired_fastq_reads(args.input_f, args.input_r)
     pool = init_pool(min(len(inputs), args.threads))
     printVerbose("\tAssembling reads with pear")
     debugPrintInputInfo(inputs, "assemble")
@@ -341,9 +376,9 @@ def partition(args):
 
     pool = init_pool(min(len(inputs), args.threads))
 
-    parallel(runPythonInstance, [
-        (splitK, input_, "%s/%s" % (args.outdir, strip_ixes(getFileName(input_))), args.chunksize, args.filetype)
-        for input_ in inputs], pool)
+    parallel(runPythonInstance,
+             [(splitK, input_, "%s/%s" % (args.outdir, strip_ixes(input_)), args.chunksize, args.filetype)
+                for input_ in inputs], pool)
     printVerbose("Done partitioning files.")
     cleanup_pool(pool)
 
@@ -788,4 +823,72 @@ def make_fasta(args):
                                  for input_ in inputs], pool)
     printVerbose("Done converting.")
 
+    cleanup_pool(pool)
+
+def macseAlignSeqs(args, pool=Pool(processes=1)):
+    """Aligns sequences by iteratively adding them to a known good alignment.
+     :param args: An argparse object with the following parameters:
+                    db                  Database against which to align and filter reads
+                    samplesDir          Directory containig the samples to be cleaned
+                    outdir              Directory where outputs will be saved
+     :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
+    """
+    # "macse_align":      "java -jar " + programPaths["MACSE"] + " -prog enrichAlignment  -seq \"%s\" -align \
+    #                                    \"%s\" -seq_lr \"%s\" -maxFS_inSeq 0  -maxSTOP_inSeq 0  -maxINS_inSeq 0 \
+    #                                    -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 -out_NT \"%s\"_NT \
+    #                                    -out_AA \"%s\"_AA -seqToAdd_logFile \"%s\"_log.csv",
+    makeDirOrdie(args.outdir)
+
+    printVerbose("\t %s Aligning reads using MACSE")
+    inputs = getInputFiles(args.input)
+    parallel(runProgramRunnerInstance, [ProgramRunner(ProgramRunnerCommands.MACSE_ALIGN,
+                                              [args.db, args.db, input] +
+                                              ["%s/%s" % (args.outdir, getFileName(input))] * 3,
+                                              {"exists": [input, args.db]}) for input in inputs], pool)
+    cleanup_pool(pool)
+
+
+def macseCleanAlignments(args, pool=Pool(processes=1)):
+    """Removes non-nucleotide characters in MACSE aligned sequences for all fasta files in the samples directory
+        (the samplesDir argument).
+    :param args: An argparse object with the following parameters:
+                    samplesDir          Directory containig the samples to be cleaned
+                    outdir              Directory where outputs will be saved
+    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
+    """
+    # "macse_format":     "java -jar " + programPaths["MACSE"] + "  -prog exportAlignment -align \"%s\" \
+    #
+    #                                  -charForRemainingFS - -gc_def 5 -out_AA \"%s\" -out_NT \"%s\" -statFile \"%s\""
+    from Bio import SeqIO
+    from Bio.Seq import Seq
+    makeDirOrdie(args.outdir)
+    printVerbose("\t %s Processing MACSE alignments")
+    samplesList = getInputFiles(args.samplesdir)
+    parallel(runProgramRunnerInstance, [ProgramRunner(ProgramRunnerCommands.MACSE_FORMAT,
+                                              ["%s/%s_NT" % (args.input, strip_ixes(sample)),
+                                               "%s/%s_AA_macse.fasta" % (args.outdir, strip_ixes(sample)),
+                                               "%s/%s_NT_macse.fasta" % (args.outdir, strip_ixes(sample)),
+                                               "%s/%s_macse.csv" % (args.outdir, strip_ixes(sample))],
+                                              {"exists": []}) for sample in os.listdir(args.samplesdir)], pool)
+
+    printVerbose("\tCleaning MACSE alignments")
+
+
+    dbSeqNames = SeqIO.to_dict(SeqIO.parse(args.db, "fasta")).keys()
+    good_seqs = []
+    samplesList = getInputFiles(args.samplesdir)
+    print "Will be processing %s samples " % len(samplesList)
+    i = 0
+    for sample in samplesList:
+        nt_macse_out = "%s/%s_NT_macse.fasta" % (args.outdir, strip_ixes(sample))
+        for mySeq in SeqIO.parse(nt_macse_out, 'fasta'):
+            if not dbSeqNames.has_key(mySeq.id):
+                mySeq.seq = Seq(str(mySeq.seq[2:]).replace("-", ""))  # remove the !! from the beginning
+                good_seqs.append(mySeq)
+        print "completed %s samples" % i
+        i += 1
+    SeqIO.write(good_seqs, open(os.path.join(args.outdir, "MACSE_OUT_MERGED.fasta"), 'w'), 'fasta')
+    aux_dir = makeAuxDir(args.outdir)
+    aux_files = getInputFiles(args.outdir, "*", "MACSE_OUT_MERGED.fasta")
+    bulk_move_to_dir(aux_files, aux_dir)
     cleanup_pool(pool)

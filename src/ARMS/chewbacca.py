@@ -76,6 +76,23 @@ def main(argv):
     parser.add_argument('--debugtest', default=False)
     subparsers = parser.add_subparsers(dest='action', help='Available commands')
 
+    # ======================================
+    # ==  0 Fix reads with Baye's hammer  ==
+    # ======================================
+    # "SPADES_PRECLEAN":  --only-error-correction -o %s -1 %s -2 %s"
+    parser_preclean = subparsers.add_parser('preclean', description="Given a pair of left and right fasta/fastq reads, \
+                            or a pair of folder containing the left and right fasta/fastq files, fixes short errors \
+                            in the reads using Baye's Hammer.  Forwards reads filegroups should end in \
+                            '_forward.<ext>' or '_R1.<ext>'.  Reverse reads filegroups should end in '_reverse.<ext>' \
+                            or '_R2.<ext>' (where <ext> is the file extension).")
+    parser_preclean.add_argument('-f', '--input_f', required=True, help="Forward Fastq Reads file or folder.")
+    parser_preclean.add_argument('-r', '--input_r', required=True, help="Reverse Fastq Reads file or folder.")
+    parser_preclean.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
+    parser_preclean.add_argument('-p', '--spadesthreads', type=int, required=False, default=1, help="The number of \
+                            threads to use per spades process (default is 1")
+    parser_preclean.set_defaults(func=preclean_spades)
+
+
     # ===================================
     # ==  1 Assemble Reads using pear  ==
     # ===================================
@@ -338,6 +355,34 @@ def main(argv):
                                                                      "translate")
     parser_toFasta.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
     parser_toFasta.set_defaults(func=make_fasta)
+
+
+
+    # ==============================
+    # ==  Align Reads with MACSE  ==
+    # ==============================
+    # "macse_align":      "java -jar " + programPaths["MACSE"] + " -prog enrichAlignment  -seq \"%s\" -align \
+    #                                \"%s\" -seq_lr \"%s\" -maxFS_inSeq 0  -maxSTOP_inSeq 0  -maxINS_inSeq 0 \
+    #                                -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 -out_NT \"%s\"_NT \
+    #                                -out_AA \"%s\"_AA -seqToAdd_logFile \"%s\"_log.csv",
+    parser_align = subparsers.add_parser('macseAlign')
+    parser_align.add_argument('-i', '--input', required=True, help="Input fasta")
+    parser_align.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
+    parser_align.add_argument('-d', '--db', required=True, help="Database against which to align and filter reads")
+    parser_align.set_defaults(func=macseAlignSeqs)
+
+
+
+    # Clean Aligned Reads with MACSE
+    # "macse_format":     "java -jar " + programPaths["MACSE"] + "  -prog exportAlignment -align \"%s\" \
+    #                                -charForRemainingFS - -gc_def 5 -out_AA \"%s\" -out_NT \"%s\" -statFile \"%s\"",
+    parser_macseClean = subparsers.add_parser('macseClean')
+    parser_macseClean.add_argument('-i', '--input', required=True, help="Input fasta")
+    parser_macseClean.add_argument('-s', '--samplesdir', required=True, help="Samples dir")
+    parser_macseClean.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
+    parser_macseClean.add_argument('-d', '--db', required=True, help="Database against which to align and filter reads")
+    parser_macseClean.set_defaults(func=macseCleanAlignments)
+
 
     global args
     args, unknown = parser.parse_known_args()

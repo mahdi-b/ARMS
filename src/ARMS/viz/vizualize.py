@@ -61,6 +61,6 @@ if __name__ == "__main__":
         """
 #path = "testMatrix.txt"
 
-#path = "/home/greg/ARMS/testARMS/16_annotate_bold/matrix.txt"
+# path = "/home/greg/ARMS/testARMS/17_annotate_ncbi/matrix.txt"
 
-#viz_OTU_abundance_heatmap(path)
+# viz_OTU_abundance_heatmap(path)

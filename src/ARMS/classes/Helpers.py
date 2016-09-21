@@ -313,3 +313,22 @@ def buildCSL(item, attributes):
 
     # chop off the trailing comma
     return option_string[:-2]
+
+def validate_paired_fastq_reads(input_f, input_r):
+    forwards_reads = getInputFiles(input_f, "*_forward*", critical=False)
+    reverse_reads = getInputFiles(input_r, "*_reverse*", critical=False)
+
+    if len(forwards_reads) == 0 and len(reverse_reads) == 0:
+        forwards_reads = getInputFiles(input_f, "*_R1*", critical=False)
+        reverse_reads = getInputFiles(input_r, "*_R2*", critical=False)
+
+    # Ensure that we have matching left and right reads
+    if len(forwards_reads) != len(reverse_reads):
+        print "Error: Unequal number of forwards/reverse reads."
+        return []
+
+    if len(forwards_reads) == 0:
+        print "Forwards reads should include the filename suffix \"_forward\" or \"R1\".  Reverse reads should \
+                        include the filename suffix \"_reverse\" or \"R2\"."
+        return
+    return zip(set(forwards_reads), set(reverse_reads))

@@ -12,10 +12,11 @@ class ProgramRunnerPrograms(Enum):
     FASTX = "FASTX"
     FLEXBAR = "FLEXBAR"
     PEAR = "PEAR"
+    SPADES = "SPADES"
     SWARM = "SWARM"
     TRIMMOMATIC = "TRIMMOMATIC"
     VSEARCH = "VSEARCH"
-
+    MACSE = "MACSE"
 
 # Names of available commands
 class ProgramRunnerCommands(Enum):
@@ -27,9 +28,11 @@ class ProgramRunnerCommands(Enum):
     CLUSTER_VSEARCH = "CLUSTER_VSEARCH"
     DEMUX_FASTX = "DEMUX_FASTX"
     DEREP_VSEARCH = "DEREP_VSEARCH"
+    PRECLEAN_SPADES = "PRECLEAN_SPADES"
     TRIM_FLEXBAR = "TRIM_FLEXBAR"
     TEST_ECHO = "TEST_ECHO"
-
+    MACSE_ALIGN = "MACSE_ALIGN"
+    MACSE_FORMAT = "MACSE_FORMAT"
 
 class ProgramRunner(object):
     """A class to interact with external command line programs and internal python functions.  The class contains a \
@@ -57,6 +60,7 @@ class ProgramRunner(object):
         ProgramRunnerPrograms.FASTX: os.path.expanduser("/usr/bin/fastx_barcode_splitter.pl"),
         ProgramRunnerPrograms.FLEXBAR: os.path.expanduser("~/ARMS/programs/flexbar/flexbar"),
         ProgramRunnerPrograms.PEAR: os.path.expanduser("~/ARMS/programs/pear/pear-0.9.5-bin-64"),
+        ProgramRunnerPrograms.SPADES: os.path.expanduser("~/ARMS/programs/spades/bin/spades.py"),
         ProgramRunnerPrograms.SWARM: os.path.expanduser("~/ARMS/programs/swarm/swarm-2.1.9-linux-x86_64"),
         ProgramRunnerPrograms.VSEARCH: os.path.expanduser("~/ARMS/programs/vsearch/vsearch")
     }
@@ -195,5 +199,14 @@ class ProgramRunner(object):
                                         -uc %s",
             ProgramRunnerCommands.ALIGN_VSEARCH: self.program_paths[ProgramRunnerPrograms.VSEARCH] +
                                         " --threads %d --usearch_global %s --db %s --id 0.9 --userfields \
-                                        query+target+id+alnlen+qcov --userout %s --alnout %s %s"
-        }
+                                        query+target+id+alnlen+qcov --userout %s --alnout %s %s",
+            ProgramRunnerCommands.PRECLEAN_SPADES: "python " + self.program_paths[ProgramRunnerPrograms.SPADES] +
+                                         " --only-error-correction -1 %s -2 %s -o %s -t %d",
+            ProgramRunnerCommands.MACSE_ALIGN: "java -jar ~/ARMS/programs/macse/macse_v1.01b.jar -prog enrichAlignment  -seq %s -align \
+                                                    %s -seq_lr %s -maxFS_inSeq 0  -maxSTOP_inSeq 0  -maxINS_inSeq 0 \
+                                                    -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 -out_NT %s_NT \
+                                                    -out_AA %s_AA -seqToAdd_logFile %s_log.csv",
+            ProgramRunnerCommands.MACSE_FORMAT: "java -jar ~/ARMS/programs/macse/macse_v1.01b.jar  -prog exportAlignment -align %s \
+                                                    -charForRemainingFS - -gc_def 5 -out_AA %s -out_NT %s -statFile \
+                                                    %s",
+}
