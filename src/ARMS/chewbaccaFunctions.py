@@ -2,6 +2,7 @@ from itertools import product
 from classes.Helpers import *
 from classes.ProgramRunner import ProgramRunner, ProgramRunnerCommands
 from converters.capitalizeSeqs import capitalizeSeqs
+from converters.clean_macse_alignment import clean_macse_alignment
 from converters.fastqToFasta import translateFastqToFasta
 from converters.ungap import ungap
 from otu_tables.annotateOTUtable import annotateOTUtable
@@ -869,25 +870,21 @@ def macseCleanAlignments(args, pool=Pool(processes=1)):
                                                "%s/%s_AA_macse.fasta" % (args.outdir, strip_ixes(sample)),
                                                "%s/%s_NT_macse.fasta" % (args.outdir, strip_ixes(sample)),
                                                "%s/%s_macse.csv" % (args.outdir, strip_ixes(sample))],
-                                              {"exists": []}) for sample in os.listdir(args.samplesdir)], pool)
-
+                                              {"exists": []}) for sample in samplesList], pool)
     printVerbose("\tCleaning MACSE alignments")
 
+    printVerbose("Processing %s samples..." % len(samplesList))
+    nt_macse_outs = ["%s/%s_NT_macse.fasta" % (args.outdir, strip_ixes(sample)) for sample in samplesList]
 
-    dbSeqNames = SeqIO.to_dict(SeqIO.parse(args.db, "fasta")).keys()
-    good_seqs = []
-    samplesList = getInputFiles(args.samplesdir)
-    print "Will be processing %s samples " % len(samplesList)
-    i = 0
-    for sample in samplesList:
-        nt_macse_out = "%s/%s_NT_macse.fasta" % (args.outdir, strip_ixes(sample))
-        for mySeq in SeqIO.parse(nt_macse_out, 'fasta'):
-            if not dbSeqNames.has_key(mySeq.id):
-                mySeq.seq = Seq(str(mySeq.seq[2:]).replace("-", ""))  # remove the !! from the beginning
-                good_seqs.append(mySeq)
-        print "completed %s samples" % i
-        i += 1
-    SeqIO.write(good_seqs, open(os.path.join(args.outdir, "MACSE_OUT_MERGED.fasta"), 'w'), 'fasta')
+    # Clean the alignments
+    parallel(runPythonInstance, [(clean_macse_alignment, input_, args.db,
+                                  "%s/%s" % (args.outdir,"%s_cleaned.fasta" % strip_ixes(input_)))
+                                 for input_ in nt_macse_outs], pool)
+
+    # Cat the cleaned alignments
+    cleaned_alignments = getInputFiles(args.outdir, "*_cleaned.fasta")
+    joinFiles(cleaned_alignments,"%s/MACSE_OUT_MERGED.fasta" % args.outdir)
+
     aux_dir = makeAuxDir(args.outdir)
     aux_files = getInputFiles(args.outdir, "*", "MACSE_OUT_MERGED.fasta")
     bulk_move_to_dir(aux_files, aux_dir)
