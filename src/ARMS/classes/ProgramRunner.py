@@ -155,6 +155,7 @@ class ProgramRunner(object):
             default values of any found entries.  Currently loads the [Program  Paths] section, updating the
             program_paths dictionary.
         """
+        bad_configs = False
         config_file_path = ProgramRunner.DEFAULT_CONFIG_FILEPATH
         config_section = "Program Paths"
         if os.path.isfile(config_file_path):
@@ -164,9 +165,15 @@ class ProgramRunner(object):
             for program_name, program_enum in ProgramRunnerPrograms.__members__.iteritems():
                 if config.has_option(config_section, program_name):
                     config_setting = config.get(config_section, program_name)
-                    ProgramRunner.program_paths[program_enum] = os.path.expanduser(config_setting)
+                    if os.path.isfile(os.path.expanduser(config_setting)):
+                        ProgramRunner.program_paths[program_enum] = os.path.expanduser(config_setting)
+                    else:
+                        print "ERROR! The provided config path does not exist: %s = %s" % (program_name, config_setting)
+                        bad_configs = True
                     # logging.debug("Read %s filepath as %s" % (program, config_setting))
-
+            if bad_configs:
+                print "Errors found in configs file.  Please check config settings."
+                exit()
         else:
             logging.debug("Chewbacca config file not found.  Using defaults.")
 
