@@ -1,6 +1,6 @@
 from Bio import SeqIO
 
-def clean_macse_alignment(input_file, db, outfile):
+def remove_refs_from_macse_out(input_file, db, outfile):
     dbSeqNames = SeqIO.to_dict(SeqIO.parse(db, "fasta"))
     good_seqs = []
     for mySeq in SeqIO.parse(input_file, 'fasta'):

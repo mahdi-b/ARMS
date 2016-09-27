@@ -3,23 +3,22 @@ from itertools import product
 from assemblers.assemble import assemble_main
 from classes.Helpers import *
 from classes.ProgramRunner import ProgramRunner, ProgramRunnerCommands
+from cleaners.clean_quality import clean_quality_main
 from cluster.cluster import cluster_main
-from converters.clean_macse_alignment import clean_macse_alignment
 from converters.fastqToFasta import translateFastqToFasta
-from converters.ungap import ungap
 from demultiplexers.demultiplex import demultiplex_main
+from dereplicaters.dereplicate import dereplicate_main
+from fixers.error_fix import preclean_main
+from mergers.merge import merge_main
 from otu_tables.annotateOTUtable import annotateOTUtable
 from otu_tables.buildOTUtable import buildOTUtable
-from parsers.parseUCtoGroups import parseUCtoGroups
 from parsers.parseVSearchoutForTaxa import *
+from partition.partition import partition_main
 from renamers.rename import rename_main
-from renamers.renameWithReplicantCounts import renameWithReplicantCounts
-from renamers.renameWithoutCount import removeCountsFromFastFile
-from renamers.updateGroups import update_groups
-from src.ARMS.fixers.error_fix import preclean_main
+from src.ARMS.cleaners.clean_macse import remove_refs_from_macse_out
+from src.ARMS.cleaners.remove_gaps import ungap
 from trimmers.trimmers import trim_adapters_main
 from utils.joinFiles import joinFiles
-from utils.splitKperFasta import splitK
 
 
 # TODO: reconcile args parameter documentation
@@ -80,8 +79,6 @@ def demultiplex(args):
                     barcodes    Tab delimited file mapping barcodes to their samples.  Must be a single file.
                     outdir      Directory where outputs will be saved.
     """
-    # "barcode.splitter": "cat \"%s\" | " + programPaths["FASTX"] + 'fastx_barcode_splitter.pl  --bcfile "%s" \
-    #                                    -prefix "%s" --suffix %s --bol --mismatches 1',
     demultiplex_main(args.input_f, args.barcodes, args.outdir, args.programs, args.threads, vars(args))
 
 
@@ -96,7 +93,6 @@ def rename_sequences(args):
                                     e.g. True if file name were 'Sample_395_0.split.out', 'Sample_395_1.split.out', etc.
                                     Important because sample names are derived from input file names.
     """
-
     rename_main(args.input_f, args.outdir, args.filetype, args.clip, args.program, args.threads, vars(args))
 
 
@@ -119,7 +115,7 @@ def trim_adapters(args):
                        vars(args))
 
 
-def trimmomatic(args):
+def clean_quality(args):
     """Uses a sliding window to identify and trim away areas of low quality.
 
     :param args: An argparse object with the following parameters:
@@ -129,108 +125,30 @@ def trimmomatic(args):
                     quality 	Minimum passing quality for the sliding window
                     minLen	    Minimum passing length for a cleaned sequence
     """
-    # "trimomatic":       "java -jar ~/ARMS/programs/Trimmomatic-0.33/trimmomatic-0.33.jar SE \
-    # -%phred %input %output SLIDINGWINDOW:%windowsize:%minAvgQuality MINLEN:%minLen"
-    makeDirOrdie(args.outdir)
-
-    printVerbose("Cleaning sequences with Trimmomatic...")
-    inputs = getInputFiles(args.input_f)
-    pool = init_pool(min(len(inputs), args.threads))
-
-    debugPrintInputInfo(inputs, "clean")
-    parallel(runProgramRunnerInstance,
-             [ProgramRunner(ProgramRunnerCommands.CLEAN_TRIMMOMATIC,
-                            [input_, "%s/%s_cleaned.fastq" % (args.outdir, strip_ixes(input_)),
-                             args.windowSize, args.quality,
-                             args.minLen],
-                            {"exists": [args.outdir, input_],
-                             "positive": [args.windowSize, args.quality, args.minLen]})
-              for input_ in inputs], pool)
-    printVerbose("Done cleaning sequences.")
-
-    cleanup_pool(pool)
+    clean_quality_main(args.input_f, args.outdir, args.program, args.threads, vars(args))
 
 
 def dereplicate(args):
-    makeDirOrdie(args.outdir)
-    inputs = getInputFiles(args.input_f)
-    pool = init_pool(min(len(inputs), args.threads))
-    # REMOVES COUNTS FROM SEQUENCE NAMES IN ORDER TO CLUSTER PROPERLY
-    # strip counts if we need to.
-    if args.stripcounts:
-        printVerbose("Removing counts from sequence names...")
-        debugPrintInputInfo(inputs, "renamed")
-        parallel(runPythonInstance, [(removeCountsFromFastFile, input_,
-                                      "%s/%s_uncount.fasta" % (args.outdir, strip_ixes(input_)), 'fasta')
-                                     for input_ in inputs], pool)
-        printVerbose("Done removing counts.")
+    """Dereplicates a set of fasta files.  Identical (or identical spanning) sequences are considered
+        replicants.  (100% match).  NOTE: only dereplicates within each fasta file (not across all files).  Merge
+        files before hand if you want to dereplciate across multiple files.
 
-        # Grab the cleaned files as input for the next step
-        inputs = getInputFiles(args.outdir, "*_uncount.fasta")
-
-    # DEREPLICATE ONE MORE TIME
-    printVerbose("Dereplicating before clustering...")
-    debugPrintInputInfo(inputs, "dereplicated")
-    parallel(runProgramRunnerInstance, [ProgramRunner(ProgramRunnerCommands.DEREP_VSEARCH,
-                                                      [args.threads, input_,
-                                                       "%s/%s_derep.fasta" % (args.outdir, strip_ixes(input_)),
-                                                       "%s/%s_uc.out" % (args.outdir, strip_ixes(input_))],
-                                                      {"exists": [input_], "positive": [args.threads]})
-                                        for input_ in inputs], pool)
-    printVerbose("Done dereplicating")
-
-    # LOG DEREPLICATED SEQUENCES INTO A .GROUPS FILE
-    # generates a .groups file named _uc_parsed.out
-    # python parseUCtoGroups.py uc.out uc_parsed.out
-    input_ucs = getInputFiles(args.outdir, "*_uc.out")
-    printVerbose("Generating a groups file from dereplication.")
-    debugPrintInputInfo(inputs, "parsed (into agroups file)")
-    parallel(runPythonInstance,
-             [(parseUCtoGroups, input_, "%s/%s_derep.groups" % (args.outdir, strip_ixes(input_)))
-              for input_ in input_ucs], pool)
-
-    most_recent_groups_files = getInputFiles(args.outdir, "*_derep.groups")
-
-    # UPDATE THE MOST CURRENT GROUPS FILES WITH DEREPLICATION COUNTS
-    if args.groupsfile is not None:
-        # Grab the oldgroups file and the dereplicated groups file
-        old_groups_files = getInputFiles(args.groupsfile)
-        derep_groups_files = getInputFiles(args.outdir, "*_derep.groups")
-
-        printVerbose("Updating .groups files with dereplicated data")
-        logging.debug("%d Reference (old)groups files to be read:" % len(old_groups_files))
-        logging.debug(str(old_groups_files))
-        logging.debug("%d Dereplicated (new)groups files to be read:" % len(derep_groups_files))
-        logging.debug(str(derep_groups_files))
-        # update_groups (old_groups_files, new_groups_files, updated)
-        update_groups(old_groups_files, derep_groups_files, args.outdir, "dereplicated")
-        most_recent_groups_files = getInputFiles(args.outdir, "dereplicated*")
-        printVerbose("Done updating .groups files.")
-
-    if len(inputs) != len(most_recent_groups_files):
-        print ("Error: Number of input fastas (%d) is not equal to the number ofgroups files (%d)." %
-               (len(inputs), len(most_recent_groups_files)))
-        exit()
-    fasta_groups_pairs = zip(inputs, most_recent_groups_files)
-    # ADD COUNT TO SEQUENCE NAMES AND SORT BY COUNT
-    # python renameWithReplicantCounts.py
-    #               8_macse_out/MACSEOUT_MERGED.fasta uc_parsed.out dereplicated_renamed.fasta
-    printVerbose("Adding dereplication data to unique fasta")
-    parallel(runPythonInstance,
-             [(renameWithReplicantCounts, fasta, groups,
-               "%s/%s_counts.fasta" % (args.outdir, strip_ixes(fasta)), 'fasta')
-              for fasta, groups in fasta_groups_pairs], pool)
-    printVerbose("Done adding data")
-
-    aux_dir = makeAuxDir(args.outdir)
-    groups_dir = makeDirOrdie("%s_groups_files" % args.outdir)
-    bulk_move_to_dir(most_recent_groups_files, groups_dir)
-    aux_files = getInputFiles(args.outdir, '*', "*_counts.fasta")
-    bulk_move_to_dir(aux_files, aux_dir)
+    :param args: An argparse object with the following parameters:
+                    input_f:        Filepath to the file or folder of files to dereplicate.
+                    outdir:         Filepath to the output directory.
+                    groupsfile:     A groups file to use as a reference for dereplication counting.  If no groups file
+                                            is provided, input sequences are conidered singletons (regardless of their
+                                            dereplication count).
+                    threads:        The number of processes to use to dereplicate the fileset.
+                    stripcounts:    If True, strips the trailing dereplication counts from a file before dereplication.
+                    aux_args:       A dictionary of program-specific named-parameters.
+    """
+    dereplicate_main(args.input_f, args.outdir, args.groupsfile, args.program, args.threads, args.stripcounts,
+                     vars(args))
 
 
 def partition(args):
-    """ Partition the cleaned file into chunks of user-defined size.
+    """ Partition a fasta/fastq file into multiple files, each with <chunksize> sequences.
 
     :param args: An argparse object with the following parameters:
                     input	    Input fasta file to split
@@ -238,59 +156,22 @@ def partition(args):
                     chunksize	Chunksize.
                     filetype	Filetype of the files to be partitioned
     """
-    # def splitK(inputFasta, prefix, nbSeqsPerFile, filetype):
-    makeDirOrdie(args.outdir)
-
-    # Gather input files
-    inputs = getInputFiles(args.input_f)
-    debugPrintInputInfo(inputs, "partitioned")
-    printVerbose("Partitioning Files...")
-
-    pool = init_pool(min(len(inputs), args.threads))
-
-    parallel(runPythonInstance,
-             [(splitK, input_, "%s/%s" % (args.outdir, strip_ixes(input_)), args.chunksize, args.filetype)
-                for input_ in inputs], pool)
-    printVerbose("Done partitioning files.")
-    cleanup_pool(pool)
+    partition_main(args.input_f, args.outdir, args.threads, args.program, args.chunksize, args.filetype, vars(args))
 
 
 def merge(args):
-    """Blindly concatenates files in a directory.
+    """Concatenates files in a directory.
        :param args: An argparse object with the following parameters:
                        input        Cleaned inputs File.
                        outdir       Directory where outputs will be saved.
                        name         Name prefix for the merged file.
                        fileext      Output file extension.  e.g 'fasta', 'fastq', 'txt'
        """
-    makeDirOrdie(args.outdir)
-    inputs = getInputFiles(args.input_f)
-    debugPrintInputInfo(inputs, "merged together.")
-    printVerbose("Merging files...")
-    joinFiles(inputs, "%s/%s_MERGED.%s" % (args.outdir, args.name, args.fileext))
-    pool = init_pool(min(len(inputs), args.threads))
-    printVerbose("Done merging.")
-    cleanup_pool(pool)
+    merge_main(args.input_f, args.outdir, args.program, args.name, args.fileext, vars(args))
 
-
+# TODO doc and debug
 def ungap_fasta(args):
-    """Removes a gap character from sequences in a fasta file.  Useful for removing characters from an alignment file.
-       :param args: An argparse object with the following parameters:
-                       input        Fasta files to ungap.
-                       outdir       Directory where outputs will be saved.
-                       gapchar      A gap character to remove from the sequences.
-                       fileext      Either 'fastq' or 'fasta'.
-       """
-    makeDirOrdie(args.outdir)
-    input_files = getInputFiles(args.input_f,"*.fasta")
-    debugPrintInputInfo(input_files, "ungap.")
-    pool = init_pool(min(len(input_files), args.threads))
-    printVerbose("Removing all '%s' from sequences..." % args.gapchar)
-    # ungap(file_to_clean, output_file_name, gap_char, file_type):
-    parallel(runPythonInstance, [(ungap, input_, "%s/%s_cleaned.%s" % (args.outdir, strip_ixes(input_), 'fasta'),
-                                  args.gapchar, args.fileext) for input_ in input_files], pool)
-    printVerbose("Done removing.")
-    cleanup_pool(pool)
+    ungap_fasta(args.input_f, args.outdir, args.gapchars, args.fileext, args.program, args.threads, vars(args))
 
 
 def cluster(args):
@@ -472,6 +353,7 @@ def make_fasta(args):
 
     cleanup_pool(pool)
 
+
 def macseAlignSeqs(args, pool=Pool(processes=1)):
     """Aligns sequences by iteratively adding them to a known good alignment.
      :param args: An argparse object with the following parameters:
@@ -489,9 +371,9 @@ def macseAlignSeqs(args, pool=Pool(processes=1)):
     printVerbose("\t %s Aligning reads using MACSE")
     inputs = getInputFiles(args.input_f)
     parallel(runProgramRunnerInstance, [ProgramRunner(ProgramRunnerCommands.MACSE_ALIGN,
-                                              [args.db, args.db, input] +
-                                              ["%s/%s" % (args.outdir, getFileName(input))] * 3,
-                                              {"exists": [input, args.db]}) for input in inputs], pool)
+                                                      [args.db, args.db, input] +
+                                                      ["%s/%s" % (args.outdir, getFileName(input))] * 3,
+                                                      {"exists": [input, args.db]}) for input in inputs], pool)
     cleanup_pool(pool)
 
 
@@ -510,24 +392,24 @@ def macseCleanAlignments(args, pool=Pool(processes=1)):
     printVerbose("\t %s Processing MACSE alignments")
     samplesList = getInputFiles(args.samplesdir)
     parallel(runProgramRunnerInstance, [ProgramRunner(ProgramRunnerCommands.MACSE_FORMAT,
-                                              ["%s/%s_NT" % (args.input_f, strip_ixes(sample)),
-                                               "%s/%s_AA_macse.fasta" % (args.outdir, strip_ixes(sample)),
-                                               "%s/%s_NT_macse.fasta" % (args.outdir, strip_ixes(sample)),
-                                               "%s/%s_macse.csv" % (args.outdir, strip_ixes(sample))],
-                                              {"exists": []}) for sample in samplesList], pool)
+                                                      ["%s/%s_NT" % (args.input_f, strip_ixes(sample)),
+                                                       "%s/%s_AA_macse.fasta" % (args.outdir, strip_ixes(sample)),
+                                                       "%s/%s_NT_macse.fasta" % (args.outdir, strip_ixes(sample)),
+                                                       "%s/%s_macse.csv" % (args.outdir, strip_ixes(sample))],
+                                                      {"exists": []}) for sample in samplesList], pool)
     printVerbose("\tCleaning MACSE alignments")
 
     printVerbose("Processing %s samples..." % len(samplesList))
     nt_macse_outs = ["%s/%s_NT_macse.fasta" % (args.outdir, strip_ixes(sample)) for sample in samplesList]
 
     # Clean the alignments
-    parallel(runPythonInstance, [(clean_macse_alignment, input_, args.db,
-                                  "%s/%s" % (args.outdir,"%s_cleaned.fasta" % strip_ixes(input_)))
+    parallel(runPythonInstance, [(remove_refs_from_macse_out, input_, args.db,
+                                  "%s/%s" % (args.outdir, "%s_cleaned.fasta" % strip_ixes(input_)))
                                  for input_ in nt_macse_outs], pool)
 
     # Cat the cleaned alignments
     cleaned_alignments = getInputFiles(args.outdir, "*_cleaned.fasta")
-    joinFiles(cleaned_alignments,"%s/MACSE_OUT_MERGED.fasta" % args.outdir)
+    joinFiles(cleaned_alignments, "%s/MACSE_OUT_MERGED.fasta" % args.outdir)
 
     aux_dir = makeAuxDir(args.outdir)
     aux_files = getInputFiles(args.outdir, "*", "MACSE_OUT_MERGED.fasta")

@@ -1,9 +1,7 @@
-import os
 import sys
 from Bio import SeqIO
-from Bio.Seq import Seq
 
-def ungap(file_to_clean, output_file_name, gap_chars, file_type):
+def remove_gap_chars(file_to_clean, output_file_name, gap_chars, file_type):
     """Removes gap characters from sequences (not sequence names) in an input fasta/fastq.
 
     :param file_to_clean: Filepath to the list of sequences to clean.
@@ -31,4 +29,4 @@ if __name__ == "__main__":
     if len(sys.argv) < 5:
         print "Usage: file_to_clean    output_file    list_of_chars_to_remove   filetype "
     else:
-        ungap(*sys.argv[1:5])
+        remove_gap_chars(*sys.argv[1:5])

@@ -6,7 +6,7 @@ from renamers.renameWithoutCount import removeCountsFromGroupsFile
 from renamers.updateGroups import update_groups
 from classes.Helpers import *
 
-
+# TODO doc
 def cluster_main(input_f, outdir, program, groupsfile, threads, aux_params):
     """Switchboard for clustering options.
 

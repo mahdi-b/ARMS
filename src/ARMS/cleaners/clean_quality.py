@@ -38,8 +38,7 @@ def clean_quality_trimmomatic(inputs, outdir, threads, window_size, quality, min
     printVerbose("Cleaning sequences with Trimmomatic...")
     parallel(runProgramRunnerInstance, [ProgramRunner(ProgramRunnerCommands.CLEAN_TRIMMOMATIC,
                             [input_, "%s/%s_cleaned.fastq" % (outdir, strip_ixes(input_)),
-                             window_size, quality,
-                             min_len],
+                             window_size, quality, min_len],
                             {"exists": [outdir, input_],
                              "positive": [window_size, quality, min_len]})
               for input_ in inputs], pool)

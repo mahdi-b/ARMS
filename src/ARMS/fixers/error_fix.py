@@ -18,7 +18,7 @@ def preclean_main(input_f, input_r, outdir, program, threads, aux_params):
     inputs = validate_paired_fastq_reads(input_f, input_r)
     pool = init_pool(min(len(inputs), threads))
     if program == "bayeshammer":
-        return preclean_spades(inputs, outdir, threads, pool, aux_params["spadesthreads"])
+        return preclean_spades(inputs, outdir, threads, pool, aux_params["bayesthreads"])
     cleanup_pool(pool)
 
 def preclean_spades(inputs, outdir, threads, pool, spadesthreads):

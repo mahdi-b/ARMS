@@ -1,12 +1,13 @@
 from Bio import SeqIO
-from Bio.SeqRecord import SeqRecord
-from Bio.Seq import Seq
 from Bio.Alphabet import Reduced
-from nose.tools import *
-from ..classes.Helpers import makeDirOrdie
-from diffFasta import diff
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
 from itertools import product
 
+from nose.tools import *
+
+from diffFasta import diff
+from src.ARMS.Helpers import makeDirOrdie
 
 test_data = {"A": "a,b,c",
              "B": "b,c,d",
