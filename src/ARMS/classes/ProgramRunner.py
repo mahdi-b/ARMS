@@ -1,9 +1,11 @@
+
 import ConfigParser
 import logging
 import os
 import subprocess
+
 from enum import Enum
-from Helpers import printVerbose, helpValidate, debugPrint
+from classes.Helpers import printVerbose, helpValidate, debugPrint
 
 
 # Names of available programs

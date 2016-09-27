@@ -1,7 +1,8 @@
-from Bio import SeqIO
-import sys
 import os
-from classes.Helpers import getFileName, strip_ixes, clip_count
+import sys
+from Bio import SeqIO
+
+from classes.Helpers import strip_ixes, clip_count
 
 
 def serialRename(input_file, output_file, file_type, clip=True):

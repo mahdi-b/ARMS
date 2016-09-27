@@ -45,7 +45,7 @@ def buildOTUtable(latest_groups_files, inital_samples_files, barcodes_file, out_
                 # read the latest groups file
                 for line in current_groups_file:
                     data = line.split("\t")
-                    # found a cluster
+                    # found a cluster_main
                     if len(data) == 2:
                         otu = data[0].rstrip()
                         children = data[1].rstrip()

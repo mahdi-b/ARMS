@@ -2,8 +2,9 @@ import glob
 import logging
 import os
 import sys
-import Validator
+import classes.Validator
 from multiprocessing import Pool, cpu_count
+
 
 class printVerbose(object):
     """A class to toggle verbose printing."""
@@ -35,7 +36,7 @@ def helpValidate(conditions):
     """
 
     for condition in conditions.iteritems():
-        getattr(Validator, condition[0])(condition[1])
+        getattr(classes.Validator, condition[0])(condition[1])
     return True
 
 
@@ -74,9 +75,11 @@ def parallel(function, data, pool):
     except KeyboardInterrupt:
         kill_pool_and_die(pool)
 
-    except:
+    """except  Exception as e:
+        print e
+        print sys.exc_info()
         kill_pool_and_die(pool)
-
+    """
 
 def makeDirOrdie(dir_path, orDie=True):
     """Creates a directory 'dirPath' or exits if the 'dirPath' directory already exists.  Prevents unnecessary execution.
@@ -122,7 +125,7 @@ def kill_pool_and_die(pool):
 
     :param pool: A fully initalized multiprocessing.Pool object.
     """
-    print "\nExiting...\n"
+    debugPrint("\nEncountered an error!\nClosing Worker Pool...\n")
     # prevent any new jobs
     pool.close()
     # terminate the pool

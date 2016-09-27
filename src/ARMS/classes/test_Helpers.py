@@ -1,9 +1,11 @@
-
-import shutil
 import StringIO
-from Helpers import *
+import shutil
 from multiprocessing import Pool
+
 from nose.tools import *
+
+from src.ARMS.Helpers import *
+
 
 class AttributeObject(object):
     def __init__(self, keys, values):

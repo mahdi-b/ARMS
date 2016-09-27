@@ -1,7 +1,11 @@
-import sys
 import sqlite3
+import sys
+
 from ete2 import NCBITaxa
+
 from classes.Helpers import printVerbose
+
+
 # sys.argv[1] = BiocodePASSED_SAP_tax_info.txt
 # sys.argv[2] = vsearch output file with 5 fields
 # sys.argv[3] = min similarity

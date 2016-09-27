@@ -19,7 +19,7 @@ def update_groups(old_groups_files, new_groups_files, out_dir, out_prefix):
 
     Finer points:
     1. The list of child sequences following the seed should not contain the seed.
-    2. The size of the cluster represented by the seed is the number of children succeeding the seed,
+    2. The size of the cluster_main represented by the seed is the number of children succeeding the seed,
             plus one for the seed.
     :param new_groups_files: The current iteration of the groups file.
     :param old_groups_files: The previous iteration of the groups file.
