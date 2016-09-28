@@ -1,8 +1,12 @@
 from classes.Helpers import *
 from classes.ProgramRunner import *
+from enum import Enum
 from parse.parseVSearchoutForTaxa import parseVSearchOutputAgainstFasta, parseVSearchOutputAgainstNCBI
 from itertools import product
 
+class QUERY_TYPE(Enum):
+    FASTA = "FASTA"
+    DATABASE = "DATABASE"
 
 def query_main(input_f, outdir, threads, program, ref, aux_params):
     """Performs closed-reference OTU picking (alignment against known reference sequences).  Switchboard function.
@@ -16,9 +20,9 @@ def query_main(input_f, outdir, threads, program, ref, aux_params):
     """
     makeDirOrdie(outdir)
     if program == "vsearch":
-        if ref == "NCBIDB":
+        if ref == QUERY_TYPE.DATABASE:
             query_ncbi_vsearch(input_f, outdir, threads)
-        elif ref == "fasta":
+        elif ref == QUERY_TYPE.FASTA:
             query_fasta_vsearch(input_f, aux_params["referencefasta"], aux_params["taxinfo"], outdir, threads,
                             aux_params["simmilarity"], aux_params["coverage"])
 

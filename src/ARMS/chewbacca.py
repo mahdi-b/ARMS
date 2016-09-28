@@ -178,7 +178,7 @@ def main(argv):
     parser_trimmomatic.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
     parser_trimmomatic.add_argument('-p', '--program', required=False, default="trimmomatic", help="Indicates which \
                                     program to use.  Choices are: 'trimmomatic'.  Default: 'trimmomatic'.")
-    parser_trimmomatic.add_argument('-m', '--minLen', type=int, default=200,
+    parser_trimmomatic.add_argument('-m', '--minlen', type=int, default=200,
                                     help="Trimmomatic: Minimum length for cleaned sequences")
     parser_trimmomatic.add_argument('-w', '--windowSize', type=int, default=5,
                                     help="Trimmomatic: Size of the sliding window")

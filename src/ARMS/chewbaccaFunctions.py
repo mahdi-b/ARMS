@@ -1,19 +1,19 @@
-from align.align import align_main
+from align.Align_Command import align_main
 from align.align_clean import align_clean_main
-from assemble.assemble import assemble_main
+from assemble.Assemble_Command import Assemble_Command
 from classes.Helpers import *
-from clean.clean_quality import clean_quality_main
+from clean.Clean_Adapters_Command import Clean_Adapters_Command
+from clean.Clean_Quality_Command import Clean_Quality_Command
 from clean.clean_gap_chars import ungap_main
 from cluster.cluster import cluster_main
-from demux.demux import demultiplex_main
+from demux.Demux_Command import Demux_Command
 from dereplicate.dereplicate import dereplicate_main
-from preclean.preclean import preclean_main
+from preclean.Preclean_Command import *
 from merge.merge import merge_main
 from otu.annotate import annotate_main
 from otu.build import build_otu_main
-from otu.query import query_main
-from rename.rename import rename_main
-from clean.clean_trim_adapters import trim_adapters_main
+from otu.query import query_main, QUERY_TYPE
+from rename.Rename_Command import Rename_Command
 from util.fastqToFasta import translateFastqToFasta
 from util.partition import partition_main
 
@@ -30,7 +30,7 @@ def preclean(args):
                     program         The program to use for precleaning.  Choices are: ['bayeshammer']
                                     Default is bayeshammer.
     """
-    preclean_main(args.input_f, args.input_r, args.outdir, args.program, args.threads, vars(args))
+    Preclean_Command(args).execute_command()
 
 
 def assemble(args):
@@ -53,7 +53,7 @@ def assemble(args):
                     outdir          Directory where outputs will be saved.
     """
 
-    assemble_main(args.input_f, args.input_r, args.outdir, args.name, args.program, args.threads, vars(args))
+    Assemble_Command(args).execute_command()
 
 
 def demultiplex(args):
@@ -76,7 +76,7 @@ def demultiplex(args):
                     barcodes    Tab delimited file mapping barcodes to their samples.  Must be a single file.
                     outdir      Directory where outputs will be saved.
     """
-    demultiplex_main(args.input_f, args.barcodes, args.outdir, args.programs, args.threads, vars(args))
+    Demux_Command(args).execute_command()
 
 
 def rename_sequences(args):
@@ -90,7 +90,7 @@ def rename_sequences(args):
                                     e.g. True if file name were 'Sample_395_0.split.out', 'Sample_395_1.split.out', etc.
                                     Important because sample names are derived from input file names.
     """
-    rename_main(args.input_f, args.outdir, args.filetype, args.clip, args.program, args.threads, vars(args))
+    Rename_Command(args).execute_command()
 
 
 def trim_adapters(args):
@@ -108,8 +108,7 @@ def trim_adapters(args):
                     allowedns   Non-negative integer value indicating the maximum number of 'N's to tolerate in a
                                     sequence.
     """
-    trim_adapters_main(args.input_f, args.adapters, args.adaptersrc, args.outdir, args.program, args.threads,
-                       vars(args))
+    Clean_Adapters_Command(args).execute_command()
 
 
 def clean_quality(args):
@@ -122,7 +121,7 @@ def clean_quality(args):
                     quality 	Minimum passing quality for the sliding window
                     minLen	    Minimum passing length for a cleaned sequence
     """
-    clean_quality_main(args.input_f, args.outdir, args.program, args.threads, vars(args))
+    Clean_Quality_Command(args).execute_command()
 
 
 def dereplicate(args):
@@ -205,7 +204,7 @@ def query_fasta(args):
                     accnosFile  List of sequence names to remove
                     outdir      Directory to put the output files
     """
-    query_main(args.input_f, args.outdir, args.threads, args.program, "fasta", vars(args))
+    query_main(args.input_f, args.outdir, args.threads, args.program, QUERY_TYPE.FASTA, vars(args))
 
 
 def query_ncbi(args):
@@ -215,7 +214,7 @@ def query_ncbi(args):
                     input       Input file/folder with fasta sequences
                     outdir      Directory to put the output files
     """
-    query_main(args.input_f, args.outdir, args.threads, args.program, "NCBIDB", vars(args))
+    query_main(args.input_f, args.outdir, args.threads, args.program, QUERY_TYPE.DATABASE, vars(args))
 
 
 def annotate_matrix(args):
@@ -243,7 +242,6 @@ def make_fasta(args):
     parallel(runPythonInstance, [(translateFastqToFasta, input_, "%s/%s.fasta" % (args.outdir, getFileName(input_)))
                                  for input_ in inputs], pool)
     printVerbose("Done converting.")
-
     cleanup_pool(pool)
 
 
@@ -266,4 +264,4 @@ def clean_macse_align(args, pool=Pool(processes=1)):
                     outdir              Directory where outputs will be saved
     :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
     """
-    align_clean_main(input_f, samplesdir, ref, outdir, threads, program, aux_params)
+    align_clean_main(args.input_f, args.samplesdir, args.ref, args.outdir, args.threads, args.program, vars(args))

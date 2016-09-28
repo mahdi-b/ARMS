@@ -1,9 +1,11 @@
 from classes.Helpers import *
 from classes.ProgramRunner import *
 from parse.parseUCtoGroups import parseUCtoGroups
-from rename.renameWithoutCount import removeCountsFromFastFile
 from rename.renameWithReplicantCounts import renameWithReplicantCounts
-from rename.updateGroups import update_groups
+from rename.renameWithoutCount import removeCountsFromFastFile
+
+from util.updateGroups import update_groups
+
 
 def dereplicate_vsearch(inputs, outdir, groupsfile, threads, stripcounts, pool):
     """Dereplicates with vsearch.
