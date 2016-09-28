@@ -300,6 +300,7 @@ def debugPrintInputInfo(input_, action_suffix):
     logging.debug(str(input_))
     logging.debug("\n")
 
+
 def buildCSL(item, attributes):
     """Tests if item has the attributes in options.  Any found attributes are built into a comma-delimited string in the
             format attribute_name=attribute_value.  e.g. "attr1=5, attr2=abc, attrk=def"
@@ -320,6 +321,7 @@ def buildCSL(item, attributes):
     # chop off the trailing comma
     return option_string[:-2]
 
+
 def validate_paired_fastq_reads(input_f, input_r):
     forwards_reads = getInputFiles(input_f, "*_forward*", critical=False)
     reverse_reads = getInputFiles(input_r, "*_reverse*", critical=False)
@@ -338,3 +340,15 @@ def validate_paired_fastq_reads(input_f, input_r):
                         include the filename suffix \"_reverse\" or \"R2\"."
         return
     return zip(set(forwards_reads), set(reverse_reads))
+
+
+def one_to_one_or_one_to_many(n,m):
+    k = len(n)
+    if k ==1 or k ==len(m):
+        return True
+    return False
+
+
+def fittosize(n,m):
+    if len(n)<len(m):
+        return n*len(m), m

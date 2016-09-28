@@ -55,14 +55,14 @@ def test_runProgramRunnerInstance():
 
 
 def test_runPythonInstance():
-    vals = [True, False, 3.1415, "test"]
+    vals = [True, False, 3.1415, "test_files"]
     for val in vals:
         assert_equal(runPythonInstance((mirror,val)), val)
 
 
 def test_parallel():
     # NOTE: tests for correctness, not parallel execution!!!
-    vals = [True, False, 3.1415, "test"]
+    vals = [True, False, 3.1415, "test_files"]
     rslts = parallel(runPythonInstance, [(mirror, val) for val in vals], Pool(4))
     print rslts
     assert_equal(vals, rslts)

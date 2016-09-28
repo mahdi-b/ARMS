@@ -243,7 +243,7 @@ def main(argv):
     # ==  9.5 ungap the files  ==
     # ===========================
     # ungap(file_to_clean, output_file_name, gap_char, file_type)
-    parser_ungap = subparsers.add_parser('ungap_fasta', description="Given a fasta/fastq file or a folder containing \
+    parser_ungap = subparsers.add_parser('ungap_main', description="Given a fasta/fastq file or a folder containing \
                             fasta/fastq files, removes alignment characters (specified by -g).")
     parser_ungap.add_argument('-i', '--input_f', required=True, help="Input directory containing files to concatenate.")
     parser_ungap.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
@@ -359,7 +359,7 @@ def main(argv):
     # ==========================
     # ==  xx Annotate Matrix  ==
     # ==========================
-    parser_annotate_matrix = subparsers.add_parser('annotate_matrix', description="Given a tabular file mapping sequence IDs \
+    parser_annotate_matrix = subparsers.add_parser('annotate_main', description="Given a tabular file mapping sequence IDs \
                                 to taxonomic groups, and an OTU matrix, regroups the identifiable sequence IDs with \
                                 taxonomic groups.")
     parser_annotate_matrix.add_argument('-i', '--input_f', required=True,
@@ -398,7 +398,7 @@ def main(argv):
     parser_align.add_argument('-d', '--db', required=True, help="Database against which to align and filter reads")
     parser_align.add_argument('-p', '--program', required=False, default="macse", help="Indicates which \
                                                    program to use.  Choices are: 'macse'.  Default: 'macse'.")
-    parser_align.set_defaults(func=macseAlignSeqs)
+    parser_align.set_defaults(func=mase_align)
 
 
 
@@ -412,7 +412,7 @@ def main(argv):
     parser_macseClean.add_argument('-d', '--db', required=True, help="Database against which to align and filter reads")
     parser_macseClean.add_argument('-p', '--program', required=False, default="macse", help="Indicates which \
                                                    program to use.  Choices are: 'macse'.  Default: 'macse'.")
-    parser_macseClean.set_defaults(func=macseCleanAlignments)
+    parser_macseClean.set_defaults(func=clean_macse_align)
 
 
     global args

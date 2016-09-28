@@ -4,7 +4,7 @@ import os
 def exists(files):
     """Returns True if each file in files exists in the current directory, and raises an Exception if not.
 
-    :param files: A list of files to test
+    :param files: A list of files to test_files
     :return: True if all files exist, raises an Exception if not.
     """
     for file_ in files:
