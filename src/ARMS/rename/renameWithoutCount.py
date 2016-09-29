@@ -1,5 +1,5 @@
-import sys
 from Bio import SeqIO
+
 from classes.Helpers import clip_count
 
 

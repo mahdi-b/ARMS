@@ -2,8 +2,9 @@ import glob
 import logging
 import os
 import sys
+from multiprocessing import Pool
+
 import classes.Validator
-from multiprocessing import Pool, cpu_count
 
 
 class printVerbose(object):
@@ -12,17 +13,13 @@ class printVerbose(object):
     # If True, verbose printing is enabled
     VERBOSE = False
 
-    def __init__(self, msg, newline=True, out=sys.stdout):
+    def __init__(self, msg,out=sys.stdout):
         """Prints the msg to console if printVerbose.VERBOSE is True.
         :param msg: The thing to print.
-        :param newline: Should a newline character be printed before the msg? Default True.
         :param out: Where to write the verbose message.  Default sys.stdout
         """
         if printVerbose.VERBOSE:
-            if newline:
-                out.write("\n")
-            out.write(msg)
-
+            out.write("\n%s\n" % msg)
 
 def helpValidate(conditions):
     """Validates all conditions using a Validator object, returning True if successful and raising an exception
@@ -296,9 +293,11 @@ def debugPrintInputInfo(input_, action_suffix):
     :param action_suffix: The past-tense operation to be preformed on the input.
     :return:
     """
-    logging.debug("%d files to be %s:\n" % (len(input_), action_suffix))
-    logging.debug(str(input_))
-    logging.debug("\n")
+    file_str = ""
+    for f in input_:
+        file_str += "\t%s\n" % f
+
+    logging.debug("%d files to be %s:\n%s\n" % (len(input_), action_suffix, file_str))
 
 
 def buildCSL(item, attributes):

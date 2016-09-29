@@ -1,8 +1,11 @@
-from classes.Helpers import *
+from itertools import product
+
 from classes.ProgramRunner import *
 from enum import Enum
 from parse.parseVSearchoutForTaxa import parseVSearchOutputAgainstFasta, parseVSearchOutputAgainstNCBI
-from itertools import product
+
+from classes.Helpers import *
+
 
 class QUERY_TYPE(Enum):
     FASTA = "FASTA"

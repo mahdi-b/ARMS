@@ -1,21 +1,12 @@
-from classes.Helpers import *
-from classes.ProgramRunner import *
-from align_clean_macse import align_clean_macse
+from Bio import SeqIO
 
 
-def align_clean_main(input_f, samplesdir, ref, outdir, threads, program, aux_params):
-    """
-    :param input_f: File path to file or folder of files to clean.
-    :param samplesdir: Filepath to the original, unaligned input files (the inputs to the macse aligner).
-    :param ref: Filepath to the reference file used to align the input files.
-    :param outdir: Filepath to the directory to write outputs to.
-    :param threads: The number of processes to use to clean the alignments.
-    :param program: The program to use to clean the alignments.  Choices are ["macse"].  Default is "macse".
-    :param aux_params: A dictionary of program-specific named-parameters.
-    """
-    makeDirOrdie(outdir)
-    inputs = getInputFiles(input_f)
-    pool = init_pool(min(len(inputs), threads))
-    if program == "macse":
-        align_clean_macse(input_f, ref, samplesdir, outdir, pool)
-    cleanup_pool(pool)
+def remove_refs_from_macse_out(input_file, db, outfile):
+    dbSeqNames = SeqIO.to_dict(SeqIO.parse(db, "fasta"))
+    good_seqs = []
+    for mySeq in SeqIO.parse(input_file, 'fasta'):
+        # Keep only the non-reference sequences
+        if not dbSeqNames.has_key(mySeq.id):
+            mySeq.seq = mySeq.seq.ungap("-")[2:]
+            good_seqs.append(mySeq)
+    SeqIO.write(good_seqs, open(outfile, 'w'), 'fasta')

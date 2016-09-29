@@ -1,21 +1,21 @@
-from align.Align_Command import align_main
-from align.align_clean import align_clean_main
+from align.Align_Command import Align_Command
+from align.Align_Clean_Command import Align_Clean_Command
 from assemble.Assemble_Command import Assemble_Command
 from classes.Helpers import *
 from clean.Clean_Adapters_Command import Clean_Adapters_Command
 from clean.Clean_Quality_Command import Clean_Quality_Command
-from clean.clean_gap_chars import ungap_main
-from cluster.cluster import cluster_main
+from cluster.Cluster_Command import Cluster_Command
 from demux.Demux_Command import Demux_Command
-from dereplicate.dereplicate import dereplicate_main
+from dereplicate.Dereplicate_Command import Dereplicate_Command
+from otu.Annotate_OTU_Table_Command import Annotate_OTU_Table_Command
+from otu.Build_OTU_Table_Command import Build_OTU_Table_Command
+from otu.Query_OTU_Command import Query_OTU_Command, QUERY_TYPE
 from preclean.Preclean_Command import *
-from merge.merge import merge_main
-from otu.annotate import annotate_main
-from otu.build import build_otu_main
-from otu.query import query_main, QUERY_TYPE
 from rename.Rename_Command import Rename_Command
-from util.fastqToFasta import translateFastqToFasta
-from util.partition import partition_main
+from util.Convert_Fastq_Fasta_Command import Convert_Fastq_Fasta_Command
+from util.Merge_Command import Merge_Command
+from util.Partition_Command import Partition_Command
+from util.Ungap_Command import Ungap_Command
 
 
 # TODO: reconcile args parameter documentation
@@ -139,8 +139,7 @@ def dereplicate(args):
                     stripcounts:    If True, strips the trailing dereplication counts from a file before dereplication.
                     aux_args:       A dictionary of program-specific named-parameters.
     """
-    dereplicate_main(args.input_f, args.outdir, args.groupsfile, args.program, args.threads, args.stripcounts,
-                     vars(args))
+    Dereplicate_Command(args).execute_command()
 
 
 def partition(args):
@@ -152,8 +151,7 @@ def partition(args):
                     chunksize	Chunksize.
                     filetype	Filetype of the files to be partitioned
     """
-    partition_main(args.input_f, args.outdir, args.threads, args.program, args.chunksize, args.filetype, vars(args))
-
+    Partition_Command(args).execute_command()
 
 def merge(args):
     """Concatenates files in a directory.
@@ -163,7 +161,7 @@ def merge(args):
                        name         Name prefix for the merged file.
                        fileext      Output file extension.  e.g 'fasta', 'fastq', 'txt'
        """
-    merge_main(args.input_f, args.outdir, args.program, args.name, args.fileext, vars(args))
+    Merge_Command(args).execute_command()
 
 
 def ungap_fasta(args):
@@ -174,7 +172,7 @@ def ungap_fasta(args):
                        gapchar      A gap character to remove from the sequences.
                        fileext      Either 'fastq' or 'fasta'.
     """
-    ungap_main(args.input_f, args.outdir, args.gapchars, args.fileext, args.program, args.threads, vars(args))
+    Ungap_Command(args).execute_command()
 
 
 def cluster(args):
@@ -182,7 +180,7 @@ def cluster(args):
 
     :param args: An argparse object.
     """
-    cluster_main(args.input_f, args.outdir, args.program, args.groupsfile, args.threads, vars(args))
+    Cluster_Command(args).execute_command()
 
 
 def build_matrix(args):
@@ -194,7 +192,7 @@ def build_matrix(args):
                     barcodes    A single barcodes file listing all possible sample groups.
     """
 
-    build_otu_main(args.outdir, args.groups_file, args.samples_file, args.program, args.barcodes_file, vars(args))
+    Build_OTU_Table_Command(args).execute_command()
 
 
 def query_fasta(args):
@@ -204,7 +202,8 @@ def query_fasta(args):
                     accnosFile  List of sequence names to remove
                     outdir      Directory to put the output files
     """
-    query_main(args.input_f, args.outdir, args.threads, args.program, QUERY_TYPE.FASTA, vars(args))
+    Query_OTU_Command(args).execute_command()
+
 
 
 def query_ncbi(args):
@@ -214,7 +213,8 @@ def query_ncbi(args):
                     input       Input file/folder with fasta sequences
                     outdir      Directory to put the output files
     """
-    query_main(args.input_f, args.outdir, args.threads, args.program, QUERY_TYPE.DATABASE, vars(args))
+    Query_OTU_Command(args).execute_command()
+
 
 
 def annotate_matrix(args):
@@ -224,7 +224,7 @@ def annotate_matrix(args):
                     outdir      Directory to put the output files.
                     map      File/folder with .samples files.
     """
-    annotate_main(args.input_f, args.annotation, args.outdir, args.threads, args.program, vars(args))
+    Annotate_OTU_Table_Command(args).execute_command()
 
 
 def make_fasta(args):
@@ -233,16 +233,7 @@ def make_fasta(args):
                     input       File/folder with fastq files.
                     outdir      Directory to put the output files.xs
     """
-    makeDirOrdie(args.outdir)
-    inputs = getInputFiles(args.input_f)
-    debugPrintInputInfo(inputs, "convert to fasta.")
-    printVerbose("Converting to fasta...")
-
-    pool = init_pool(min(len(inputs), args.threads))
-    parallel(runPythonInstance, [(translateFastqToFasta, input_, "%s/%s.fasta" % (args.outdir, getFileName(input_)))
-                                 for input_ in inputs], pool)
-    printVerbose("Done converting.")
-    cleanup_pool(pool)
+    Convert_Fastq_Fasta_Command(args).execute_command()
 
 
 def mase_align(args, pool=Pool(processes=1)):
@@ -253,7 +244,7 @@ def mase_align(args, pool=Pool(processes=1)):
                     outdir              Directory where outputs will be saved
      :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
     """
-    align_main(args.input_f, args.ref, args.outdir, args.program, args.threads, vars(args))
+    Align_Command(args).execute_command()
 
 
 def clean_macse_align(args, pool=Pool(processes=1)):
@@ -264,4 +255,4 @@ def clean_macse_align(args, pool=Pool(processes=1)):
                     outdir              Directory where outputs will be saved
     :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
     """
-    align_clean_main(args.input_f, args.samplesdir, args.ref, args.outdir, args.threads, args.program, vars(args))
+    Align_Clean_Command(args).execute_command()

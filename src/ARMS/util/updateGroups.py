@@ -1,7 +1,8 @@
 import os
 import sys
-from util.joinFiles import joinFiles
+
 from parse.parseGroupsFileToDict import parseGroupsFileToDictOfChilden
+from util.merge import merge_files
 
 
 def update_groups(old_groups_files, new_groups_files, out_dir, out_prefix):
@@ -30,7 +31,8 @@ def update_groups(old_groups_files, new_groups_files, out_dir, out_prefix):
     :return: Filepath to the updated groups file
     """
     if not (len(old_groups_files) and len(new_groups_files)):
-        print "Received empty file lists.  Aborting."
+        print "\n***WARNING***: Received empty file lists.  Aborting group file update.  If you provided a groups file, \
+              something went wrong.\n"
         return
     print "Using %s and %s to generate updated groups file %s_updated.groups" % \
           (old_groups_files[0], new_groups_files[0], out_prefix)
@@ -39,8 +41,8 @@ def update_groups(old_groups_files, new_groups_files, out_dir, out_prefix):
     output_file = "%s/%s_updated.groups" % (out_dir, out_prefix)
 
     # Concat the old and new groups files respectively
-    joinFiles(old_groups_files, old_groups_temp_file)
-    joinFiles(new_groups_files, new_groups_temp_file)
+    merge_files(old_groups_files, old_groups_temp_file)
+    merge_files(new_groups_files, new_groups_temp_file)
 
     # parse the groups files to dictionaries of children
     old_seeds = parseGroupsFileToDictOfChilden(old_groups_temp_file)

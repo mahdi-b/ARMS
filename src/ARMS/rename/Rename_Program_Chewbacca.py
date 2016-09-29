@@ -1,7 +1,9 @@
-from classes.Helpers import *
-from classes.ProgramRunner import *
 from classes.ChewbaccaProgram import *
+from classes.ProgramRunner import *
+
+from classes.Helpers import *
 from renameSerially import serialRename
+
 
 class Rename_Program_Chewbacca(ChewbaccaProgram):
     name = "chewbacca"

@@ -1,7 +1,7 @@
 import os
 from Bio import SeqIO
-from Bio.Seq import Seq
 from Bio.Alphabet import SingleLetterAlphabet
+from Bio.Seq import Seq
 
 
 def capitalizeSeqs(input_fasta, output_fasta):

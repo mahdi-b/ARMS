@@ -1,6 +1,8 @@
-from classes.Helpers import *
-from classes.ProgramRunner import *
 from classes.ChewbaccaProgram import *
+from classes.ProgramRunner import *
+
+from classes.Helpers import *
+
 
 class Preclean_Program_Bayeshammer(ChewbaccaProgram):
     name = "bayeshammer"

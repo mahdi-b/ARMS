@@ -1,6 +1,8 @@
-from classes.Helpers import *
-from classes.ProgramRunner import *
 from classes.ChewbaccaProgram import *
+from classes.ProgramRunner import *
+
+from classes.Helpers import *
+
 
 class Demux_Program_Fastx(ChewbaccaProgram):
     """Splits a fasta/fastq file on a set of barcodes.  For a set of k input files, each input file is assigned a

@@ -1,6 +1,7 @@
 import argparse
-from chewbaccaFunctions import *
 import signal
+
+from chewbaccaFunctions import *
 
 # Program Version
 version = "0.01"
@@ -36,7 +37,7 @@ Supported operations:
         mothur align.seqs
 
     7 split
-        splitKperFasta.py
+        partition.py
 
     8 macsealign
         macse
@@ -224,10 +225,10 @@ def main(argv):
                             program to use.  Choices are: 'chewbacca'.  Default: 'chewbacca'.")
     parser_split.set_defaults(func=partition)
 
-    # =======================
-    # ==  9 Cat the files  ==
-    # =======================
-    # joinFiles(input_file_list, output_file)
+    # =========================
+    # ==  9 Merge the files  ==
+    # =========================
+    # merge_files(input_file_list, output_file)
     parser_cat = subparsers.add_parser('merge_files', description="Given a folder containing any type of file, \
                             concatenates all files in that folder together, regardless of their filetype.  Note: Any \
                             file headers/footers will be written as well.")
@@ -243,13 +244,13 @@ def main(argv):
     # ==  9.5 ungap the files  ==
     # ===========================
     # ungap(file_to_clean, output_file_name, gap_char, file_type)
-    parser_ungap = subparsers.add_parser('ungap_main', description="Given a fasta/fastq file or a folder containing \
+    parser_ungap = subparsers.add_parser('ungap_fasta', description="Given a fasta/fastq file or a folder containing \
                             fasta/fastq files, removes alignment characters (specified by -g).")
     parser_ungap.add_argument('-i', '--input_f', required=True, help="Input directory containing files to concatenate.")
     parser_ungap.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
     parser_ungap.add_argument('-f', '--fileext', required=True, help="File extension for the output file.  Either \
                             'fasta', or 'fastq'.")
-    parser_ungap.add_argument('-g', '--gapchar', required=True, help="A string of one or more characters to remove \
+    parser_ungap.add_argument('-g', '--gapchars', required=True, help="A string of one or more characters to remove \
                             from the sequences (but not sequence groups) in the input files.")
     parser_ungap.add_argument('-p', '--program', required=False, default="chewbacca", help="Indicates which \
                                            program to use.  Choices are: 'chewbacca'.  Default: 'chewbacca'.")

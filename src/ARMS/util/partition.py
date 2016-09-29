@@ -1,41 +1,27 @@
-from classes.Helpers import *
-from classes.ProgramRunner import *
-from splitKperFasta import splitK
+import sys
+from Bio import SeqIO
 
 
-def partition_main(input_f, outdir, threads, program, chunksize, filetype, aux_params):
-    """Partitions a fasta/fastq file into files with <chunksize> sequences.
+def splitK(inputFasta, prefix, nbSeqsPerFile, filetype):
+    mySeqs = SeqIO.parse(inputFasta, filetype)
+    chunk = 0
+    sequences = []
 
-    :param input_f: Filepath to a file or folder of files to partition.
-    :param outdir: The directory to write split files to.
-    :param threads: The number of processes to use to partition the input fileset.
-    :param chunksize: The number of sequences per file.
-    :param filetype: Either 'fasta' or 'fastq'.
-    :param aux_params A dictionary of program-specific named-parameters.
-    """
-    makeDirOrdie(outdir)
-    # Gather input files
-    inputs = getInputFiles(input_f)
-    debugPrintInputInfo(inputs, "partitioned")
-    pool = init_pool(min(len(inputs), threads))
-    if program == "chewbacca":
-        partition_chewbacca(inputs, outdir, threads, chunksize, filetype, pool)
-    cleanup_pool(pool)
+    for mySeq in mySeqs:
+        mySeq.seq  = mySeq.seq.ungap(".")
+        if len(mySeq.seq) < 200:
+            continue
+        sequences.append(mySeq)
+        if len(sequences) % nbSeqsPerFile == 0:
+            SeqIO.write(sequences, open("%s_part_%d.%s" % (str(prefix), chunk, filetype), 'w'), filetype)
+            sequences=[]
+            chunk+=1
+    if sequences:
+        SeqIO.write(sequences, open("%s_part_%d.%s" % (str(prefix), chunk, filetype), 'w'), filetype)
+    print("Split %s into %d parts." % (inputFasta, (chunk + 1)))
 
-
-def partition_chewbacca(inputs, outdir, threads, chunksize, filetype, pool):
-    """Partition a fasta/fastq file into chunks of user-defined size.
-
-    :param inputs: A list of filepaths to files to partition.
-    :param outdir: The directory to write split files to.
-    :param threads: The number of processes to use to partition the input fileset.
-    :param chunksize: The number of sequences per file.
-    :param filetype: Either 'fasta' or 'fastq'.
-    :param pool: A fully-initalized multiprocessing.Pool object.
-    """
-    # def splitK(inputFasta, prefix, nbSeqsPerFile, filetype):
-    printVerbose("Partitioning Files...")
-    parallel(runPythonInstance,
-             [(splitK, input_, "%s/%s" % (outdir, strip_ixes(input_)), chunksize, filetype)
-              for input_ in inputs], pool)
-    printVerbose("Done partitioning files.")
+if __name__ == "__main__":
+    if len(sys.argv) < 5:
+        print "Usage: input_fasta  output_file_prefix  #seqs_per_file  input_filetype"
+    else:
+        splitK(*sys.argv[1:5])

@@ -1,5 +1,6 @@
-from classes.Helpers import *
 from util.updateGroups import update_groups
+
+from classes.Helpers import *
 
 
 def handle_groups_file_update(outdir, groupsfile, clustering_groups_files_uncount):

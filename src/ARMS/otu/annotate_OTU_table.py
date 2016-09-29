@@ -1,6 +1,6 @@
-from itertools import product
-from parse.parseVSearchoutForTaxa import *
 from classes.ProgramRunner import *
+from parse.parseVSearchoutForTaxa import *
+
 from classes.Helpers import *
 
 

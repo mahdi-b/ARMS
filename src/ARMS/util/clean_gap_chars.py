@@ -1,6 +1,8 @@
-from classes.Helpers import *
 from classes.ProgramRunner import *
-from clean_gap_chars_chewbacca import remove_gap_chars
+
+from classes.Helpers import *
+from ungap import remove_gap_chars
+
 
 def ungap_main(input_f, outdir, gapchars, file_ext, program, threads, aux_params):
     """Removes a gap character from sequences in a fasta file.  Useful for removing characters from an alignment file.

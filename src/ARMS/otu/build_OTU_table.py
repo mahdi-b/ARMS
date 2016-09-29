@@ -1,4 +1,3 @@
-import sys
 from classes.Helpers import *
 # NOTE: A SEQUENCE MUST NOT APPEAR IN TWO GROUPS FILES.
 def buildOTUtable(latest_groups_files, inital_samples_files, barcodes_file, out_file):

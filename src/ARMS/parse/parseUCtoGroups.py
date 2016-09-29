@@ -1,5 +1,6 @@
-from collections import defaultdict
 import sys
+from collections import defaultdict
+
 
 # TODO rename, these arent fasta files
 def parseUCtoGroups(input_uc_file, output_groups_file):

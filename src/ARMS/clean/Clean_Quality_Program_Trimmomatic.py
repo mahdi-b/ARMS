@@ -1,6 +1,8 @@
-from classes.Helpers import *
-from classes.ProgramRunner import *
 from classes.ChewbaccaProgram import *
+from classes.ProgramRunner import *
+
+from classes.Helpers import *
+
 
 class Clean_Quality_Program_Trimmomatic(ChewbaccaProgram):
     name = "trimmomatic"

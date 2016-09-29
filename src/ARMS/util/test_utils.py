@@ -5,9 +5,9 @@ from Bio.SeqRecord import SeqRecord
 from itertools import product
 
 from nose.tools import *
+from src.ARMS.Helpers import makeDirOrdie
 
 from diffFasta import diff
-from src.ARMS.Helpers import makeDirOrdie
 
 test_data = {"A": "a,b,c",
              "B": "b,c,d",

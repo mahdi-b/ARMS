@@ -1,7 +1,10 @@
-from classes.Helpers import *
-from classes.ProgramRunner import *
-from classes.ChewbaccaProgram import *
 import os
+
+from classes.ChewbaccaProgram import *
+from classes.ProgramRunner import *
+
+from classes.Helpers import *
+
 
 class Clean_Adapters_Program_Flexbar(ChewbaccaProgram):
     name = "flexbar"

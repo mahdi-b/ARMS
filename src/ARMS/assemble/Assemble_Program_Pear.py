@@ -1,6 +1,8 @@
-from classes.Helpers import *
-from classes.ProgramRunner import *
 from classes.ChewbaccaProgram import *
+from classes.ProgramRunner import *
+
+from classes.Helpers import *
+
 
 class Assemble_Program_Pear(ChewbaccaProgram):
     name = "pear"
