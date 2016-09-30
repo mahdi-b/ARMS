@@ -19,11 +19,3 @@ class Assemble_Command(ChewbaccaCommand):
     supported_programs = [Assemble_Program_Pear]
     default_program = Assemble_Program_Pear
     command_name = "Assemble"
-
-
-    def execute_command(self):
-        self.get_program(self.args.program).execute_program()
-
-
-
-

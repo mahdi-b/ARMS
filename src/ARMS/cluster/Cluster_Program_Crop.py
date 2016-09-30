@@ -1,11 +1,14 @@
 from classes.ChewbaccaProgram import *
 from classes.ProgramRunner import ProgramRunner, ProgramRunnerCommands
+from parse.parseCROPoutToGroups import parseCROPoutToGroups
+
 from classes.Helpers import *
 from cluster_helpers import handle_groups_file_update
-from parse.parseCROPoutToGroups import parseCROPoutToGroups
 
 
 class Cluster_Program_Crop(ChewbaccaProgram):
+    """Uses CROP to cluster a set of input sequences.
+    """
     name = "crop"
 
 
@@ -23,16 +26,26 @@ class Cluster_Program_Crop(ChewbaccaProgram):
     def cluster_crop(self, input_f, outdir, groupsfile, threads, blocksize, clustpct, maxmcmc, maxsm, rare, blockcount):
         """Clusters sequences using CROP.
 
-        :param input_f:
-        :param outdir:
-        :param groupsfile:
-        :param threads:
-        :param blocksize:
-        :param clustpct:
-        :param maxmcmc:
-        :param maxsm:
-        :param rare:
+        :param input_f: Filepath to the input fasta file to cluster.
+        :param outdir: Filepath to the output directory.
+        :param groupsfile: Filepath to the groups file to use as a reference for dereplication counting.
+        :param threads: The maximum number of processes to use to cluster.
+        :param blocksize: Size of blocks to be used for all rounds (if -b is specified, then -z will not affect the
+                            first round.  For data set with different average sequence length, this parameter should \
+                            be tuned such that it won't take too long for each block to do pariwise alignment.  Hint \
+                            for choosing z: z*L<150,000, where L is the average length of the sequences.
+        :param clustpct: The minimum similarity threshold for clustering.  Either 'g' for 95% or 's' for 97%.
+        :param maxmcmc: This parameter specifies the number of iterations of MCMC. Default value is 2000. Increase \
+                            this value to enhance accuracy (recommended value is at least 10*block size).
+        :param maxsm: This parameter specifies the maximum number of 'split and merge' process to run.  Max is 20.
+        :param rare: The maximum cluster size allowed to be classified as 'rare'. Clusters are defined as either \
+                            'abundant' or 'rare'. 'Abundant' clusters will be clustered first, then the 'rare' \
+                            clusters are mapped to the 'abundant' clusters.  Finally, 'rare' clusters which cannot be \
+                            mapped will be clustered separately. e.g. If r=5, the clusters with size <=5 will be \
+                            considered 'rare' in above procedure. and r=0 will yield the best accuracy. If you \
+                            believe your data is not too diverse to be handled, then r=0 will be the best choice.
         """
+
         makeDirOrdie(outdir)
         # Grab the fasta file(s) to cluster
         inputs = getInputFiles(input_f)

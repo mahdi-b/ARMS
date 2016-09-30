@@ -5,6 +5,8 @@ from classes.Helpers import *
 
 
 class Preclean_Program_Bayeshammer(ChewbaccaProgram):
+    """Uses bayeshammer (Spades) to fix sequencing errors via kmer clustering and probabilistic substitution.
+    """
     name = "bayeshammer"
 
 

@@ -1,7 +1,9 @@
 from itertools import product
-from annotate_OTU_table import annotateOTUtable
+
 from classes.ChewbaccaProgram import *
 from classes.ProgramRunner import *
+
+from annotate_OTU_table import annotateOTUtable
 from classes.Helpers import *
 
 

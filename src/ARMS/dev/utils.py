@@ -2,12 +2,10 @@ import os
 import re
 import time
 from Bio import pairwise2
-from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
-from random import uniform, randrange, sample, seed
+from Bio.SeqRecord import SeqRecord
 from Bio.SubsMat import MatrixInfo as matlist
-
-
+from random import uniform, randrange, sample, seed
 
 nucleotides = ['A', 'T', 'C', 'G'] * 2
 seed(int(round(time.time() * 1000)))

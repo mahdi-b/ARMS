@@ -1,9 +1,8 @@
-from Bio import SeqIO, AlignIO
-from itertools import chain, izip, combinations
-
 import logging
-import numpy as np
 import re
+from itertools import izip, combinations
+
+import numpy as np
 
 
 def replaceInnerGap(line):

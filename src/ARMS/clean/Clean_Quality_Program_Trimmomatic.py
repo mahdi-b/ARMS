@@ -5,6 +5,9 @@ from classes.Helpers import *
 
 
 class Clean_Quality_Program_Trimmomatic(ChewbaccaProgram):
+    """Uses Trimmomatic to identify areas of low quality (defined as the average quality within a sliding window) and
+        remove them, keeping the longest remaining segment.
+    """
     name = "trimmomatic"
 
 

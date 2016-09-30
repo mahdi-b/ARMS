@@ -2,6 +2,7 @@ import argparse
 import signal
 
 from chewbaccaFunctions import *
+from classes.Helpers import *
 
 # Program Version
 version = "0.01"
@@ -42,7 +43,7 @@ Supported operations:
     8 macsealign
         macse
 
-    9 cluster_main
+    9 cluster
         vsearch derep_full_length
 
     9.5 chimeras
@@ -261,7 +262,7 @@ def main(argv):
     # ===============================================
     parser_cluster = subparsers.add_parser('cluster_seqs', description="Given a fasta file or a folder containing \
                             fasta files, performs clustering on each input file individually.  Outputs a .groups file \
-                            listing unique representative sequences from each cluster_main, and the groups of the\
+                            listing unique representative sequences from each cluster, and the groups of the\
                             sequences they represent.  Also outputs a <input_file_name>_seeds.fasta file of the unique \
                             representatives.")
     parser_cluster.add_argument('-i', '--input_f', required=True, help="Input fasta file/folder")
@@ -291,7 +292,7 @@ def main(argv):
                             specifies the maximum number of 'split and merge' process to run. Default value is 20, \
                             which is also the maximum allowed.")
     parser_cluster.add_argument('-r', '--rare', required=False, type=int, default=2, help="CROP only: The maximum \
-                            cluster_main size allowed to be classified as 'rare'. Clusters are defined as either \
+                            cluster size allowed to be classified as 'rare'. Clusters are defined as either \
                             'abundant' or 'rare'. 'Abundant' clusters will be clustered first, then the 'rare' \
                             clusters are mapped to the 'abundant' clusters.  Finally, 'rare' clusters which cannot be \
                             mapped will be clustered separately. e.g. If r=5, the clusters with size <=5 will be \
@@ -308,39 +309,45 @@ def main(argv):
     # ===================================================
     # --usearch_global  ../9_p_uchime/seeds.pick.fasta  --db ../data/BiocodePASSED_SAP.txt --id 0.9 \
     #	--userfields query+target+id+alnlen+qcov --userout out  --alnout alnout.txt
-    parser_biocode = subparsers.add_parser('query_fasta', description="Given a fasta file, or folder containing \
+    parser_query_fasta = subparsers.add_parser('query_fasta', description="Given a fasta file, or folder containing \
                             fasta files, aligns sequences asgainst the BIOCODE database.")
-    parser_biocode.add_argument('-i', '--input_f', required=True, help="Input file/folder with fasta files")
-    parser_biocode.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
-    parser_biocode.add_argument('-r', '--referencefasta', required=True, help="Filepath to the curated fasta file to \
-                            use as a reference.")
-    parser_biocode.add_argument('-x', '--taxinfo', required=True, help="Filepath to a two-column, tab-delimited file \
-                            mapping a sequence's fasta id (in the referencefasta file) to a taxonomic identification.")
-    parser_biocode.add_argument('-s', '--simmilarity', required=False, default=97, type=int, help="Minimum %  \
+    parser_query_fasta.add_argument('-i', '--input_f', required=True, help="Input file/folder with fasta files")
+    parser_query_fasta.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
+    parser_query_fasta.add_argument('-r', '--referencefasta', required=True, help="Filepath to the curated fasta file \
+                            to use as a reference.")
+    parser_query_fasta.add_argument('-x', '--taxinfo', required=True, help="Filepath to a two-column, tab-delimited \
+                            file mapping a sequence's fasta id (in the referencefasta file) to a taxonomic \
+                            identification.")
+    parser_query_fasta.add_argument('-s', '--simmilarity', required=False, default=97, type=int, help="Minimum %  \
                             simmilarity (integer between 0 and 100) between query and reference sequences required for \
                             positive identification. Default: 97")
-    parser_biocode.add_argument('-p', '--program', required=False, default="vsearch", help="Indicates which \
+    parser_query_fasta.add_argument('-p', '--program', required=False, default="vsearch", help="Indicates which \
                                            program to use.  Choices are: 'vsearch'.  Default: 'vsearch'.")
-    parser_biocode.add_argument('-c', '--coverage', required=False, default=85, type=int, help="Minimum % coverage \
+    parser_query_fasta.add_argument('-c', '--coverage', required=False, default=85, type=int, help="Minimum % coverage \
                             (integer between 0 and 100) required query and reference sequences required for positive \
                             identification. Default: 85")
-    parser_biocode.add_argument('-j', '--threads', required=False, type=int, default=2,
+    parser_query_fasta.add_argument('-j', '--threads', required=False, type=int, default=2,
                                 help="Number of threads to use per query process.")
-    parser_biocode.set_defaults(func=query_fasta)
+    parser_query_fasta.set_defaults(func=query_fasta)
 
     # =======================================
     # ==  13 Closed Ref Picking with NCBI  ==
     # =======================================
     # --usearch_global ../9_p_uchime/seeds.pick.fasta  --db /home/mahdi/refs/COI_DOWNLOADED/COI.fasta -id 0.9 \
     #          --userfields query+target+id+alnlen+qcov --userout out --alnout alnout.txt --userfields query+target+id+alnlen+qcov
-    parcer_ncbi = subparsers.add_parser('query_ncbi')
-    parcer_ncbi.add_argument('-i', '--input_f', required=True, help="Input Fasta File to clean")
-    parcer_ncbi.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
-    parcer_ncbi.add_argument('-j', '--threads', required=False, type=int, default=2,
+    parser_query_db = subparsers.add_parser('query_db')
+    parser_query_db.add_argument('-i', '--input_f', required=True, help="Input Fasta File to clean")
+    parser_query_db.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved")
+    parser_query_db.add_argument('-r', '--referencefasta', required=True, help="Filepath to the curated fasta file \
+                                to use as a reference.")
+    parser_query_db.add_argument('-d', '--db', required=True, help="Filepath to the curated fasta file \
+                                    to use as a reference.")
+
+    parser_query_db.add_argument('-j', '--threads', required=False, type=int, default=2,
                              help="Number of threads to use per query process.")
-    parcer_ncbi.add_argument('-p', '--program', required=False, default="vsearch", help="Indicates which \
+    parser_query_db.add_argument('-p', '--program', required=False, default="vsearch", help="Indicates which \
                                            program to use.  Choices are: 'vsearch'.  Default: 'vsearch'.")
-    parcer_ncbi.set_defaults(func=query_ncbi)
+    parser_query_db.set_defaults(func=query_ncbi)
 
     # ========================
     # ==  xx Build Matrix  ==
@@ -360,7 +367,7 @@ def main(argv):
     # ==========================
     # ==  xx Annotate Matrix  ==
     # ==========================
-    parser_annotate_matrix = subparsers.add_parser('annotate_main', description="Given a tabular file mapping sequence IDs \
+    parser_annotate_matrix = subparsers.add_parser('annotate_matrix', description="Given a tabular file mapping sequence IDs \
                                 to taxonomic groups, and an OTU matrix, regroups the identifiable sequence IDs with \
                                 taxonomic groups.")
     parser_annotate_matrix.add_argument('-i', '--input_f', required=True,
@@ -416,7 +423,11 @@ def main(argv):
     parser_macseClean.set_defaults(func=clean_macse_align)
 
 
-    global args
+    parser_test = subparsers.add_parser('echo')
+    parser_test.add_argument('-i', '--input', required=True, help="String to echo")
+    parser_test.set_defaults(func=echo)
+
+
     args, unknown = parser.parse_known_args()
     if unknown:
         print "\nIgnoring unknown args: " + ', '.join(['%s'] * len(unknown)) % tuple(unknown)
@@ -431,6 +442,11 @@ def main(argv):
     dryRun = args.dryRun
     signal.signal(signal.SIGTSTP, signal.SIG_IGN)
     args.func(args)
+
+
+def echo(args):
+    import subprocess
+    subprocess.call(["echo", args.input])
 
 
 if __name__ == "__main__":

@@ -1,11 +1,14 @@
 from align.align_clean import remove_refs_from_macse_out
 from classes.ChewbaccaProgram import *
-from classes.Helpers import *
 from classes.ProgramRunner import *
 from util.merge import merge_files
 
+from classes.Helpers import *
+
 
 class Align_Clean_Program_Macse(ChewbaccaProgram):
+    """Uses Macse to clean a set of alignments by removing gap characters and reference sequences from the file.
+    """
     name = "macse"
 
 

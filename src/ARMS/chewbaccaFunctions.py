@@ -1,7 +1,6 @@
-from align.Align_Command import Align_Command
 from align.Align_Clean_Command import Align_Clean_Command
+from align.Align_Command import Align_Command
 from assemble.Assemble_Command import Assemble_Command
-from classes.Helpers import *
 from clean.Clean_Adapters_Command import Clean_Adapters_Command
 from clean.Clean_Quality_Command import Clean_Quality_Command
 from cluster.Cluster_Command import Cluster_Command
@@ -9,7 +8,8 @@ from demux.Demux_Command import Demux_Command
 from dereplicate.Dereplicate_Command import Dereplicate_Command
 from otu.Annotate_OTU_Table_Command import Annotate_OTU_Table_Command
 from otu.Build_OTU_Table_Command import Build_OTU_Table_Command
-from otu.Query_OTU_Command import Query_OTU_Command, QUERY_TYPE
+from otu.Query_OTU_DB_Command import Query_OTU_DB_Command
+from otu.Query_OTU_Fasta_Command import Query_OTU_Fasta_Command
 from preclean.Preclean_Command import *
 from rename.Rename_Command import Rename_Command
 from util.Convert_Fastq_Fasta_Command import Convert_Fastq_Fasta_Command
@@ -153,6 +153,7 @@ def partition(args):
     """
     Partition_Command(args).execute_command()
 
+
 def merge(args):
     """Concatenates files in a directory.
        :param args: An argparse object with the following parameters:
@@ -202,8 +203,7 @@ def query_fasta(args):
                     accnosFile  List of sequence names to remove
                     outdir      Directory to put the output files
     """
-    Query_OTU_Command(args).execute_command()
-
+    Query_OTU_Fasta_Command(args).execute_command()
 
 
 def query_ncbi(args):
@@ -213,8 +213,7 @@ def query_ncbi(args):
                     input       Input file/folder with fasta sequences
                     outdir      Directory to put the output files
     """
-    Query_OTU_Command(args).execute_command()
-
+    Query_OTU_DB_Command(args).execute_command()
 
 
 def annotate_matrix(args):
@@ -236,23 +235,21 @@ def make_fasta(args):
     Convert_Fastq_Fasta_Command(args).execute_command()
 
 
-def mase_align(args, pool=Pool(processes=1)):
+def mase_align(args):
     """Aligns sequences by iteratively adding them to a known good alignment.
      :param args: An argparse object with the following parameters:
                     db                  Database against which to align and filter reads
                     samplesDir          Directory containig the samples to be cleaned
                     outdir              Directory where outputs will be saved
-     :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
     """
     Align_Command(args).execute_command()
 
 
-def clean_macse_align(args, pool=Pool(processes=1)):
+def clean_macse_align(args):
     """Removes non-nucleotide characters in MACSE aligned sequences for all fasta files in the samples directory
         (the samplesDir argument).
     :param args: An argparse object with the following parameters:
                     samplesDir          Directory containig the samples to be cleaned
                     outdir              Directory where outputs will be saved
-    :param pool: A fully initalized multiprocessing.Pool object.  Defaults to a Pool of size 1.
     """
     Align_Clean_Command(args).execute_command()

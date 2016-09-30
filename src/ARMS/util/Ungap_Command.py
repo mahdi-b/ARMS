@@ -7,7 +7,3 @@ class Ungap_Command(ChewbaccaCommand):
     supported_programs = [Ungap_Program_Chewbacca]
     default_program = Ungap_Program_Chewbacca
     command_name = "Ungap"
-
-
-    def execute_command(self):
-        self.get_program(self.args.program).execute_program()

@@ -1,10 +1,10 @@
-from Bio import SeqIO
-from Bio.Seq import Seq
-
 import matplotlib.pyplot as plt
-from makeBadSeqs import *
+from Bio import SeqIO
 from multiprocessing import Pool
+
+from makeBadSeqs import *
 from utils import *
+
 
 # name match_code actual_table used_table orf match%
 

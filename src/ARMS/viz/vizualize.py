@@ -1,9 +1,10 @@
-import pandas as pd
 import sys
 from matplotlib import pyplot as plt
-import seaborn as sns
-from utils import *
+
 import numpy as np
+
+from utils import *
+
 
 def viz_OTU_composition_barchart(frame, output_file="", as_pct_composition=True):
     ncols = len(frame.columns.values)

@@ -1,10 +1,11 @@
 from classes.ChewbaccaProgram import *
 from classes.ProgramRunner import *
-from classes.Helpers import *
-from cluster_helpers import handle_groups_file_update
 from parse.parseUCtoGroups import parseUCtoGroups
 from rename.renameWithoutCount import removeCountsFromGroupsFile
 from util.capitalizeSeqs import capitalizeSeqs
+
+from classes.Helpers import *
+from cluster_helpers import handle_groups_file_update
 
 
 class Cluster_Program_Swarm(ChewbaccaProgram):

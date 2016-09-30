@@ -1,14 +1,24 @@
 from classes.ChewbaccaProgram import *
+from classes.Helpers import *
 from classes.ProgramRunner import *
 from parse.parseUCtoGroups import parseUCtoGroups
 from rename.renameWithReplicantCounts import renameWithReplicantCounts
 from rename.renameWithoutCount import removeCountsFromFastFile
 from util.updateGroups import update_groups
 
-from classes.Helpers import *
-
 
 class Dereplicate_Program_Vsearch(ChewbaccaProgram):
+    """Dereplicates a fasta file by grouping identical (or spanning) reads together under one representative sequence.
+        The number of replicant sequences each representative represents is given by a replicant count at the end of
+        the sequence name in output fasta file.  If a .groups file is provided, then replicant counts will take into
+        account previous dereplication counts (e.g. a replicant sequence that represents 3 sequences will add 3 to its
+        representative sequence's replicant count).  Replicant counts are denoted with a suffix of '_X' on the sequence
+        name, where X is the dereplication count.
+
+        e.g. the sequence below is named 'sequence_24' and has a replicant count of 5.
+        >sequence_24_5
+        AAACG
+    """
     name = "vsearch"
 
 

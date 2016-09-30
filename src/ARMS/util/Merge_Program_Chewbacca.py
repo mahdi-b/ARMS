@@ -1,7 +1,9 @@
 from classes.ChewbaccaProgram import *
 from classes.ProgramRunner import *
-from classes.Helpers import *
 from util.merge import merge_files
+
+from classes.Helpers import *
+
 
 class Merge_Program_Chewbacca(ChewbaccaProgram):
     name = "chewbacca"

@@ -1,3 +1,9 @@
+
+# python dependencies
+pip install argparse
+pip install enum34
+pip install ete2
+
 mkdir programs
 cd programs
 

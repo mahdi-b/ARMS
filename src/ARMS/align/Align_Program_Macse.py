@@ -1,8 +1,11 @@
 from classes.ChewbaccaProgram import *
-from classes.Helpers import *
 from classes.ProgramRunner import *
 
+from classes.Helpers import *
+
+
 class Align_Program_Macse(ChewbaccaProgram):
+    """Uses Macse's enrichAlignment program to align a set of sequences."""
     name = "macse"
 
 

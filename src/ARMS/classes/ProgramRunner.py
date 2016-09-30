@@ -10,6 +10,8 @@ from classes.Helpers import printVerbose, helpValidate, debugPrint
 
 # Names of available programs
 class ProgramRunnerPrograms(Enum):
+    """An Enum class listing all known external programs used by chewbacca
+    """
     CROP = "CROP"
     FASTX = "FASTX"
     FLEXBAR = "FLEXBAR"
@@ -19,9 +21,11 @@ class ProgramRunnerPrograms(Enum):
     TRIMMOMATIC = "TRIMMOMATIC"
     VSEARCH = "VSEARCH"
     MACSE = "MACSE"
+    JAVA = "JAVA"
 
 # Names of available commands
 class ProgramRunnerCommands(Enum):
+    """An Enum class listing all known external commandline operations."""
     ALIGN_VSEARCH = "ALIGN_VSEARCH"
     ASSEMBLE_PEAR = "ASSEMBLE_PEAR"
     CLEAN_TRIMMOMATIC = "CLEAN_TRIMMOMATIC"
@@ -35,6 +39,7 @@ class ProgramRunnerCommands(Enum):
     TEST_ECHO = "TEST_ECHO"
     MACSE_ALIGN = "MACSE_ALIGN"
     MACSE_FORMAT = "MACSE_FORMAT"
+
 
 class ProgramRunner(object):
     """A class to interact with external command line programs and internal python functions.  The class contains a \
@@ -64,9 +69,11 @@ class ProgramRunner(object):
         ProgramRunnerPrograms.PEAR: os.path.expanduser("~/ARMS/programs/pear/pear-0.9.5-bin-64"),
         ProgramRunnerPrograms.SPADES: os.path.expanduser("~/ARMS/programs/spades/bin/spades.py"),
         ProgramRunnerPrograms.SWARM: os.path.expanduser("~/ARMS/programs/swarm/swarm-2.1.9-linux-x86_64"),
-        ProgramRunnerPrograms.VSEARCH: os.path.expanduser("~/ARMS/programs/vsearch/vsearch")
+        ProgramRunnerPrograms.VSEARCH: os.path.expanduser("~/ARMS/programs/vsearch/vsearch"),
+        ProgramRunnerPrograms.TRIMMOMATIC: os.path.expanduser("~/ARMS/programs/Trimmomatic-0.33/trimmomatic-0.33.jar"),
+        ProgramRunnerPrograms.MACSE: os.path.expanduser("~/ARMS/programs/macse/macse_v1.01b.jar"),
+        ProgramRunnerPrograms.JAVA: os.path.expanduser("java -jar")
     }
-
 
     def __init__(self, program, params, conditions=None, stdin="", stdout="", stderr=""):
         """Initalizes a ProgramRunner object.  Reads chewbacca.cfg and loads configuration settings, builds the command
@@ -82,7 +89,7 @@ class ProgramRunner(object):
         :param stdin:       A handle to the stdin pipe for the command.  Defaults to os.devnull.
         :param stdout:      A handle to the stdout pipe for the command.  Defaults to os.devnull.
         :param stderr:      A hande to the stderr pipe for the command.  Defaults to os.devnull.
-        :return             A list of output files to be moved to args.outdir.
+        :return             A list of output files to be moved to outdir.
         """
         if conditions is None:
             conditions = {}
@@ -107,7 +114,6 @@ class ProgramRunner(object):
 
         :return:            True if validation is successful, and raising an exception in <Validator.function> if not.
         """
-        #return True
         return helpValidate(conditions)
 
 
@@ -121,7 +127,6 @@ class ProgramRunner(object):
         """
         for condition in conditions.iteritems():
             print "\t\tvalidating that %s, %s" % (str(condition[1]), condition[0])
-
 
     def run(self):
         """Validates conditions (or prints them for a dry run) and then executes the command.
@@ -137,7 +142,6 @@ class ProgramRunner(object):
         debugPrint("Running " + self.command)
         subprocess.check_call(os.path.expanduser(self.command), shell=True)
 
-
     def dryRun(self, dryValidate=True):
         """Prints the validation procedures that would be performed, and the commands that would be run in an actual
             run, without actually executing them.
@@ -149,7 +153,6 @@ class ProgramRunner(object):
         else:
             self.validateConditions(self.conditions)
         return self.command
-
 
     def loadConfigs(self):
         """Loads configuration settings from the chewbacca configuration file (located in
@@ -179,9 +182,8 @@ class ProgramRunner(object):
         else:
             logging.debug("Chewbacca config file not found.  Using defaults.")
 
-
     def initalizeCommands(self):
-        """Provides the static definition of the commandTemplates dictionary.
+        """Initalizes the commandTemplates dictionary.
         """
         # NOTE: Mothur doesn't like quoted filenames.  Gross.
         # NOTE: Java jars can't be resolved if string concatenation is used.
@@ -200,9 +202,9 @@ class ProgramRunner(object):
                                         " %s -o %s -u %s -w %s",
             ProgramRunnerCommands.CLUSTER_VSEARCH: self.program_paths[ProgramRunnerPrograms.VSEARCH] +
                                         " --cluster_size %s -id %f --centroids %s --uc %s",
-            ProgramRunnerCommands.CLEAN_TRIMMOMATIC:
-                                        "java -jar ~/ARMS/programs/Trimmomatic-0.33/trimmomatic-0.33.jar \
-                                        SE -phred33 %s %s SLIDINGWINDOW:%d:%d MINLEN:%d",
+            ProgramRunnerCommands.CLEAN_TRIMMOMATIC: self.program_paths[ProgramRunnerPrograms.JAVA] +
+                                        " " + self.program_paths[ProgramRunnerPrograms.TRIMMOMATIC] +
+                                        " " + "SE -phred33 %s %s SLIDINGWINDOW:%d:%d MINLEN:%d",
             ProgramRunnerCommands.DEREP_VSEARCH: self.program_paths[ProgramRunnerPrograms.VSEARCH] +
                                         " --threads %d --derep_fulllength %s --sizeout --fasta_width 0 --output %s \
                                         -uc %s",
@@ -211,11 +213,14 @@ class ProgramRunner(object):
                                         query+target+id+alnlen+qcov --userout %s --alnout %s %s",
             ProgramRunnerCommands.PRECLEAN_SPADES: "python " + self.program_paths[ProgramRunnerPrograms.SPADES] +
                                          " --only-error-correction -1 %s -2 %s -o %s -t %d",
-            ProgramRunnerCommands.MACSE_ALIGN: "java -jar ~/ARMS/programs/macse/macse_v1.01b.jar -prog enrichAlignment  -seq %s -align \
-                                                    %s -seq_lr %s -maxFS_inSeq 0  -maxSTOP_inSeq 0  -maxINS_inSeq 0 \
-                                                    -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 -out_NT %s_NT \
-                                                    -out_AA %s_AA -seqToAdd_logFile %s_log.csv",
-            ProgramRunnerCommands.MACSE_FORMAT: "java -jar ~/ARMS/programs/macse/macse_v1.01b.jar  -prog exportAlignment -align %s \
-                                                    -charForRemainingFS - -gc_def 5 -out_AA %s -out_NT %s -statFile \
-                                                    %s",
+            ProgramRunnerCommands.MACSE_ALIGN:  self.program_paths[ProgramRunnerPrograms.JAVA] +
+                                        " " + self.program_paths[ProgramRunnerPrograms.MACSE] +
+                                        " -prog enrichAlignment  -seq %s -align \
+                                        %s -seq_lr %s -maxFS_inSeq 0  -maxSTOP_inSeq 0  -maxINS_inSeq 0 \
+                                        -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 -out_NT %s_NT \
+                                        -out_AA %s_AA -seqToAdd_logFile %s_log.csv",
+            ProgramRunnerCommands.MACSE_FORMAT: self.program_paths[ProgramRunnerPrograms.JAVA] +
+                                        " " + self.program_paths[ProgramRunnerPrograms.MACSE] +
+                                        " " + " -prog exportAlignment -align %s \
+                                        -charForRemainingFS - -gc_def 5 -out_AA %s -out_NT %s -statFile %s",
 }

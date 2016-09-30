@@ -1,11 +1,12 @@
-from Bio import SeqIO
-import sys
-import operator
 import matplotlib.pyplot as plt
-from pylab import rcParams
-from utils import *
+import operator
+import sys
+from Bio import SeqIO
 from functools import partial
 from itertools import product
+from pylab import rcParams
+
+from utils import *
 
 
 def freq_analysis(input_faa, window_size, graph=False):

@@ -1,9 +1,10 @@
 import sys
-from Bio.SubsMat import MatrixInfo as matlist
 from Bio import pairwise2
+from Bio.SubsMat import MatrixInfo as matlist
 from collections import defaultdict
-from operator import itemgetter
 from itertools import product
+from operator import itemgetter
+
 from computeDist import *
 
 # Variables should be local not global..
@@ -85,7 +86,6 @@ def guess_table_by_best_hit(mhap_out_hits, ref, ref_index, nuc_prt_names_map, qu
     table_counts = make_freq_dict(hits, ref, ref_index, nuc_prt_names_map)
 
     return ([int(match_table)], table_counts)
-
 
 
 

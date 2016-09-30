@@ -1,5 +1,3 @@
-import os
-
 from classes.ChewbaccaProgram import *
 from classes.ProgramRunner import *
 
@@ -7,6 +5,9 @@ from classes.Helpers import *
 
 
 class Clean_Adapters_Program_Flexbar(ChewbaccaProgram):
+    """Uses flexbar to trim adapters (and preceeding barcodes) from sequences in input file(s).  Sequences should be in
+        the following format: <BARCODE><ADAPTER><SEQUENCE><RC_ADAPTER>, where ADAPTER is defined in the adapters file,
+        and RC_ADAPTER is defined in the rcadapters file."""
     name = "flexbar"
 
     def execute_program(self):

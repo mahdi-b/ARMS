@@ -72,11 +72,8 @@ def parallel(function, data, pool):
     except KeyboardInterrupt:
         kill_pool_and_die(pool)
 
-    """except  Exception as e:
-        print e
-        print sys.exc_info()
+    except:
         kill_pool_and_die(pool)
-    """
 
 def makeDirOrdie(dir_path, orDie=True):
     """Creates a directory 'dirPath' or exits if the 'dirPath' directory already exists.  Prevents unnecessary execution.

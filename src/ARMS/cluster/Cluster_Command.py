@@ -1,4 +1,5 @@
 from classes.ChewbaccaCommand import *
+
 from Cluster_Program_Crop import Cluster_Program_Crop
 from Cluster_Program_Swarm import Cluster_Program_Swarm
 from Cluster_Program_Vsearch import Cluster_Program_Vsearch
@@ -15,10 +16,3 @@ class Cluster_Command(ChewbaccaCommand):
                           ]
     default_program = Cluster_Program_Swarm
     command_name = "Cluster"
-
-
-    def execute_command(self):
-        self.get_program(self.args.program).execute_program()
-
-
-

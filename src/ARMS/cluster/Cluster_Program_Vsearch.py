@@ -1,9 +1,10 @@
 from classes.ChewbaccaProgram import *
-from classes.Helpers import *
 from classes.ProgramRunner import ProgramRunner, ProgramRunnerCommands
-from cluster_helpers import handle_groups_file_update
 from parse.parseUCtoGroups import parseUCtoGroups
 from rename.renameWithoutCount import removeCountsFromGroupsFile
+
+from classes.Helpers import *
+from cluster_helpers import handle_groups_file_update
 
 
 class Cluster_Program_Vsearch(ChewbaccaProgram):
