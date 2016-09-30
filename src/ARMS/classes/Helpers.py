@@ -295,7 +295,7 @@ def debugPrintInputInfo(input_, action_suffix):
     """
     file_str = ""
     for f in input_:
-        file_str += "\t%s\n" % f
+        file_str += "\t%s\n" % file_str
 
     logging.debug("%d files to be %s:\n%s\n" % (len(input_), action_suffix, file_str))
 

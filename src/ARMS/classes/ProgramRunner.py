@@ -212,7 +212,7 @@ class ProgramRunner(object):
                                         " --threads %d --usearch_global %s --db %s --id 0.9 --userfields \
                                         query+target+id+alnlen+qcov --userout %s --alnout %s %s",
             ProgramRunnerCommands.PRECLEAN_SPADES: "python " + self.program_paths[ProgramRunnerPrograms.SPADES] +
-                                         " --only-error-correction -1 %s -2 %s -o %s -t %d",
+                                         " --only-error-correction --disable-gzip-output -1 %s -2 %s -o %s -t %d",
             ProgramRunnerCommands.MACSE_ALIGN:  self.program_paths[ProgramRunnerPrograms.JAVA] +
                                         " " + self.program_paths[ProgramRunnerPrograms.MACSE] +
                                         " -prog enrichAlignment  -seq %s -align \
