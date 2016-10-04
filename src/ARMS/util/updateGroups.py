@@ -53,7 +53,7 @@ def update_groups(old_groups_files, new_groups_files, out_dir, out_prefix):
     with open(output_file, 'w') as output:
         for new_seed in new_keys:
             i += 1
-            if i % 100000 == 0:
+            if i % 10000 == 0:
                 print "Processed %d / %d lines\n" % (i, total)
                 output.write(outstring)
                 outstring = ""

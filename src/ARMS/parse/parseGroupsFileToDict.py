@@ -33,6 +33,7 @@ def parseGroupsFileToDict(groups_file, thing_to_map):
     i = 0
     nb_lines = 0
     for line in open(groups_file, 'r'):
+        nb_lines +=1
         data = line.rstrip().split("\t")
         seed = data[0]
         children = ""
@@ -45,8 +46,7 @@ def parseGroupsFileToDict(groups_file, thing_to_map):
                 children = data[1]
             groups[seed] = len(children.split(" "))
 
-        if nb_lines % 1000000 == 0:
+        if nb_lines % 100000 == 0:
             print "%s lines processed" % nb_lines
-        nb_lines +=1
     print "Done reading count file."
     return groups
