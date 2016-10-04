@@ -3,9 +3,8 @@ import logging
 import os
 import sys
 from multiprocessing import Pool
-
 import classes.Validator
-
+from shutil import copy2
 
 class printVerbose(object):
     """A class to toggle verbose printing."""
@@ -41,7 +40,7 @@ def runProgramRunnerInstance(my_instance):
     """Runs an instance of a ProgramRunner.  Calls ProgramRunner.run() for a ProgramRunner object.'
         :param my_instance A fully initalized ProgramRunner object to run.
     """
-    # logging.info(myInstance.dryRun())
+    # logging.info(myInstance.dry_run())
     return my_instance.run()
 
 
@@ -101,6 +100,15 @@ def makeAuxDir(dir_path):
     aux_path = dir_path + "_aux"
     makeDirOrdie(aux_path)
     return aux_path
+
+
+def copy_file(target_path, dest_path):
+    """Copies a file using shutil.copy2.
+
+    :param target_path: Filepath to the file to copy.
+    :param dest_path: Filepath to the destination.
+    """
+    copy2(target_path, dest_path)
 
 
 def init_pool(requested_pool_size):
@@ -295,7 +303,7 @@ def debugPrintInputInfo(input_, action_suffix):
     """
     file_str = ""
     for f in input_:
-        file_str += "\t%s\n" % file_str
+        file_str += "\t%s\n" % str(f)
 
     logging.debug("%d files to be %s:\n%s\n" % (len(input_), action_suffix, file_str))
 

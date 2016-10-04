@@ -21,26 +21,26 @@ class Dereplicate_Program_Vsearch(ChewbaccaProgram):
     """
     name = "vsearch"
 
-
     def execute_program(self):
         args = self.args
-        self.dereplicate_vsearch(args.input_f, args.outdir, args.groupsfile, args.threads, args.stripcounts)
+        self.dereplicate_vsearch(args.input_f, args.outdir, args.groupsfile, args.processes, args.stripcounts,
+                                 args.extraargstring)
 
-
-    def dereplicate_vsearch(self, input_f, outdir, groupsfile, threads, stripcounts):
+    def dereplicate_vsearch(self, input_f, outdir, groupsfile, processes, stripcounts, extraargstring):
         """Dereplicates with vsearch.
 
         :param input_f: Filepath to the file or folder of files to dereplicate.
         :param outdir: Filepath to the output directory.
-        :param groupsfile: A groups file to use as a reference for dereplication counting.  If no groups file is provided,
-                            input sequences are conidered singletons (regardless of their dereplication count).
-        :param threads: The number of processes to use to dereplicate the fileset.
+        :param groupsfile: A groups file to use as a reference for dereplication counting.  If no groups file is
+                            provided, input sequences are conidered singletons (regardless of their dereplication
+                            count).
+        :param processes: The number of processes to use to dereplicate the fileset.
         :param stripcounts: If True, strips the trailing dereplication counts from a file before dereplication.
-
+        :param extraargstring: Advanced program parameter string.
         """
         makeDirOrdie(outdir)
         inputs = getInputFiles(input_f)
-        pool = init_pool(min(len(inputs), threads))
+        pool = init_pool(min(len(inputs), processes))
         # REMOVES COUNTS FROM SEQUENCE NAMES IN ORDER TO CLUSTER PROPERLY
         # strip counts if we need to.
         if stripcounts:
@@ -58,10 +58,11 @@ class Dereplicate_Program_Vsearch(ChewbaccaProgram):
         printVerbose("Dereplicating before clustering...")
         debugPrintInputInfo(inputs, "dereplicated")
         parallel(runProgramRunnerInstance, [ProgramRunner(ProgramRunnerCommands.DEREP_VSEARCH,
-                                                          [threads, input_,
+                                                          [processes, input_,
                                                            "%s/%s_derep.fasta" % (outdir, strip_ixes(input_)),
                                                            "%s/%s_uc.out" % (outdir, strip_ixes(input_))],
-                                                          {"exists": [input_], "positive": [threads]})
+                                                          {"exists": [input_], "positive": [processes]},
+                                                          extraargstring)
                                             for input_ in inputs], pool)
         printVerbose("Done dereplicating")
 
@@ -75,7 +76,7 @@ class Dereplicate_Program_Vsearch(ChewbaccaProgram):
                  [(parseUCtoGroups, input_, "%s/%s_derep.groups" % (outdir, strip_ixes(input_)))
                   for input_ in input_ucs], pool)
 
-        most_recent_groups_files = getInputFiles(outdir, "*_derep.groups")
+        most_recent_groups_files = getInputFiles(outdir, "*_derep.groups", ignore_empty_files=False)
 
         # UPDATE THE MOST CURRENT GROUPS FILES WITH DEREPLICATION COUNTS
         if groupsfile is not None:
@@ -88,9 +89,9 @@ class Dereplicate_Program_Vsearch(ChewbaccaProgram):
             logging.debug(str(old_groups_files))
             logging.debug("%d Dereplicated (new)groups files to be read:" % len(derep_groups_files))
             logging.debug(str(derep_groups_files))
-            # update_groups (old_groups_files, new_groups_files, updated)
+
             update_groups(old_groups_files, derep_groups_files, outdir, "dereplicated")
-            most_recent_groups_files = getInputFiles(outdir, "dereplicated*")
+            most_recent_groups_files = getInputFiles(outdir, "dereplicated*", ignore_empty_files=False)
             printVerbose("Done updating .groups files.")
 
         if len(inputs) != len(most_recent_groups_files):
@@ -111,6 +112,6 @@ class Dereplicate_Program_Vsearch(ChewbaccaProgram):
         aux_dir = makeAuxDir(outdir)
         groups_dir = makeDirOrdie("%s_groups_files" % outdir)
         bulk_move_to_dir(most_recent_groups_files, groups_dir)
-        aux_files = getInputFiles(outdir, '*', "*_counts.fasta")
+        aux_files = getInputFiles(outdir, '*', "*_counts.fasta", ignore_empty_files=False)
         bulk_move_to_dir(aux_files, aux_dir)
         cleanup_pool(pool)

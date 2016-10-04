@@ -1,0 +1,199 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>dereplicate.Dereplicate_Program_Vsearch &mdash; Chewbacca 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Chewbacca 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Chewbacca 0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for dereplicate.Dereplicate_Program_Vsearch</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">classes.ChewbaccaProgram</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">classes.Helpers</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">classes.ProgramRunner</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">parse.parseUCtoGroups</span> <span class="k">import</span> <span class="n">parseUCtoGroups</span>
+<span class="kn">from</span> <span class="nn">rename.renameWithReplicantCounts</span> <span class="k">import</span> <span class="n">renameWithReplicantCounts</span>
+<span class="kn">from</span> <span class="nn">rename.renameWithoutCount</span> <span class="k">import</span> <span class="n">removeCountsFromFastFile</span>
+<span class="kn">from</span> <span class="nn">util.updateGroups</span> <span class="k">import</span> <span class="n">update_groups</span>
+
+
+<span class="k">class</span> <span class="nc">Dereplicate_Program_Vsearch</span><span class="p">(</span><span class="n">ChewbaccaProgram</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Dereplicates a fasta file by grouping identical (or spanning) reads together under one representative sequence.</span>
+<span class="sd">        The number of replicant sequences each representative represents is given by a replicant count at the end of</span>
+<span class="sd">        the sequence name in output fasta file.  If a .groups file is provided, then replicant counts will take into</span>
+<span class="sd">        account previous dereplication counts (e.g. a replicant sequence that represents 3 sequences will add 3 to its</span>
+<span class="sd">        representative sequence&#39;s replicant count).  Replicant counts are denoted with a suffix of &#39;_X&#39; on the sequence</span>
+<span class="sd">        name, where X is the dereplication count.</span>
+
+<span class="sd">        e.g. the sequence below is named &#39;sequence_24&#39; and has a replicant count of 5.</span>
+<span class="sd">        &gt;sequence_24_5</span>
+<span class="sd">        AAACG</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;vsearch&quot;</span>
+
+
+    <span class="k">def</span> <span class="nf">execute_program</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dereplicate_vsearch</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">input_f</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">outdir</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">groupsfile</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">threads</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">stripcounts</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">dereplicate_vsearch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_f</span><span class="p">,</span> <span class="n">outdir</span><span class="p">,</span> <span class="n">groupsfile</span><span class="p">,</span> <span class="n">threads</span><span class="p">,</span> <span class="n">stripcounts</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Dereplicates with vsearch.</span>
+
+<span class="sd">        :param input_f: Filepath to the file or folder of files to dereplicate.</span>
+<span class="sd">        :param outdir: Filepath to the output directory.</span>
+<span class="sd">        :param groupsfile: A groups file to use as a reference for dereplication counting.  If no groups file is provided,</span>
+<span class="sd">                            input sequences are conidered singletons (regardless of their dereplication count).</span>
+<span class="sd">        :param threads: The number of processes to use to dereplicate the fileset.</span>
+<span class="sd">        :param stripcounts: If True, strips the trailing dereplication counts from a file before dereplication.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">makeDirOrdie</span><span class="p">(</span><span class="n">outdir</span><span class="p">)</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="n">getInputFiles</span><span class="p">(</span><span class="n">input_f</span><span class="p">)</span>
+        <span class="n">pool</span> <span class="o">=</span> <span class="n">init_pool</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="n">threads</span><span class="p">))</span>
+        <span class="c1"># REMOVES COUNTS FROM SEQUENCE NAMES IN ORDER TO CLUSTER PROPERLY</span>
+        <span class="c1"># strip counts if we need to.</span>
+        <span class="k">if</span> <span class="n">stripcounts</span><span class="p">:</span>
+            <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;Removing counts from sequence names...&quot;</span><span class="p">)</span>
+            <span class="n">debugPrintInputInfo</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="s2">&quot;renamed&quot;</span><span class="p">)</span>
+            <span class="n">parallel</span><span class="p">(</span><span class="n">runPythonInstance</span><span class="p">,</span> <span class="p">[(</span><span class="n">removeCountsFromFastFile</span><span class="p">,</span> <span class="n">input_</span><span class="p">,</span>
+                                          <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_uncount.fasta&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">strip_ixes</span><span class="p">(</span><span class="n">input_</span><span class="p">)),</span> <span class="s1">&#39;fasta&#39;</span><span class="p">)</span>
+                                         <span class="k">for</span> <span class="n">input_</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">],</span> <span class="n">pool</span><span class="p">)</span>
+            <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;Done removing counts.&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Grab the cleaned files as input for the next step</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="n">getInputFiles</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="s2">&quot;*_uncount.fasta&quot;</span><span class="p">)</span>
+
+        <span class="c1"># DEREPLICATE ONE MORE TIME</span>
+        <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;Dereplicating before clustering...&quot;</span><span class="p">)</span>
+        <span class="n">debugPrintInputInfo</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="s2">&quot;dereplicated&quot;</span><span class="p">)</span>
+        <span class="n">parallel</span><span class="p">(</span><span class="n">runProgramRunnerInstance</span><span class="p">,</span> <span class="p">[</span><span class="n">ProgramRunner</span><span class="p">(</span><span class="n">ProgramRunnerCommands</span><span class="o">.</span><span class="n">DEREP_VSEARCH</span><span class="p">,</span>
+                                                          <span class="p">[</span><span class="n">threads</span><span class="p">,</span> <span class="n">input_</span><span class="p">,</span>
+                                                           <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_derep.fasta&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">strip_ixes</span><span class="p">(</span><span class="n">input_</span><span class="p">)),</span>
+                                                           <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_uc.out&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">strip_ixes</span><span class="p">(</span><span class="n">input_</span><span class="p">))],</span>
+                                                          <span class="p">{</span><span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">input_</span><span class="p">],</span> <span class="s2">&quot;positive&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">threads</span><span class="p">]})</span>
+                                            <span class="k">for</span> <span class="n">input_</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">],</span> <span class="n">pool</span><span class="p">)</span>
+        <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;Done dereplicating&quot;</span><span class="p">)</span>
+
+        <span class="c1"># LOG DEREPLICATED SEQUENCES INTO A .GROUPS FILE</span>
+        <span class="c1"># generates a .groups file named _uc_parsed.out</span>
+        <span class="c1"># python parseUCtoGroups.py uc.out uc_parsed.out</span>
+        <span class="n">input_ucs</span> <span class="o">=</span> <span class="n">getInputFiles</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="s2">&quot;*_uc.out&quot;</span><span class="p">)</span>
+        <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;Generating a groups file from dereplication.&quot;</span><span class="p">)</span>
+        <span class="n">debugPrintInputInfo</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="s2">&quot;parsed (into agroups file)&quot;</span><span class="p">)</span>
+        <span class="n">parallel</span><span class="p">(</span><span class="n">runPythonInstance</span><span class="p">,</span>
+                 <span class="p">[(</span><span class="n">parseUCtoGroups</span><span class="p">,</span> <span class="n">input_</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_derep.groups&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">strip_ixes</span><span class="p">(</span><span class="n">input_</span><span class="p">)))</span>
+                  <span class="k">for</span> <span class="n">input_</span> <span class="ow">in</span> <span class="n">input_ucs</span><span class="p">],</span> <span class="n">pool</span><span class="p">)</span>
+
+        <span class="n">most_recent_groups_files</span> <span class="o">=</span> <span class="n">getInputFiles</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="s2">&quot;*_derep.groups&quot;</span><span class="p">)</span>
+
+        <span class="c1"># UPDATE THE MOST CURRENT GROUPS FILES WITH DEREPLICATION COUNTS</span>
+        <span class="k">if</span> <span class="n">groupsfile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Grab the oldgroups file and the dereplicated groups file</span>
+            <span class="n">old_groups_files</span> <span class="o">=</span> <span class="n">getInputFiles</span><span class="p">(</span><span class="n">groupsfile</span><span class="p">)</span>
+            <span class="n">derep_groups_files</span> <span class="o">=</span> <span class="n">getInputFiles</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="s2">&quot;*_derep.groups&quot;</span><span class="p">)</span>
+
+            <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;Updating .groups files with dereplicated data&quot;</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2"> Reference (old)groups files to be read:&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">old_groups_files</span><span class="p">))</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">old_groups_files</span><span class="p">))</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2"> Dereplicated (new)groups files to be read:&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">derep_groups_files</span><span class="p">))</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">derep_groups_files</span><span class="p">))</span>
+            <span class="c1"># update_groups (old_groups_files, new_groups_files, updated)</span>
+            <span class="n">update_groups</span><span class="p">(</span><span class="n">old_groups_files</span><span class="p">,</span> <span class="n">derep_groups_files</span><span class="p">,</span> <span class="n">outdir</span><span class="p">,</span> <span class="s2">&quot;dereplicated&quot;</span><span class="p">)</span>
+            <span class="n">most_recent_groups_files</span> <span class="o">=</span> <span class="n">getInputFiles</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="s2">&quot;dereplicated*&quot;</span><span class="p">)</span>
+            <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;Done updating .groups files.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">most_recent_groups_files</span><span class="p">):</span>
+            <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;Error: Number of input fastas (</span><span class="si">%d</span><span class="s2">) is not equal to the number ofgroups files (</span><span class="si">%d</span><span class="s2">).&quot;</span> <span class="o">%</span>
+                   <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">most_recent_groups_files</span><span class="p">)))</span>
+            <span class="n">exit</span><span class="p">()</span>
+        <span class="n">fasta_groups_pairs</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">most_recent_groups_files</span><span class="p">)</span>
+        <span class="c1"># ADD COUNT TO SEQUENCE NAMES AND SORT BY COUNT</span>
+        <span class="c1"># python renameWithReplicantCounts.py</span>
+        <span class="c1">#               8_macse_out/MACSEOUT_MERGED.fasta uc_parsed.out dereplicated_renamed.fasta</span>
+        <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;Adding dereplication data to unique fasta&quot;</span><span class="p">)</span>
+        <span class="n">parallel</span><span class="p">(</span><span class="n">runPythonInstance</span><span class="p">,</span>
+                 <span class="p">[(</span><span class="n">renameWithReplicantCounts</span><span class="p">,</span> <span class="n">fasta</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span>
+                   <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_counts.fasta&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">strip_ixes</span><span class="p">(</span><span class="n">fasta</span><span class="p">)),</span> <span class="s1">&#39;fasta&#39;</span><span class="p">)</span>
+                  <span class="k">for</span> <span class="n">fasta</span><span class="p">,</span> <span class="n">groups</span> <span class="ow">in</span> <span class="n">fasta_groups_pairs</span><span class="p">],</span> <span class="n">pool</span><span class="p">)</span>
+        <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;Done adding data&quot;</span><span class="p">)</span>
+
+        <span class="n">aux_dir</span> <span class="o">=</span> <span class="n">makeAuxDir</span><span class="p">(</span><span class="n">outdir</span><span class="p">)</span>
+        <span class="n">groups_dir</span> <span class="o">=</span> <span class="n">makeDirOrdie</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">_groups_files&quot;</span> <span class="o">%</span> <span class="n">outdir</span><span class="p">)</span>
+        <span class="n">bulk_move_to_dir</span><span class="p">(</span><span class="n">most_recent_groups_files</span><span class="p">,</span> <span class="n">groups_dir</span><span class="p">)</span>
+        <span class="n">aux_files</span> <span class="o">=</span> <span class="n">getInputFiles</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="s2">&quot;*_counts.fasta&quot;</span><span class="p">)</span>
+        <span class="n">bulk_move_to_dir</span><span class="p">(</span><span class="n">aux_files</span><span class="p">,</span> <span class="n">aux_dir</span><span class="p">)</span>
+        <span class="n">cleanup_pool</span><span class="p">(</span><span class="n">pool</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Chewbacca 0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Mahdi Belcaid Greg Burgess.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.5.
+    </div>
+  </body>
+</html>

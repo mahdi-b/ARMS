@@ -1,0 +1,140 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>preclean.Preclean_Program_Bayeshammer &mdash; Chewbacca 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Chewbacca 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Chewbacca 0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for preclean.Preclean_Program_Bayeshammer</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">classes.ChewbaccaProgram</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">classes.ProgramRunner</span> <span class="k">import</span> <span class="o">*</span>
+
+<span class="kn">from</span> <span class="nn">classes.Helpers</span> <span class="k">import</span> <span class="o">*</span>
+
+
+<span class="k">class</span> <span class="nc">Preclean_Program_Bayeshammer</span><span class="p">(</span><span class="n">ChewbaccaProgram</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Uses bayeshammer (Spades) to fix sequencing errors via kmer clustering and probabilistic substitution.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;bayeshammer&quot;</span>
+
+
+    <span class="k">def</span> <span class="nf">execute_program</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">preclean_bayeshammer</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">input_f</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">input_r</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">outdir</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">threads</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">bayesthreads</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">preclean_bayeshammer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_f</span><span class="p">,</span> <span class="n">input_r</span><span class="p">,</span> <span class="n">outdir</span><span class="p">,</span> <span class="n">threads</span><span class="p">,</span> <span class="n">bayesthreads</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Assembles reads from two (left and right) fastq files/directories.</span>
+
+<span class="sd">        :param input_f: File path to file or folder of left reads to clean.</span>
+<span class="sd">        :param input_r: File path to file or folder of right reads to clean.</span>
+<span class="sd">        :param outdir: Filepath to output directory.</span>
+<span class="sd">        :param program: The program to use.  Current options are &quot;bayeshammer&quot;.</span>
+<span class="sd">        :param threads: Number of processes to use to process the input files.</span>
+<span class="sd">        :param bayesthreads: The number of threads per process to use.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">makeDirOrdie</span><span class="p">(</span><span class="n">outdir</span><span class="p">)</span>
+        <span class="c1"># Collect input files, and validate that they match</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="n">validate_paired_fastq_reads</span><span class="p">(</span><span class="n">input_f</span><span class="p">,</span> <span class="n">input_r</span><span class="p">)</span>
+        <span class="n">pool</span> <span class="o">=</span> <span class="n">init_pool</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="n">threads</span><span class="p">))</span>
+        <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Precleaning reads with Spades-Baye&#39;s Hammer...&quot;</span><span class="p">)</span>
+        <span class="n">debugPrintInputInfo</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="s2">&quot;preclean/fix.&quot;</span><span class="p">)</span>
+
+        <span class="n">parallel</span><span class="p">(</span><span class="n">runProgramRunnerInstance</span><span class="p">,</span>
+                 <span class="p">[</span><span class="n">ProgramRunner</span><span class="p">(</span><span class="n">ProgramRunnerCommands</span><span class="o">.</span><span class="n">PRECLEAN_SPADES</span><span class="p">,</span>
+                                <span class="p">[</span><span class="n">forwards</span><span class="p">,</span> <span class="n">reverse</span><span class="p">,</span> <span class="n">outdir</span><span class="p">,</span> <span class="n">bayesthreads</span><span class="p">],</span>
+                                <span class="p">{</span><span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">forwards</span><span class="p">,</span> <span class="n">reverse</span><span class="p">],</span> <span class="s2">&quot;positive&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">bayesthreads</span><span class="p">]})</span>
+                    <span class="k">for</span> <span class="n">forwards</span><span class="p">,</span> <span class="n">reverse</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">],</span> <span class="n">pool</span><span class="p">)</span>
+        <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;Done cleaning reads.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Grab all the auxillary files (everything not containing &quot;.assembled.&quot;</span>
+        <span class="c1">#aux_files = getInputFiles(outdir, &quot;*&quot;, &quot;*.assembled.*&quot;, ignore_empty_files=False)</span>
+        <span class="c1"># make aux dir for extraneous files and move them there</span>
+        <span class="c1">#bulk_move_to_dir(aux_files, makeAuxDir(outdir))</span>
+
+        <span class="c1"># Select output files</span>
+        <span class="n">cleaned_reads</span> <span class="o">=</span> <span class="n">getInputFiles</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/corrected&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">outdir</span><span class="p">),</span> <span class="s2">&quot;*.gz&quot;</span><span class="p">)</span>
+        <span class="n">bulk_move_to_dir</span><span class="p">(</span><span class="n">cleaned_reads</span><span class="p">,</span> <span class="n">outdir</span><span class="p">)</span>
+
+
+        <span class="c1"># Gather aux files</span>
+        <span class="n">aux_dir</span> <span class="o">=</span> <span class="n">makeAuxDir</span><span class="p">(</span><span class="n">outdir</span><span class="p">)</span>
+        <span class="n">aux_files</span> <span class="o">=</span> <span class="n">getInputFiles</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="s2">&quot;*.gz&quot;</span><span class="p">)</span>
+        <span class="n">aux_files</span> <span class="o">+=</span> <span class="n">getInputFiles</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="s2">&quot;*unpaired*&quot;</span><span class="p">)</span>
+        <span class="n">bulk_move_to_dir</span><span class="p">(</span><span class="n">aux_files</span><span class="p">,</span> <span class="n">aux_dir</span><span class="p">)</span>
+        <span class="n">cleanup_pool</span><span class="p">(</span><span class="n">pool</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Chewbacca 0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Mahdi Belcaid Greg Burgess.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.5.
+    </div>
+  </body>
+</html>

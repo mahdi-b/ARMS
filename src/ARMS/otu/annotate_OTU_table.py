@@ -1,6 +1,4 @@
 from classes.ProgramRunner import *
-from parse.parseVSearchoutForTaxa import *
-
 from classes.Helpers import *
 
 
@@ -41,8 +39,9 @@ def annotateOTUtable(otu_file, annotation_file, out_file, id_col=0, tax_col=5, c
         tax = data[tax_col].rstrip()
         id_to_tax[id] = tax
     identifiable = id_to_tax.keys()
-
+    printVerbose("Constructed a dictionary of %d identities from %s." % (len(id_to_tax), annotation_file))
     # Parse through the matrix file again to replace any identifiable ids and reformat the file
+    printVerbose("Annotating %s with found identities." % otu_file)
     with open(out_file, 'w') as out:
         for line in open(otu_file, 'r'):
             data = line.split()

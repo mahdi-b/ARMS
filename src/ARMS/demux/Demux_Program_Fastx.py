@@ -21,19 +21,18 @@ class Demux_Program_Fastx(ChewbaccaProgram):
     """
     name = "fastx"
 
-
     def execute_program(self):
         args = self.args
-        self.demux_fastx(args.input_f, args.barcodes, args.outdir, args.threads)
+        self.demux_fastx(args.input_f, args.barcodes, args.outdir, args.processes, args.extraargstring)
 
-
-    def demux_fastx(self, input_f, barcodes, outdir, threads):
+    def demux_fastx(self, input_f, barcodes, outdir, processes, extraargstring):
         """Demuxes using FAST X BARCODE SPLITTER.
 
         :param input_f: File path to input file or folder of input files.
         :param barcodes: File path to input barcodes file.
         :param outdir: Filepath to output directory.
-        :param threads: Number of processes to use to demux input fileset.
+        :param processes: Number of processes to use to demux input fileset.
+        :param extraargstring: Advanced program parameter string.
         """
         makeDirOrdie(outdir)
         # Get input files
@@ -42,21 +41,22 @@ class Demux_Program_Fastx(ChewbaccaProgram):
         file_id = range(len(files_to_split))
         file_id_pairs = zip(files_to_split, file_id)
         debugPrintInputInfo(files_to_split, "demux")
-        pool = init_pool(min(len(file_id_pairs), threads))
+        pool = init_pool(min(len(file_id_pairs), processes))
 
         printVerbose("Demuxing sequences...")
-        parallel(runProgramRunnerInstance, [ProgramRunner(ProgramRunnerCommands.DEMUX_FASTX,
-                                                          [input_, barcodes, "%s/" % outdir,
-                                                           "_%d_splitOut.fastq" % id_], {"exists": [input_, barcodes]})
-                                            for input_, id_ in file_id_pairs], pool)
+        parallel(runProgramRunnerInstance,
+                 [ProgramRunner(ProgramRunnerCommands.DEMUX_FASTX,
+                                [input_, barcodes, "%s/" % outdir, "_%d_splitOut.fastq" % id_],
+                                {"exists": [input_, barcodes]}, extraargstring)
+                  for input_, id_ in file_id_pairs], pool)
         printVerbose("Demuxed sequences.")
 
         # gather output files and move them to their final destination
-        output_files = enumerateDir(".", "*_splitOut_")
+        output_files = enumerateDir(".", "*_splitOut_", ignore_empty_files=False)
         bulk_move_to_dir(output_files, outdir)
 
         # Grab all the auxillary files
-        aux_files = getInputFiles(outdir, "unmatched_*")
+        aux_files = getInputFiles(outdir, "unmatched_*", ignore_empty_files=False)
         # make aux dir for extraneous files and move them there
         bulk_move_to_dir(aux_files, makeAuxDir(outdir))
         cleanup_pool(pool)

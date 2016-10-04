@@ -23,6 +23,7 @@ class ProgramRunnerPrograms(Enum):
     MACSE = "MACSE"
     JAVA = "JAVA"
 
+
 # Names of available commands
 class ProgramRunnerCommands(Enum):
     """An Enum class listing all known external commandline operations."""
@@ -57,7 +58,7 @@ class ProgramRunner(object):
     """
     DEFAULT_CONFIG_FILEPATH = "chewbacca.cfg"
     configsLoaded = False
-    dry_run = False
+    run_dry = False
     # Actual commands
     commandTemplates = {}
 
@@ -75,7 +76,7 @@ class ProgramRunner(object):
         ProgramRunnerPrograms.JAVA: os.path.expanduser("java -jar")
     }
 
-    def __init__(self, program, params, conditions=None, stdin="", stdout="", stderr=""):
+    def __init__(self, program, params, conditions=None, custom_arg_string="", stdin="", stdout="", stderr=""):
         """Initalizes a ProgramRunner object.  Reads chewbacca.cfg and loads configuration settings, builds the command
         string, and configures stdIO pipes.
 
@@ -86,9 +87,11 @@ class ProgramRunner(object):
                                 key/function name is called on each parameter in the corresponding list of parameters.
                                 All parameters must satisfy their <Validator>.function in order for the specified
                                 program to execute.
-        :param stdin:       A handle to the stdin pipe for the command.  Defaults to os.devnull.
-        :param stdout:      A handle to the stdout pipe for the command.  Defaults to os.devnull.
-        :param stderr:      A hande to the stderr pipe for the command.  Defaults to os.devnull.
+        :param custom_arg_string: A string containing advanced command line parameters to pass to the called program.
+                                This string will be appended to the end of the normal commandline arguments.
+        :param stdin:       A handle to the stdin pipe for the command.  Defaults to stdin.
+        :param stdout:      A handle to the stdout pipe for the command.  Defaults to stdout.
+        :param stderr:      A hande to the stderr pipe for the command.  Defaults to stderr.
         :return             A list of output files to be moved to outdir.
         """
         if conditions is None:
@@ -97,14 +100,14 @@ class ProgramRunner(object):
         ProgramRunner.initalizeCommands(self)
         ProgramRunner.configsLoaded = True
         self.program = program
-        self.command = self.commandTemplates[program] % tuple(params)
+        self.command = "%s %s" % (self.commandTemplates[program] % tuple(params), custom_arg_string)
         self.conditions = conditions
+        self.extra_args = custom_arg_string
         self.stdin = stdin
         self.stdout = stdout
         self.stderr = stderr
 
-
-    def validateConditions(self, conditions):
+    def validate_conditions(self, conditions):
         """Validates this program's conditions for execution.
 
         :param conditions: A dictionary mapping <Validator>.function names to a list of parameters.  The dictionary
@@ -116,8 +119,7 @@ class ProgramRunner(object):
         """
         return helpValidate(conditions)
 
-
-    def dryValidateConditions(self, conditions):
+    def dry_validate_conditions(self, conditions):
         """Prints validation procedures without actually executing them.
 
         :param conditions: A dictionary mapping <Validator>.function names to a list of parameters.  The dictionary
@@ -134,24 +136,24 @@ class ProgramRunner(object):
         :return: None
         """
 
-        self.validateConditions(self.conditions)
-        if printVerbose.VERBOSE or self.dry_run:
-            self.dryRun()
+        self.validate_conditions(self.conditions)
+        if printVerbose.VERBOSE or self.run_dry:
+            self.dry_run()
 
         # call and check_call are blocking, Popen is non-blocking
         debugPrint("Running " + self.command)
         subprocess.check_call(os.path.expanduser(self.command), shell=True)
 
-    def dryRun(self, dryValidate=True):
+    def dry_run(self, dryValidate=True):
         """Prints the validation procedures that would be performed, and the commands that would be run in an actual
             run, without actually executing them.
 
         :return:
         """
         if dryValidate:
-            self.dryValidateConditions(self.conditions)
+            self.dry_validate_conditions(self.conditions)
         else:
-            self.validateConditions(self.conditions)
+            self.validate_conditions(self.conditions)
         return self.command
 
     def loadConfigs(self):

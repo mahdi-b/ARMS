@@ -14,6 +14,7 @@ Contents:
    intro
    file_types/file_types
    quick_start
+   api/index
 
 Indices and tables
 ==================

@@ -1,8 +1,6 @@
 import sqlite3
 import sys
-
 from ete2 import NCBITaxa
-
 from classes.Helpers import printVerbose
 
 
@@ -41,7 +39,7 @@ def buildTaxaDict(tax_map_file):
         biocodeTax[biocodeId] = taxonomy
     return biocodeTax
 
-# TODO these two be merged
+
 def parseVSearchOutputAgainstFasta(vsearch_outfile, taxInfo, output_file, min_simmilarity, min_coverage):
     """Resolves vsearch matches in a vsearch output file to the taxonomic name taken from BIOCODE.
         Takes in a vsearch output file from usearch__global, parses the result for good matches, and
@@ -56,9 +54,11 @@ def parseVSearchOutputAgainstFasta(vsearch_outfile, taxInfo, output_file, min_si
     printVerbose("Parsing Vsearch Output")
     min_simm = float(min_simmilarity)
     min_coverage = float(min_coverage)
-
     biocodeTax = buildTaxaDict(taxInfo)
+    printVerbose("Constructed identity dictionary with %d entries from %s." % (len(biocodeTax), taxInfo))
+    rslt = []
     with open(output_file, 'w') as out:
+        printVerbose("Reading %s as query file..." % vsearch_outfile)
         for line in open(vsearch_outfile, 'r'):
             data = line.split()
             if float(data[2]) < min_simm or float(data[4]) < min_coverage:
@@ -66,11 +66,11 @@ def parseVSearchOutputAgainstFasta(vsearch_outfile, taxInfo, output_file, min_si
                 if biocodeTax.has_key(data[1]):
                     print "Found %s as %s" % (data[1], biocodeTax[data[1]])
                     data.append(biocodeTax[data[1]])
-
-                    out.write( "\t".join(data))
-                    out.write("\n")
+                    rslt.append("\t".join(data))
                 else:
                     printErrorMissingID(out, data[1])
+        out.write("\n".join(rslt))
+    printVerbose("Wrote %d identified sequences to %s" % (len(rslt), output_file))
 
 
 def parseVSearchOutputAgainstNCBI(vsearch_out, database, output_file, min_coverage, min_similarity):
@@ -93,7 +93,7 @@ def parseVSearchOutputAgainstNCBI(vsearch_out, database, output_file, min_covera
     query = "select taxid from gi_taxid where gi=%s"
 
     def getTaxFromId(taxId, taxonomy=["species", "genus", 'family', 'order', 'class', 'phylum']):
-        myTaxonomy = dict([(a,"") for a in taxonomy])
+        myTaxonomy = dict([(a, "") for a in taxonomy])
         taxId = int(taxId)
         for lin in ncbi.get_lineage(taxId):
             rank = ncbi.get_rank([lin]).values()[0]
@@ -102,7 +102,6 @@ def parseVSearchOutputAgainstNCBI(vsearch_out, database, output_file, min_covera
                 myTaxonomy[rank] = val
 
         return ":".join([myTaxonomy[x] for x in taxonomy[::-1]])
-
 
     with open(output_file, 'w') as out:
         for line in open(vsearch_out, 'r'):

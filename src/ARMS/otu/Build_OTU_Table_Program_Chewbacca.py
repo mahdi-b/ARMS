@@ -1,6 +1,5 @@
 from classes.ChewbaccaProgram import *
 from classes.ProgramRunner import *
-
 from build_OTU_table import buildOTUtable
 from classes.Helpers import *
 
@@ -8,12 +7,9 @@ from classes.Helpers import *
 class Build_OTU_Table_Program_Chewbacca(ChewbaccaProgram):
     name = "bayeshammer"
 
-
     def execute_program(self):
         args = self.args
         self.build_otu_chewbacca(args.outdir, args.groups, args.samples, args.barcodes)
-
-
 
     # TODO should the build table command support parallel operations?
     def build_otu_chewbacca(self, outdir, groups_file, samples_file, barcodes_file):
@@ -23,6 +19,7 @@ class Build_OTU_Table_Program_Chewbacca(ChewbaccaProgram):
         :param groups_file: A .groups file containing the OTU names and their consituent/replicant sequences.
         :param samples_file: A .samples file containing the samples that each sequence in the .groups file belongs to.
         :param barcodes_file: A .barcodes file listing all sample names.
+        :param extraargstring: Advanced program parameter string.
         """
         makeDirOrdie(outdir)
         groups = getInputFiles(groups_file)

@@ -1,0 +1,438 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Core Classes &mdash; Chewbacca 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Chewbacca 0.1 documentation" href="index.html" />
+    <link rel="prev" title="Welcome to Chewbacca’s documentation!" href="quick_start.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="quick_start.html" title="Welcome to Chewbacca’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Chewbacca 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="core-classes">
+<h1>Core Classes<a class="headerlink" href="#core-classes" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="programrunner">
+<h2>ProgramRunner<a class="headerlink" href="#programrunner" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="classes.ProgramRunner.ProgramRunner">
+<em class="property">class </em><code class="descclassname">classes.ProgramRunner.</code><code class="descname">ProgramRunner</code><span class="sig-paren">(</span><em>program</em>, <em>params</em>, <em>conditions=None</em>, <em>stdin=''</em>, <em>stdout=''</em>, <em>stderr=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/classes/ProgramRunner.html#ProgramRunner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.ProgramRunner.ProgramRunner" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class to interact with external command line programs and internal python functions.  The class contains a     dictionary of formatted command strings for external programs.  The class supports validation, sanitization, and     debugging of user-supplied parameters.</p>
+<dl class="docutils">
+<dt>Attributes:</dt>
+<dd><dl class="first docutils">
+<dt>DEFAULT_CONFIG_FILEPATH     The filepath to a config file containing user-specified overrides (such as file</dt>
+<dd>paths to exectuables.</dd>
+<dt>configsLoaded               Specifies that all config variables have been loaded, and that the file should not</dt>
+<dd>be read again durring the execution of this instance.</dd>
+</dl>
+<p>program_paths               Specifies the default location of executibles used in the commands dictionary.
+commandTemplates            A dictionary mapping chewbacca commands to un-paramaterized command line strings.</p>
+<blockquote class="last">
+<div>Used as templates for commands.</div></blockquote>
+</dd>
+</dl>
+<dl class="method">
+<dt id="classes.ProgramRunner.ProgramRunner.dryRun">
+<code class="descname">dryRun</code><span class="sig-paren">(</span><em>dryValidate=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/classes/ProgramRunner.html#ProgramRunner.dryRun"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.ProgramRunner.ProgramRunner.dryRun" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Prints the validation procedures that would be performed, and the commands that would be run in an actual</dt>
+<dd>run, without actually executing them.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.ProgramRunner.ProgramRunner.dryValidateConditions">
+<code class="descname">dryValidateConditions</code><span class="sig-paren">(</span><em>conditions</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/classes/ProgramRunner.html#ProgramRunner.dryValidateConditions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.ProgramRunner.ProgramRunner.dryValidateConditions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints validation procedures without actually executing them.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>conditions</strong> &#8211; A dictionary mapping &lt;Validator&gt;.function names to a list of parameters.  The dictionary
+key/function name is called on each parameter in the corresponding list of parameters.
+All parameters must satisfy their &lt;Validator&gt;.function in order for the specified
+program to execute.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.ProgramRunner.ProgramRunner.initalizeCommands">
+<code class="descname">initalizeCommands</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/classes/ProgramRunner.html#ProgramRunner.initalizeCommands"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.ProgramRunner.ProgramRunner.initalizeCommands" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initalizes the commandTemplates dictionary.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.ProgramRunner.ProgramRunner.loadConfigs">
+<code class="descname">loadConfigs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/classes/ProgramRunner.html#ProgramRunner.loadConfigs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.ProgramRunner.ProgramRunner.loadConfigs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads configuration settings from the chewbacca configuration file (located in
+ProgramRunner.DEFAULT_CONFIG_FILEPATH).  If the file is not found, default values are used. Overwrites the
+default values of any found entries.  Currently loads the [Program  Paths] section, updating the
+program_paths dictionary.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.ProgramRunner.ProgramRunner.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/classes/ProgramRunner.html#ProgramRunner.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.ProgramRunner.ProgramRunner.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates conditions (or prints them for a dry run) and then executes the command.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.ProgramRunner.ProgramRunner.validateConditions">
+<code class="descname">validateConditions</code><span class="sig-paren">(</span><em>conditions</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/classes/ProgramRunner.html#ProgramRunner.validateConditions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.ProgramRunner.ProgramRunner.validateConditions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates this program&#8217;s conditions for execution.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>conditions</strong> &#8211; A dictionary mapping &lt;Validator&gt;.function names to a list of parameters.  The dictionary
+key/function name is called on each parameter in the corresponding list of parameters.
+All parameters must satisfy their &lt;Validator&gt;.function in order for the specified
+program to execute.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True if validation is successful, and raising an exception in &lt;Validator.function&gt; if not.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="chewbaccacommand">
+<h2>ChewbaccaCommand<a class="headerlink" href="#chewbaccacommand" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="classes.ChewbaccaCommand.ChewbaccaCommand">
+<em class="property">class </em><code class="descclassname">classes.ChewbaccaCommand.</code><code class="descname">ChewbaccaCommand</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/classes/ChewbaccaCommand.html#ChewbaccaCommand"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.ChewbaccaCommand.ChewbaccaCommand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents a portable, executable Command.  ChewbaccaCommands have a list of supported_programs, a
+default_program, and an args object (object with parameters as attributes).  Chewbacca Commands read the
+program attribute from the args object, and call the appropriate program (if supported), falling back to the
+default if no match is found.</p>
+<dl class="method">
+<dt id="classes.ChewbaccaCommand.ChewbaccaCommand.execute_command">
+<code class="descname">execute_command</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/classes/ChewbaccaCommand.html#ChewbaccaCommand.execute_command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.ChewbaccaCommand.ChewbaccaCommand.execute_command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Executes the command.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Results of execution.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.ChewbaccaCommand.ChewbaccaCommand.get_program">
+<code class="descname">get_program</code><span class="sig-paren">(</span><em>program</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/classes/ChewbaccaCommand.html#ChewbaccaCommand.get_program"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.ChewbaccaCommand.ChewbaccaCommand.get_program" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a program name, searches for that Program in the list of supported_programs, and returns an instance
+of that Program initalized with the parameter object.  If not found, returns an instance of the default_program
+initalized with the parameter object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>program</strong> &#8211; String name of the desired program.  This should match the .name attribute of a ChewbaccaProgram</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">An instance of a ChewbaccaProgram, initalized with the argparse object.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="chewbaccaprogram">
+<h2>ChewbaccaProgram<a class="headerlink" href="#chewbaccaprogram" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="classes.ChewbaccaProgram.ChewbaccaProgram">
+<em class="property">class </em><code class="descclassname">classes.ChewbaccaProgram.</code><code class="descname">ChewbaccaProgram</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/classes/ChewbaccaProgram.html#ChewbaccaProgram"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.ChewbaccaProgram.ChewbaccaProgram" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents a way of completing a ChewbaccaCommand using a particular program (with some combination of external
+programs, and custom Chewbacca scripts.  ChewbaccaPrograms are responsbile for carrying out their associated
+ChewbaccaCommand.  The name attribute denotes the primary external program used, e.g. &#8220;vsearch&#8221; if VSearch is
+used, or &#8220;chewbacca&#8221; if a custom script is used.</p>
+<dl class="method">
+<dt id="classes.ChewbaccaProgram.ChewbaccaProgram.execute_program">
+<code class="descname">execute_program</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/classes/ChewbaccaProgram.html#ChewbaccaProgram.execute_program"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.ChewbaccaProgram.ChewbaccaProgram.execute_program" title="Permalink to this definition">¶</a></dt>
+<dd><p>Completes the representative ChewbaccaCommand using the specified program.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="commands">
+<h1>Commands<a class="headerlink" href="#commands" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="dereplicate.Dereplicate_Command.Dereplicate_Command">
+<em class="property">class </em><code class="descclassname">dereplicate.Dereplicate_Command.</code><code class="descname">Dereplicate_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dereplicate/Dereplicate_Command.html#Dereplicate_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dereplicate.Dereplicate_Command.Dereplicate_Command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dereplicates a set of fasta files.  Identical (or identical spanning) sequences are considered         replicants.  (100% match).  NOTE: only dereplicates within each fasta file (not across all files).  Merge         files before hand if you want to dereplciate across multiple files.</p>
+<dl class="attribute">
+<dt id="dereplicate.Dereplicate_Command.Dereplicate_Command.default_program">
+<code class="descname">default_program</code><a class="headerlink" href="#dereplicate.Dereplicate_Command.Dereplicate_Command.default_program" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">Dereplicate_Program_Vsearch</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="clean.Clean_Quality_Command.Clean_Quality_Command">
+<em class="property">class </em><code class="descclassname">clean.Clean_Quality_Command.</code><code class="descname">Clean_Quality_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/clean/Clean_Quality_Command.html#Clean_Quality_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clean.Clean_Quality_Command.Clean_Quality_Command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes areas of low quality from reads, keeping the longest contiguous segment.</p>
+<dl class="attribute">
+<dt id="clean.Clean_Quality_Command.Clean_Quality_Command.default_program">
+<code class="descname">default_program</code><a class="headerlink" href="#clean.Clean_Quality_Command.Clean_Quality_Command.default_program" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">Clean_Quality_Program_Trimmomatic</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="clean.Clean_Adapters_Command.Clean_Adapters_Command">
+<em class="property">class </em><code class="descclassname">clean.Clean_Adapters_Command.</code><code class="descname">Clean_Adapters_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/clean/Clean_Adapters_Command.html#Clean_Adapters_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clean.Clean_Adapters_Command.Clean_Adapters_Command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes adapters (and preceeding barcodes) from sequences in input file(s).</p>
+<dl class="attribute">
+<dt id="clean.Clean_Adapters_Command.Clean_Adapters_Command.default_program">
+<code class="descname">default_program</code><a class="headerlink" href="#clean.Clean_Adapters_Command.Clean_Adapters_Command.default_program" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">Clean_Adapters_Program_Flexbar</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="demux.Demux_Command.Demux_Command">
+<em class="property">class </em><code class="descclassname">demux.Demux_Command.</code><code class="descname">Demux_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/demux/Demux_Command.html#Demux_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#demux.Demux_Command.Demux_Command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Splits a set of sequences into separate files by sample based on the barcode at the begining of each sequence.</p>
+<dl class="attribute">
+<dt id="demux.Demux_Command.Demux_Command.default_program">
+<code class="descname">default_program</code><a class="headerlink" href="#demux.Demux_Command.Demux_Command.default_program" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">Demux_Program_Fastx</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="assemble.Assemble_Command.Assemble_Command">
+<em class="property">class </em><code class="descclassname">assemble.Assemble_Command.</code><code class="descname">Assemble_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/assemble/Assemble_Command.html#Assemble_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#assemble.Assemble_Command.Assemble_Command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assembles reads from two (left and right) fastq files/directories.  For a set of k forward read files, and k
+reverse read files, return k assembled files.  Matching forward and reverse files should be identically named,
+except for a &lt;forward&gt;/&lt;reverse&gt; suffix that indicates the read orientation.  Two suffix pairs are supported:
+&#8216;_forwards&#8217; and &#8216;_reverse&#8217;,
+and
+&#8216;_R1&#8217; and &#8216;R2&#8217;
+Choose ONE suffix style and stick to it.
+e.g. Sample_100_forwards.fq and Sample_100_reverse.fq will be assembled into Sample_100_assembled.fq.</p>
+<blockquote>
+<div>Alternatively, Sample_100_R1.fq and Sample_100_R2.fq will be assembled into Sample_100_assembled.fq.
+You can provide as many pairs of files as you wish as long as they follow exactly on of the above naming
+conventions.  If a &#8216;name&#8217; parameter is provided, it will be used as a suffix for all assembled sequence files.</div></blockquote>
+<dl class="attribute">
+<dt id="assemble.Assemble_Command.Assemble_Command.default_program">
+<code class="descname">default_program</code><a class="headerlink" href="#assemble.Assemble_Command.Assemble_Command.default_program" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">Assemble_Program_Pear</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="util.Partition_Command.Partition_Command">
+<em class="property">class </em><code class="descclassname">util.Partition_Command.</code><code class="descname">Partition_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/util/Partition_Command.html#Partition_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#util.Partition_Command.Partition_Command" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="util.Convert_Fastq_Fasta_Command.Convert_Fastq_Fasta_Command">
+<em class="property">class </em><code class="descclassname">util.Convert_Fastq_Fasta_Command.</code><code class="descname">Convert_Fastq_Fasta_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/util/Convert_Fastq_Fasta_Command.html#Convert_Fastq_Fasta_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#util.Convert_Fastq_Fasta_Command.Convert_Fastq_Fasta_Command" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="util.Merge_Command.Merge_Command">
+<em class="property">class </em><code class="descclassname">util.Merge_Command.</code><code class="descname">Merge_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/util/Merge_Command.html#Merge_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#util.Merge_Command.Merge_Command" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="util.Ungap_Command.Ungap_Command">
+<em class="property">class </em><code class="descclassname">util.Ungap_Command.</code><code class="descname">Ungap_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/util/Ungap_Command.html#Ungap_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#util.Ungap_Command.Ungap_Command" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="rename.Rename_Command.Rename_Command">
+<em class="property">class </em><code class="descclassname">rename.Rename_Command.</code><code class="descname">Rename_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rename/Rename_Command.html#Rename_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rename.Rename_Command.Rename_Command" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="cluster.Cluster_Command.Cluster_Command">
+<em class="property">class </em><code class="descclassname">cluster.Cluster_Command.</code><code class="descname">Cluster_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cluster/Cluster_Command.html#Cluster_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cluster.Cluster_Command.Cluster_Command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clusters a set of fasta files.  Identical (or identical spanning) sequences are considered         replicants.  (100% match).  NOTE: only Clusters within each fasta file (not across all files).  Merge         files before hand if you want to dereplciate across multiple files.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="align.Align_Clean_Command.Align_Clean_Command">
+<em class="property">class </em><code class="descclassname">align.Align_Clean_Command.</code><code class="descname">Align_Clean_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/align/Align_Clean_Command.html#Align_Clean_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#align.Align_Clean_Command.Align_Clean_Command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cleans a set of alignments by removing gap characters and reference sequences from the file.</p>
+<dl class="attribute">
+<dt id="align.Align_Clean_Command.Align_Clean_Command.default_program">
+<code class="descname">default_program</code><a class="headerlink" href="#align.Align_Clean_Command.Align_Clean_Command.default_program" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">Align_Clean_Program_Macse</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="align.Align_Command.Align_Command">
+<em class="property">class </em><code class="descclassname">align.Align_Command.</code><code class="descname">Align_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/align/Align_Command.html#Align_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#align.Align_Command.Align_Command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Aligns a set of fasta files.  Identical (or identical spanning) sequences are considered         replicants.  (100% match).  NOTE: only Aligns within each fasta file (not across all files).  Merge         files before hand if you want to dereplciate across multiple files.</p>
+<dl class="attribute">
+<dt id="align.Align_Command.Align_Command.default_program">
+<code class="descname">default_program</code><a class="headerlink" href="#align.Align_Command.Align_Command.default_program" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">Align_Program_Macse</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="preclean.Preclean_Command.Preclean_Command">
+<em class="property">class </em><code class="descclassname">preclean.Preclean_Command.</code><code class="descname">Preclean_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preclean/Preclean_Command.html#Preclean_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preclean.Preclean_Command.Preclean_Command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fixes sequencing errors.</p>
+<dl class="attribute">
+<dt id="preclean.Preclean_Command.Preclean_Command.default_program">
+<code class="descname">default_program</code><a class="headerlink" href="#preclean.Preclean_Command.Preclean_Command.default_program" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">Preclean_Program_Bayeshammer</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="otu.Annotate_OTU_Table_Command.Annotate_OTU_Table_Command">
+<em class="property">class </em><code class="descclassname">otu.Annotate_OTU_Table_Command.</code><code class="descname">Annotate_OTU_Table_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otu/Annotate_OTU_Table_Command.html#Annotate_OTU_Table_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#otu.Annotate_OTU_Table_Command.Annotate_OTU_Table_Command" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="otu.Query_OTU_DB_Command.Query_OTU_DB_Command">
+<em class="property">class </em><code class="descclassname">otu.Query_OTU_DB_Command.</code><code class="descname">Query_OTU_DB_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otu/Query_OTU_DB_Command.html#Query_OTU_DB_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#otu.Query_OTU_DB_Command.Query_OTU_DB_Command" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="otu.Build_OTU_Table_Command.Build_OTU_Table_Command">
+<em class="property">class </em><code class="descclassname">otu.Build_OTU_Table_Command.</code><code class="descname">Build_OTU_Table_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otu/Build_OTU_Table_Command.html#Build_OTU_Table_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#otu.Build_OTU_Table_Command.Build_OTU_Table_Command" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="otu.Query_OTU_Fasta_Command.Query_OTU_Fasta_Command">
+<em class="property">class </em><code class="descclassname">otu.Query_OTU_Fasta_Command.</code><code class="descname">Query_OTU_Fasta_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otu/Query_OTU_Fasta_Command.html#Query_OTU_Fasta_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#otu.Query_OTU_Fasta_Command.Query_OTU_Fasta_Command" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Core Classes</a><ul>
+<li><a class="reference internal" href="#programrunner">ProgramRunner</a></li>
+<li><a class="reference internal" href="#chewbaccacommand">ChewbaccaCommand</a></li>
+<li><a class="reference internal" href="#chewbaccaprogram">ChewbaccaProgram</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#commands">Commands</a></li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="quick_start.html"
+                        title="previous chapter">Welcome to Chewbacca&#8217;s documentation!</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/src.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="quick_start.html" title="Welcome to Chewbacca’s documentation!"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Chewbacca 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Mahdi Belcaid Greg Burgess.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.5.
+    </div>
+  </body>
+</html>

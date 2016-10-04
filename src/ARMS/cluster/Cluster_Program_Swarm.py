@@ -1,21 +1,20 @@
+from Bio import SeqIO
+from Bio.Alphabet import SingleLetterAlphabet
+from Bio.Seq import Seq
 from classes.ChewbaccaProgram import *
+from classes.Helpers import *
 from classes.ProgramRunner import *
+from Cluster_Helpers import handle_groups_file_update
 from parse.parseUCtoGroups import parseUCtoGroups
 from rename.renameWithoutCount import removeCountsFromGroupsFile
-from util.capitalizeSeqs import capitalizeSeqs
-
-from classes.Helpers import *
-from cluster_helpers import handle_groups_file_update
 
 
 class Cluster_Program_Swarm(ChewbaccaProgram):
     name = "swarm"
 
-
     def execute_program(self):
         args = self.args
-        self.cluster_swarm(args.input_f, args.outdir, args.groupsfile, args.threads)
-
+        self.cluster_swarm(args.input_f, args.outdir, args.groupsfile, args.processes, args.extraargstring)
 
     # TODO IMPORTANT: make sure that the abundances in dereplicated_renamed.fasta are sorted in decreasing order
     # We need to explore this more. Run by default for now....
@@ -27,28 +26,28 @@ class Cluster_Program_Swarm(ChewbaccaProgram):
 
     # ~/bin/swarm/src/swarm dereplicated_renamed.fasta \
 
-    def cluster_swarm(self, input_f, outdir, groupsfile, threads):
+    def cluster_swarm(self, input_f, outdir, groupsfile, processes, extraargstring):
         """Clusters sequences using SWARM.
-        :param : An argparse object with the following parameters:
-                        input       A file or folder containing fasta files to cluster.
-                        output      The output directory results will be written to.
-                        groupsfile	A groups file or folder containinggroups files that describe the input.
-                                    Note: if no groups file is supplied, then entries in the fasta file are assumed to be
-                                        singleton sequences.
+        :param input_f: A file or folder containing fasta files to cluster.
+        :param outdir: The output directory results will be written to.
+        :param groupsfile: A groups file or folder containing groups files that describe the input. Note: if no groups
+                            file is supplied, then entries in the fasta file are assumed to be singleton sequences.
+        :param processes: The maximum number of processes to use.
+        :param extraargstring: Advanced program parameter string.
         """
         makeDirOrdie(outdir)
         # Grab the fasta file(s) to cluster
         inputs = getInputFiles(input_f)
         debugPrintInputInfo(inputs, "clustered")
-        pool = init_pool(min(len(inputs), threads))
+        pool = init_pool(min(len(inputs), processes))
 
         # RUN CLUSTERING
         parallel(runProgramRunnerInstance,
                  [ProgramRunner(ProgramRunnerCommands.CLUSTER_SWARM,
                                 [input_, "%s/%s_clustered" % (outdir, strip_ixes(input_)),
-                                       "%s/%s_clustered_uc" % (outdir, strip_ixes(input_)),
-                                       "%s/%s_clustered_seeds" % (outdir, strip_ixes(input_))],
-                                  {"exists": [input_]}) for input_ in inputs], pool)
+                                 "%s/%s_clustered_uc" % (outdir, strip_ixes(input_)),
+                                 "%s/%s_clustered_seeds" % (outdir, strip_ixes(input_))],
+                                {"exists": [input_]}, extraargstring) for input_ in inputs], pool)
 
         # PARSE UC FILE TO GROUPS FILE
         printVerbose("Parsing the clustered uc files to groups files")
@@ -77,13 +76,13 @@ class Cluster_Program_Swarm(ChewbaccaProgram):
         printVerbose("Done capitalizing sequences")
 
         # Collect the groups file from clustering with counts removed
-        cleaned_clustered_groups_files = getInputFiles(outdir, "*_uncount.groups")
+        cleaned_clustered_groups_files = getInputFiles(outdir, "*_uncount.groups", ignore_empty_files=False)
 
         # Resolve the user specified names file if necessary
         final_groups_files = handle_groups_file_update(outdir, groupsfile, cleaned_clustered_groups_files)
 
         # GATHER AUX FILES
-        aux_files = getInputFiles(outdir, "*", "*_seeds.fasta")
+        aux_files = getInputFiles(outdir, "*", "*_seeds.fasta", ignore_empty_files=False)
 
         # Move the final groups file(s) to the groups dir
         groups_dir = makeDirOrdie("%s_groups_files" % outdir)
@@ -95,3 +94,26 @@ class Cluster_Program_Swarm(ChewbaccaProgram):
 
         # Cleanup the pool
         cleanup_pool(pool)
+
+
+    def capitalizeSeqs(input_fasta, output_fasta):
+        """Capitalizes the ATGC sequence in a fasta file and writes it to a new file.
+
+        :param input_fasta: Filepath to the input fasta file to capitalize.
+        :param output_fasta: Filepath to the output fasta file.
+        :return: Filepath to the output fasta file.
+        """
+        seqBuffer = []
+        i = 0
+        output = open(output_fasta, 'a')
+
+        for sequence in SeqIO.parse(open(input_fasta, 'rU'), "fasta"):
+            sequence.seq = Seq(str(sequence.seq).upper(), SingleLetterAlphabet())
+            seqBuffer.append(sequence)
+            i += 1
+            if i % 5000 == 0:
+                SeqIO.write(seqBuffer, output, "fasta")
+                seqBuffer = []
+        SeqIO.write(seqBuffer, output, "fasta")
+        output.close()
+        return output_fasta

@@ -23,6 +23,7 @@ Groups Files
 **extensions: .groups**
 
 Groups files are used by Chewbacca to keep track of groups or clusters of related sequences.
+These files are generated and updated when dereplication or clustering occur.
 A Groups file consists of one or more lines in the following format:
 
   *GROUPNAME <tab> SequenceName <space> SequenceName space* ...
@@ -45,7 +46,10 @@ Samples Files
 -------------
 **extensions: .samples**
 
-Samples files are used by Chewbacca to map sequences to the the sample name that they belong to.
+Samples files are used by Chewbacca to map sequence names to the the name of their respective sample names.
+This file is generally written once, early on in the anylitical process, at the time of sequence renaming.
+The primary purposes for writing this file are for annotation and construction of an OTU table at the end of the analysis.
+
 A Samples file consists of one or more lines in the following format:
 
   *SequenceName <tab> SampleName*

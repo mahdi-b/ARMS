@@ -23,32 +23,34 @@ class Assemble_Program_Pear(ChewbaccaProgram):
 
     def execute_program(self):
         args = self.args
-        self.assemble_pear(args.input_f, args.input_r, args.outdir, args.name,  args.threads, args.pearthreads)
+        self.assemble_pear(args.input_f, args.input_r, args.outdir, args.name,  args.processes, args.pearthreads,
+                           args.extraargstring)
 
 
-    def assemble_pear(self, input_f, input_r, outdir, name, threads, pearthreads):
+    def assemble_pear(self, input_f, input_r, outdir, name, processes, pearthreads, extraargstring):
         """Uses PEAR to assemble paired F/R read files in parallel.
 
         :param input_f: File path to forward Fastq Reads file or folder.
         :param input_r: File path to reverse Fastq Reads file or folder.
         :param outdir: File path to the output directory.
         :param name: File prefix for the assembled reads.
-        :param threads: The number of processes to use.
+        :param processes: The maximum number of processes to use.
+        :param extraargstring: Advanced program parameter string.
         :param pearthreads: The number of threads per process to use.
         """
         # "~/programs/pear-0.9.4-bin-64/pear-0.9.4-64 -f %s -r %s -o %s -j %s -m %d"
         makeDirOrdie(outdir)
         inputs = validate_paired_fastq_reads(input_f, input_r)
-        pool = init_pool(min(len(inputs), threads))
+        pool = init_pool(min(len(inputs), processes))
         printVerbose("\tAssembling reads with pear")
         debugPrintInputInfo(inputs, "assemble")
-        parallel(runProgramRunnerInstance, [ProgramRunner(ProgramRunnerCommands.ASSEMBLE_PEAR, [forwards, reverse,
-                                                                                                "%s/%s_%s" % (
-                                                                                                    outdir, name,
-                                                                                                    getFileName(forwards)),
-                                                                                                pearthreads],
-                                                          {"exists": [forwards, reverse], "positive": [pearthreads]})
-                                            for forwards, reverse in inputs], pool)
+        parallel(runProgramRunnerInstance, [ProgramRunner(ProgramRunnerCommands.ASSEMBLE_PEAR,
+                                                          [forwards, reverse, "%s/%s_%s" % ( outdir, name,
+                                                                                             getFileName(forwards)),
+                                                            pearthreads],
+                                                          {"exists": [forwards, reverse], "positive": [pearthreads]},
+                                                          extraargstring)
+                                                            for forwards, reverse in inputs], pool)
 
         printVerbose("Done assembling sequences...")
         # Grab all the auxillary files (everything not containing ".assembled."

@@ -35,6 +35,9 @@
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
           <a href="../quick_start.html" title="Welcome to Chewbacca’s documentation!"
              accesskey="N">next</a> |</li>
         <li class="right" >
@@ -73,6 +76,7 @@ Getting acquainted with these filetypes will save you time and a lot of headache
 <h2>Groups Files<a class="headerlink" href="#groups-files" title="Permalink to this headline">¶</a></h2>
 <p><strong>extensions: .groups</strong></p>
 <p>Groups files are used by Chewbacca to keep track of groups or clusters of related sequences.
+These files are generated and updated when dereplication or clustering occur.
 A Groups file consists of one or more lines in the following format:</p>
 <blockquote>
 <div><em>GROUPNAME &lt;tab&gt; SequenceName &lt;space&gt; SequenceName space</em> ...</div></blockquote>
@@ -98,8 +102,10 @@ This is not an error, but the intended behavior.</p>
 <div class="section" id="samples-files">
 <h2>Samples Files<a class="headerlink" href="#samples-files" title="Permalink to this headline">¶</a></h2>
 <p><strong>extensions: .samples</strong></p>
-<p>Samples files are used by Chewbacca to map sequences to the the sample name that they belong to.
-A Samples file consists of one or more lines in the following format:</p>
+<p>Samples files are used by Chewbacca to map sequence names to the the name of their respective sample names.
+This file is generally written once, early on in the anylitical process, at the time of sequence renaming.
+The primary purposes for writing this file are for annotation and construction of an OTU table at the end of the analysis.</p>
+<p>A Samples file consists of one or more lines in the following format:</p>
 <blockquote>
 <div><em>SequenceName &lt;tab&gt; SampleName</em></div></blockquote>
 <p>As an example:</p>
@@ -173,6 +179,9 @@ A Samples file consists of one or more lines in the following format:</p>
         <li class="right" style="margin-right: 10px">
           <a href="../genindex.html" title="General Index"
              >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
         <li class="right" >
           <a href="../quick_start.html" title="Welcome to Chewbacca’s documentation!"
              >next</a> |</li>

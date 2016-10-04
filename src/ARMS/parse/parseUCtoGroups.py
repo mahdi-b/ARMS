@@ -24,10 +24,3 @@ def parseUCtoGroups(input_uc_file, output_groups_file):
             outFile.write("%s\t%s" % (key, " ".join(list(set(seeds[key])))))
             outFile.write("\n")
     return output_groups_file
-
-
-if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print "Usage: input_uc_file, output_groups_file"
-    else:
-        parseUCtoGroups(*sys.argv[1:3])

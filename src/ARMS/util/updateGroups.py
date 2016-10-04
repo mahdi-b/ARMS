@@ -1,6 +1,5 @@
 import os
 import sys
-
 from parse.parseGroupsFileToDict import parseGroupsFileToDictOfChilden
 from util.merge import merge_files
 
