@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('Agg')
 import numpy as np
 from classes.ChewbaccaProgram import ChewbaccaProgram
 from classes.Helpers import *
