@@ -2,7 +2,7 @@ import sys
 from matplotlib import pyplot as plt
 import numpy as np
 
-from utils import *
+from Visualize_Helpers import *
 
 
 def viz_otu_composition_barchart(frame, output_file="", as_pct_composition=True):

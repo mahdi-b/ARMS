@@ -84,5 +84,9 @@ nice -10 python ~/ARMS/src/ARMS/chewbacca.py annotate_matrix -i 11_buildmatrix -
 nice -10 python ~/ARMS/src/ARMS/chewbacca.py annotate_matrix -i 15_annotate_biocode -a 13_bold -o 16_annotate_bold
 nice -10 python ~/ARMS/src/ARMS/chewbacca.py annotate_matrix -i 16_annotate_bold -a 14_ncbi -o 17_annotate_ncbi
 
-
+##=================================================================================================
+## Step 13: Visualize the data
+##=================================================================================================
+nice -10 python ~/ARMS/src/ARMS/chewbacca.py visualize_otu_sample_composition -i 11_buildmatrix -o 18_otu_sample_comp
+nice -10 python ~/ARMS/src/ARMS/chewbacca.py visualize_otu_heatmap -i 11_buildmatrix -o 19_otu_heatmap
 

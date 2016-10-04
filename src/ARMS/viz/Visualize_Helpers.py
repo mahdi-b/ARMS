@@ -1,4 +1,37 @@
 import pandas as pd
+import math
+from classes.Helpers import *
+
+def subset_dataframe(input_f, args):
+    # Gather input files
+    inputs = getInputFiles(input_f)
+    input_table = inputs[0]
+    debugPrintInputInfo(inputs, "visualize")
+    data_frame = otu_table_to_dataframe(input_table)
+    data_frame = select_top_otus(data_frame, n=100)
+
+    if args.pct is not None:
+        printVerbose("Subsetting dataframe with pct = %f" % args.pct)
+        if args.pct <= 0:
+            print "Error: 'pct' parameter must be a positive real number in the range (0,1].\n"
+            exit()
+        return select_top_otus(data_frame, pct=args.pct, n=0)
+
+    elif args.count is not None:
+        printVerbose("Subsetting dataframe with count = %d" % args.count)
+        if args.count < 1:
+            print "Error: 'count' parameter must be a positive integer."
+            exit()
+        return select_top_otus(data_frame, pct=0, n=args.count)
+
+    elif args.names is not None:
+        printVerbose("Subsetting dataframe with namesfile = %s" % args.names)
+        names_file = getInputFiles(args.names, ignore_empty_files=False)[0]
+        return select_otus_by_name_file(data_frame, names_file)
+
+    else:
+        return data_frame
+
 
 def otu_table_to_dataframe(path):
     """Parses an OTU table into a pandas DataFrame, and returns it.  OTU tables should have the following format:
@@ -63,75 +96,8 @@ def select_top_otus(dataframe, pct=.1, n=0):
     num_rows = len(dataframe.index.values)
     rslt_row_count = num_rows
     if n < 1:
-        rslt_row_count = int(pct*num_rows)
+        rslt_row_count = int(math.ceil(pct*num_rows))
     else:
         rslt_row_count = n
 
     return dataframe[:rslt_row_count]
-
-
-def makeBiome(dataframe):
-    """Converts a dataframe into a barebones .biom file.
-
-    :param dataframe: The dataframe to convert
-    :return: The text content of the converted dataframe.
-
-
-    Example .biome file:
-
-    {
-        "id": null,
-        "format": "Biological Observation Matrix 0.9.1-dev",
-        "format_url": "http://biom-format.org/documentation/format_versions/biom-1.0.html",
-        "type": "OTU table",
-        "generated_by": "QIIME revision 1.4.0-dev",
-        "date": "2011-12-19T19:00:00",
-        "rows": [
-            {"id": "GG_OTU_1", "metadata": null},
-            {"id": "GG_OTU_2", "metadata": null},
-            {"id": "GG_OTU_3", "metadata": null},
-            {"id": "GG_OTU_4", "metadata": null},
-            {"id": "GG_OTU_5", "metadata": null}
-        ],
-        "columns": [
-            {"id": "Sample1", "metadata": null},
-            {"id": "Sample2", "metadata": null},
-            {"id": "Sample3", "metadata": null},
-            {"id": "Sample4", "metadata": null},
-            {"id": "Sample5", "metadata": null},
-            {"id": "Sample6", "metadata": null}
-        ],
-        "matrix_type": "dense",
-        "matrix_element_type": "int",
-        "shape": [5, 6],
-        "data": [[0, 0, 1, 0, 0, 0],
-                 [5, 1, 0, 2, 3, 1],
-                 [0, 0, 1, 4, 2, 0],
-                 [2, 1, 1, 0, 0, 1],
-                 [0, 1, 1, 0, 0, 0]]
-    }
-    """
-    header = "\t\"id\": \"gregs data\",\n\
-        \"format\": \"Biological Observation Matrix 0.9.1-dev\",\n\
-        \"format_url\": \"http://biom-format.org/documentation/format_versions/biom-1.0.html\",\n\
-        \"type\": \"OTU table\",\n\
-        \"generated_by\": \"QIIME revision 1.4.0-dev\",\n\
-        \"date\": \"2011-12-19T19:00:00\","
-    row_content = ["\t\t{\"id\": \"%s\", \"metadata\": \" \"},"%row for row in dataframe.index.values]
-    row_content[-1] = row_content[-1][:-1]
-    rows = "\t\"rows\": [\n%s\n\t]," % "\n".join(row_content)
-
-    col_content = ["\t\t{\"id\": \"%s\", \"metadata\": \" \"},"% col for col in dataframe.columns.values]
-    col_content[-1] = col_content[-1][:-1]
-    cols = "\t\"columns\": [\n%s\n\t]," % "\n".join(col_content)
-
-    predata = "\t\"matrix_type\": \"dense\",\n\
-        \"matrix_element_type\": \"int\",\n\
-        \"shape\": [%d, %d]," % (len(dataframe.index.values), len(dataframe.columns.values))
-    data_content = str(dataframe.values.tolist()).replace('], ','],\n\t\t')
-    data = "\t\"data\": %s" % data_content
-
-    body = "%s\n%s\n%s\n%s\n%s" % (header, rows, cols, predata, data)
-    text = "{\n%s\n}"% body
-    print text
-    return text

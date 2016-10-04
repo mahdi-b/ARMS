@@ -420,14 +420,21 @@ def main(argv):
     parser_viz_otu_comp.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
     parser_viz_otu_comp.add_argument('-p', '--program', required=False, default="chewbacca", help="Indicates which \
                             program to use.  Choices are: 'chewbacca'.  Default: 'chewbacca'.")
-    parser_viz_otu_comp.set_defaults(command=Visualize_OTU_Sample_Composition_Command)
+    group = parser_viz_otu_comp.add_mutually_exclusive_group(required=False)
+    group.add_argument('-m', '--pct', help="Real number x in the range (0,1] indicating that the top x% of OTU names \
+                           (sorted by abundance) should be included in the graph.", type=float)
+    group.add_argument('-n', '--names', help="Filepath to a list of OTU names to include.  File should be formatted as \
+                            a series of lines where each line contains just an OTU name.")
+    group.add_argument('-k', '--count', help="Positive integer x indicating that x OTU names (sorted highest \
+                            abundance) should be included in the graph.", type=int)
+    group.set_defaults(command=Visualize_OTU_Sample_Composition_Command)
 
     # ===========================
     # == Visualize OTU Heatmap ==
     # ===========================
-    parser_viz_otu_comp = subparsers.add_parser('visualize_otu_heatmap', description="Creates a heatmap showing the \
+    parser_viz_otu_heatmap = subparsers.add_parser('visualize_otu_heatmap', description="Creates a heatmap showing the \
                             abundance of each OTU at each sample site.")
-    parser_viz_otu_comp.add_argument('-i', '--input_f', required=True, help="Filepath to the OTU table to visualize.  \
+    parser_viz_otu_heatmap.add_argument('-i', '--input_f', required=True, help="Filepath to the OTU table to visualize.  \
                             Input OTU tables should start with a tab-delimited header row of samplenames, prefixed by \
                             the word \"OTU\".  Each subsequent line should be a tab-delimited line listing an OTU, \
                             followed by its abundance in each Sample.\ne.g.:\n\
@@ -435,10 +442,17 @@ def main(argv):
                             otu_name1 0 1 5...\n\
                             otu_name2 1 2 0...\n\
                             otu_name3 3 1 1...\n")
-    parser_viz_otu_comp.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
-    parser_viz_otu_comp.add_argument('-p', '--program', required=False, default="chewbacca", help="Indicates which \
+    parser_viz_otu_heatmap.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
+    parser_viz_otu_heatmap.add_argument('-p', '--program', required=False, default="chewbacca", help="Indicates which \
                             program to use.  Choices are: 'chewbacca'.  Default: 'chewbacca'.")
-    parser_viz_otu_comp.set_defaults(command=Visualize_OTU_Heatmap_Command)
+    group = parser_viz_otu_heatmap.add_mutually_exclusive_group(required=False)
+    group.add_argument('-m', '--pct', help="Real number x in the range (0,1] indicating that the top x% of OTU names \
+                           (sorted by abundance) should be included in the graph.", type=float)
+    group.add_argument('-n', '--names', help="Filepath to a list of OTU names to include.  File should be formatted as \
+                            a series of lines where each line contains just an OTU name.")
+    group.add_argument('-k', '--count', help="Positive integer x indicating that x OTU names (sorted highest \
+                            abundance) should be included in the graph.", type=int)
+    parser_viz_otu_heatmap.set_defaults(command=Visualize_OTU_Heatmap_Command)
 
     # =======================================
     # == Parse args and call default func  ==
