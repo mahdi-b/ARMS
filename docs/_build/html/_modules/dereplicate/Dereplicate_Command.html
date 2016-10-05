@@ -50,9 +50,11 @@
 
 
 <div class="viewcode-block" id="Dereplicate_Command"><a class="viewcode-back" href="../../api/commands.html#dereplicate.Dereplicate_Command.Dereplicate_Command">[docs]</a><span class="k">class</span> <span class="nc">Dereplicate_Command</span><span class="p">(</span><span class="n">ChewbaccaCommand</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Dereplicates a set of fasta files.  Identical (or identical spanning) sequences are considered \</span>
-<span class="sd">        replicants.  (100% match).  NOTE: only dereplicates within each fasta file (not across all files).  Merge \</span>
-<span class="sd">        files before hand if you want to dereplciate across multiple files.</span>
+    <span class="sd">&quot;&quot;&quot;Dereplicates a set of fasta files.  Identical or spanning (e.g. &#39;ATA&#39; spans the sequence &#39;AT&#39;) sequences are</span>
+<span class="sd">        considered replicants.  NOTE: This command only dereplicates within each fasta file (not across all files).</span>
+<span class="sd">        This means a sequence in one file will be unique within that file, but might exist in another file.</span>
+<span class="sd">        To ensure sequences are uniqe across an entire dataset, merge all fasta files into one file, then dereplicate</span>
+<span class="sd">        that fasta file.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">supported_programs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Dereplicate_Program_Vsearch</span><span class="p">]</span>
     <span class="n">default_program</span> <span class="o">=</span> <span class="n">Dereplicate_Program_Vsearch</span>

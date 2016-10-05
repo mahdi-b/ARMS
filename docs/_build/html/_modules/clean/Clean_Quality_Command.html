@@ -50,7 +50,11 @@
 
 
 <div class="viewcode-block" id="Clean_Quality_Command"><a class="viewcode-back" href="../../api/commands.html#clean.Clean_Quality_Command.Clean_Quality_Command">[docs]</a><span class="k">class</span> <span class="nc">Clean_Quality_Command</span><span class="p">(</span><span class="n">ChewbaccaCommand</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Removes areas of low quality from reads, keeping the longest contiguous segment.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Removes regions of low quality from fastq-formatted reads.  These regions are likely sources of error, and would</span>
+<span class="sd">        be detrimental to other analytical process.  Input sequences to this command should have already been</span>
+<span class="sd">        demultiplexed, and had their barcodes/adapters removed.  Otherwise, partial removal of these markers would be</span>
+<span class="sd">        difficult to detect and would likely cause errors down-stream.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">supported_programs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Clean_Quality_Program_Trimmomatic</span><span class="p">]</span>
     <span class="n">default_program</span> <span class="o">=</span> <span class="n">Clean_Quality_Program_Trimmomatic</span>
     <span class="n">command_name</span> <span class="o">=</span> <span class="s2">&quot;Clean_Quality&quot;</span></div>

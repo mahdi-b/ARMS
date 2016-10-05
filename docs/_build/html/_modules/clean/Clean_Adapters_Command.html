@@ -45,12 +45,15 @@
             
   <h1>Source code for clean.Clean_Adapters_Command</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">classes.ChewbaccaCommand</span> <span class="k">import</span> <span class="o">*</span>
-
 <span class="kn">from</span> <span class="nn">Clean_Adapters_Program_Flexbar</span> <span class="k">import</span> <span class="n">Clean_Adapters_Program_Flexbar</span>
 
 
 <div class="viewcode-block" id="Clean_Adapters_Command"><a class="viewcode-back" href="../../api/commands.html#clean.Clean_Adapters_Command.Clean_Adapters_Command">[docs]</a><span class="k">class</span> <span class="nc">Clean_Adapters_Command</span><span class="p">(</span><span class="n">ChewbaccaCommand</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Removes adapters (and preceeding barcodes) from sequences in input file(s).</span>
+    <span class="sd">&quot;&quot;&quot;Removes sequencing adapters (and preceeding barcodes) from sequences in input file(s).  Sequences should be in</span>
+<span class="sd">        the following format: &lt;BARCODE&gt;&lt;ADAPTER&gt;&lt;SEQUENCE&gt;&lt;RC_ADAPTER&gt;.  Valid ADAPTER sequences, and their</span>
+<span class="sd">        reverse-complements (RC_ADAPTER) should be defined separately in a pair of fasta-formatted files.  Sequences</span>
+<span class="sd">        passed to this command should have already been demultiplexed, as this process will remove the identifying</span>
+<span class="sd">        barcode sequences.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">supported_programs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Clean_Adapters_Program_Flexbar</span><span class="p">]</span>
     <span class="n">default_program</span> <span class="o">=</span> <span class="n">Clean_Adapters_Program_Flexbar</span>

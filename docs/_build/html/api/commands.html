@@ -23,7 +23,9 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <link rel="top" title="Chewbacca 0.1 documentation" href="../index.html" /> 
+    <link rel="top" title="Chewbacca 0.1 documentation" href="../index.html" />
+    <link rel="up" title="API" href="index.html" />
+    <link rel="prev" title="Core Classes" href="core_classes.html" /> 
   </head>
   <body role="document">
     <div class="related" role="navigation" aria-label="related navigation">
@@ -32,7 +34,11 @@
         <li class="right" style="margin-right: 10px">
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li class="nav-item nav-item-0"><a href="../index.html">Chewbacca 0.1 documentation</a> &raquo;</li> 
+        <li class="right" >
+          <a href="core_classes.html" title="Core Classes"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Chewbacca 0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">API</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -43,136 +49,35 @@
             
   <div class="section" id="commands">
 <h1>Commands<a class="headerlink" href="#commands" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
-<dt id="dereplicate.Dereplicate_Command.Dereplicate_Command">
-<em class="property">class </em><code class="descclassname">dereplicate.Dereplicate_Command.</code><code class="descname">Dereplicate_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dereplicate/Dereplicate_Command.html#Dereplicate_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dereplicate.Dereplicate_Command.Dereplicate_Command" title="Permalink to this definition">¶</a></dt>
-<dd><p>Dereplicates a set of fasta files.  Identical (or identical spanning) sequences are considered         replicants.  (100% match).  NOTE: only dereplicates within each fasta file (not across all files).  Merge         files before hand if you want to dereplciate across multiple files.</p>
-<dl class="attribute">
-<dt id="dereplicate.Dereplicate_Command.Dereplicate_Command.default_program">
-<code class="descname">default_program</code><a class="headerlink" href="#dereplicate.Dereplicate_Command.Dereplicate_Command.default_program" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">Dereplicate_Program_Vsearch</span></code></p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="clean.Clean_Quality_Command.Clean_Quality_Command">
-<em class="property">class </em><code class="descclassname">clean.Clean_Quality_Command.</code><code class="descname">Clean_Quality_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clean/Clean_Quality_Command.html#Clean_Quality_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clean.Clean_Quality_Command.Clean_Quality_Command" title="Permalink to this definition">¶</a></dt>
-<dd><p>Removes areas of low quality from reads, keeping the longest contiguous segment.</p>
-<dl class="attribute">
-<dt id="clean.Clean_Quality_Command.Clean_Quality_Command.default_program">
-<code class="descname">default_program</code><a class="headerlink" href="#clean.Clean_Quality_Command.Clean_Quality_Command.default_program" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">Clean_Quality_Program_Trimmomatic</span></code></p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="clean.Clean_Adapters_Command.Clean_Adapters_Command">
-<em class="property">class </em><code class="descclassname">clean.Clean_Adapters_Command.</code><code class="descname">Clean_Adapters_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clean/Clean_Adapters_Command.html#Clean_Adapters_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clean.Clean_Adapters_Command.Clean_Adapters_Command" title="Permalink to this definition">¶</a></dt>
-<dd><p>Removes adapters (and preceeding barcodes) from sequences in input file(s).</p>
-<dl class="attribute">
-<dt id="clean.Clean_Adapters_Command.Clean_Adapters_Command.default_program">
-<code class="descname">default_program</code><a class="headerlink" href="#clean.Clean_Adapters_Command.Clean_Adapters_Command.default_program" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">Clean_Adapters_Program_Flexbar</span></code></p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="demux.Demux_Command.Demux_Command">
-<em class="property">class </em><code class="descclassname">demux.Demux_Command.</code><code class="descname">Demux_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/demux/Demux_Command.html#Demux_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#demux.Demux_Command.Demux_Command" title="Permalink to this definition">¶</a></dt>
-<dd><p>Splits a set of sequences into separate files by sample based on the barcode at the begining of each sequence.</p>
-<dl class="attribute">
-<dt id="demux.Demux_Command.Demux_Command.default_program">
-<code class="descname">default_program</code><a class="headerlink" href="#demux.Demux_Command.Demux_Command.default_program" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">Demux_Program_Fastx</span></code></p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="assemble.Assemble_Command.Assemble_Command">
-<em class="property">class </em><code class="descclassname">assemble.Assemble_Command.</code><code class="descname">Assemble_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/assemble/Assemble_Command.html#Assemble_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#assemble.Assemble_Command.Assemble_Command" title="Permalink to this definition">¶</a></dt>
-<dd><p>Assembles reads from two (left and right) fastq files/directories.  For a set of k forward read files, and k
-reverse read files, return k assembled files.  Matching forward and reverse files should be identically named,
-except for a &lt;forward&gt;/&lt;reverse&gt; suffix that indicates the read orientation.  Two suffix pairs are supported:
-&#8216;_forwards&#8217; and &#8216;_reverse&#8217;,
-and
-&#8216;_R1&#8217; and &#8216;R2&#8217;
-Choose ONE suffix style and stick to it.
-e.g. Sample_100_forwards.fq and Sample_100_reverse.fq will be assembled into Sample_100_assembled.fq.</p>
-<blockquote>
-<div>Alternatively, Sample_100_R1.fq and Sample_100_R2.fq will be assembled into Sample_100_assembled.fq.
-You can provide as many pairs of files as you wish as long as they follow exactly on of the above naming
-conventions.  If a &#8216;name&#8217; parameter is provided, it will be used as a suffix for all assembled sequence files.</div></blockquote>
-<dl class="attribute">
-<dt id="assemble.Assemble_Command.Assemble_Command.default_program">
-<code class="descname">default_program</code><a class="headerlink" href="#assemble.Assemble_Command.Assemble_Command.default_program" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">Assemble_Program_Pear</span></code></p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="util.Partition_Command.Partition_Command">
-<em class="property">class </em><code class="descclassname">util.Partition_Command.</code><code class="descname">Partition_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/util/Partition_Command.html#Partition_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#util.Partition_Command.Partition_Command" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="class">
-<dt id="util.Convert_Fastq_Fasta_Command.Convert_Fastq_Fasta_Command">
-<em class="property">class </em><code class="descclassname">util.Convert_Fastq_Fasta_Command.</code><code class="descname">Convert_Fastq_Fasta_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/util/Convert_Fastq_Fasta_Command.html#Convert_Fastq_Fasta_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#util.Convert_Fastq_Fasta_Command.Convert_Fastq_Fasta_Command" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="class">
-<dt id="util.Merge_Command.Merge_Command">
-<em class="property">class </em><code class="descclassname">util.Merge_Command.</code><code class="descname">Merge_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/util/Merge_Command.html#Merge_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#util.Merge_Command.Merge_Command" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="class">
-<dt id="util.Ungap_Command.Ungap_Command">
-<em class="property">class </em><code class="descclassname">util.Ungap_Command.</code><code class="descname">Ungap_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/util/Ungap_Command.html#Ungap_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#util.Ungap_Command.Ungap_Command" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="class">
-<dt id="rename.Rename_Command.Rename_Command">
-<em class="property">class </em><code class="descclassname">rename.Rename_Command.</code><code class="descname">Rename_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rename/Rename_Command.html#Rename_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rename.Rename_Command.Rename_Command" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="class">
-<dt id="cluster.Cluster_Command.Cluster_Command">
-<em class="property">class </em><code class="descclassname">cluster.Cluster_Command.</code><code class="descname">Cluster_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cluster/Cluster_Command.html#Cluster_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cluster.Cluster_Command.Cluster_Command" title="Permalink to this definition">¶</a></dt>
-<dd><p>Clusters a set of fasta files.  Identical (or identical spanning) sequences are considered         replicants.  (100% match).  NOTE: only Clusters within each fasta file (not across all files).  Merge         files before hand if you want to dereplciate across multiple files.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="align.Align_Clean_Command.Align_Clean_Command">
-<em class="property">class </em><code class="descclassname">align.Align_Clean_Command.</code><code class="descname">Align_Clean_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/align/Align_Clean_Command.html#Align_Clean_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#align.Align_Clean_Command.Align_Clean_Command" title="Permalink to this definition">¶</a></dt>
-<dd><p>Cleans a set of alignments by removing gap characters and reference sequences from the file.</p>
-<dl class="attribute">
-<dt id="align.Align_Clean_Command.Align_Clean_Command.default_program">
-<code class="descname">default_program</code><a class="headerlink" href="#align.Align_Clean_Command.Align_Clean_Command.default_program" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">Align_Clean_Program_Macse</span></code></p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="align.Align_Command.Align_Command">
-<em class="property">class </em><code class="descclassname">align.Align_Command.</code><code class="descname">Align_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/align/Align_Command.html#Align_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#align.Align_Command.Align_Command" title="Permalink to this definition">¶</a></dt>
-<dd><p>Aligns a set of fasta files.  Identical (or identical spanning) sequences are considered         replicants.  (100% match).  NOTE: only Aligns within each fasta file (not across all files).  Merge         files before hand if you want to dereplciate across multiple files.</p>
-<dl class="attribute">
-<dt id="align.Align_Command.Align_Command.default_program">
-<code class="descname">default_program</code><a class="headerlink" href="#align.Align_Command.Align_Command.default_program" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">Align_Program_Macse</span></code></p>
-</dd></dl>
-
-</dd></dl>
-
+<div class="section" id="error-correction">
+<h2>Error Correction<a class="headerlink" href="#error-correction" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="preclean.Preclean_Command.Preclean_Command">
 <em class="property">class </em><code class="descclassname">preclean.Preclean_Command.</code><code class="descname">Preclean_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/preclean/Preclean_Command.html#Preclean_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preclean.Preclean_Command.Preclean_Command" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fixes sequencing errors.</p>
+<dd><p>Attempts to fix minor sequencing errors caused by pyrosequencing.  By reducing errors prior to sequence assembly,
+a greater number of paired reads can be sucessfully assembled.</p>
+<dl class="docutils">
+<dt><strong>Inputs</strong>:</dt>
+<dd><ul class="first last simple">
+<li>Left reads file(s).</li>
+<li>Right reads file(s).</li>
+</ul>
+</dd>
+<dt><strong>Outputs</strong>:</dt>
+<dd><ul class="first last simple">
+<li>&lt;Left reads file&gt;_corrected.fastq file(s).</li>
+<li>&lt;Right reads file&gt;_corrected.fastq file(s).</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Example</strong>:</p>
+<p>Assuming a forwards read file &#8216;Data_R1.fq&#8217; and a reverse reads file &#8216;Data_R1.fq&#8217;,</p>
+<p><code class="docutils literal"><span class="pre">$</span> <span class="pre">python</span> <span class="pre">chewbacca.py</span> <span class="pre">preclean</span> <span class="pre">-f</span> <span class="pre">Data_R1.fq</span> <span class="pre">-r</span> <span class="pre">Data_R2.fq</span>&nbsp; <span class="pre">-o</span> <span class="pre">rslt</span></code></p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rslt</span><span class="o">/</span>
+    <span class="n">Data_R1_corrected</span><span class="o">.</span><span class="n">fq</span>
+    <span class="n">Data_R1_corrected</span><span class="o">.</span><span class="n">fq</span>
+</pre></div>
+</div>
 <dl class="attribute">
 <dt id="preclean.Preclean_Command.Preclean_Command.default_program">
 <code class="descname">default_program</code><a class="headerlink" href="#preclean.Preclean_Command.Preclean_Command.default_program" title="Permalink to this definition">¶</a></dt>
@@ -181,16 +86,279 @@ conventions.  If a &#8216;name&#8217; parameter is provided, it will be used as 
 
 </dd></dl>
 
+</div>
+<div class="section" id="assembling-sequences">
+<h2>Assembling Sequences<a class="headerlink" href="#assembling-sequences" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
-<dt id="otu.Annotate_OTU_Table_Command.Annotate_OTU_Table_Command">
-<em class="property">class </em><code class="descclassname">otu.Annotate_OTU_Table_Command.</code><code class="descname">Annotate_OTU_Table_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/otu/Annotate_OTU_Table_Command.html#Annotate_OTU_Table_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#otu.Annotate_OTU_Table_Command.Annotate_OTU_Table_Command" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="assemble.Assemble_Command.Assemble_Command">
+<em class="property">class </em><code class="descclassname">assemble.Assemble_Command.</code><code class="descname">Assemble_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/assemble/Assemble_Command.html#Assemble_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#assemble.Assemble_Command.Assemble_Command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assembles reads from two (forward and reverse) fastq files/directories.  For a set of k forward read files, and k
+reverse read files, return k assembled files.  Matching forward and reverse files should be identically named,
+except for a &lt;forward&gt;/&lt;reverse&gt; suffix that indicates the read orientation.  Two suffix conventions are
+supported:</p>
+<p>_forwards/_reverse</p>
+<p>and</p>
+<p>_R1/_R2</p>
+<dl class="docutils">
+<dt><strong>Input</strong>:</dt>
+<dd><ul class="first last simple">
+<li>Left Reads File(s)</li>
+<li>Right Reads File(s)</li>
+</ul>
+</dd>
+<dt><strong>Output</strong>:</dt>
+<dd><ul class="first last simple">
+<li>Assembled Reads Files</li>
+</ul>
+</dd>
+<dt><strong>Notes</strong>:</dt>
+<dd><p class="first">Choose ONE suffix style and stick to it!  Mixed suffixes are not supported.
+e.g.
+Sample_100_forwards.fq and Sample_100_reverse.fq will be assembled into Sample_100_assembled.fq.
+Simmilarly, Sample_100_R1.fq and Sample_100_R2.fq will be assembled into Sample_100_assembled.fq.
+However, Sample_100_forwards.fq and Sample_100_R2.fq are not guaranteed to be matched.</p>
+<p class="last">You can provide as many pairs of files as you wish as long as they follow exactly one of the above naming
+conventions.  If a &#8216;name&#8217; parameter is provided, it will be used as a filename (not path) prefix for all
+assembled sequence files.</p>
+</dd>
+<dt><strong>Example</strong></dt>
+<dd>Assuming a forwards reads file named &#8220;Data_R1.fq&#8221;, and a reverse reads file &#8220;Data_R2.fq&#8221;.</dd>
+</dl>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">./</span>
+    <span class="n">Data_R1</span><span class="o">.</span><span class="n">fq</span>
+    <span class="n">Data_R2</span><span class="o">.</span><span class="n">fq</span>
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">$</span> <span class="pre">python</span> <span class="pre">chewbacca.py</span> <span class="pre">assemble</span> <span class="pre">-n</span> <span class="pre">BALI</span> <span class="pre">-f</span> <span class="pre">Data_R1.fq</span>&nbsp; <span class="pre">-r</span> <span class="pre">Data_R2.fq</span>&nbsp; <span class="pre">-o</span> <span class="pre">rslt</span></code></p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rslt</span><span class="o">/</span>
+    <span class="n">BALI_DATA</span><span class="o">.</span><span class="n">assembled</span><span class="o">.</span><span class="n">fq</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="assemble.Assemble_Command.Assemble_Command.default_program">
+<code class="descname">default_program</code><a class="headerlink" href="#assemble.Assemble_Command.Assemble_Command.default_program" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">Assemble_Program_Pear</span></code></p>
+</dd></dl>
 
+</dd></dl>
+
+</div>
+<div class="section" id="demultiplexing-by-barcode">
+<h2>Demultiplexing by Barcode<a class="headerlink" href="#demultiplexing-by-barcode" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="demux.Demux_Command.Demux_Command">
+<em class="property">class </em><code class="descclassname">demux.Demux_Command.</code><code class="descname">Demux_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/demux/Demux_Command.html#Demux_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#demux.Demux_Command.Demux_Command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a set of files, each file is assigned a file_ID#.  Each file is then split into separate child files where
+each file holds only sequences belonging to a single sample.  These child files are named using the sample name
+of the sequences it lists, and the file_ID# of the file it came from.  Demuxing is based on the nucleotide
+barcode prefixing each sequence.</p>
+<dl class="attribute">
+<dt id="demux.Demux_Command.Demux_Command.default_program">
+<code class="descname">default_program</code><a class="headerlink" href="#demux.Demux_Command.Demux_Command.default_program" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">Demux_Program_Fastx</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="adapter-removal">
+<h2>Adapter Removal<a class="headerlink" href="#adapter-removal" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="clean.Clean_Adapters_Command.Clean_Adapters_Command">
+<em class="property">class </em><code class="descclassname">clean.Clean_Adapters_Command.</code><code class="descname">Clean_Adapters_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clean/Clean_Adapters_Command.html#Clean_Adapters_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clean.Clean_Adapters_Command.Clean_Adapters_Command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes sequencing adapters (and preceeding barcodes) from sequences in input file(s).  Sequences should be in
+the following format: &lt;BARCODE&gt;&lt;ADAPTER&gt;&lt;SEQUENCE&gt;&lt;RC_ADAPTER&gt;.  Valid ADAPTER sequences, and their
+reverse-complements (RC_ADAPTER) should be defined separately in a pair of fasta-formatted files.  Sequences
+passed to this command should have already been demultiplexed, as this process will remove the identifying
+barcode sequences.</p>
+<dl class="attribute">
+<dt id="clean.Clean_Adapters_Command.Clean_Adapters_Command.default_program">
+<code class="descname">default_program</code><a class="headerlink" href="#clean.Clean_Adapters_Command.Clean_Adapters_Command.default_program" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">Clean_Adapters_Program_Flexbar</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="quality-cleaning">
+<h2>Quality Cleaning<a class="headerlink" href="#quality-cleaning" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="clean.Clean_Quality_Command.Clean_Quality_Command">
+<em class="property">class </em><code class="descclassname">clean.Clean_Quality_Command.</code><code class="descname">Clean_Quality_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clean/Clean_Quality_Command.html#Clean_Quality_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clean.Clean_Quality_Command.Clean_Quality_Command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes regions of low quality from fastq-formatted reads.  These regions are likely sources of error, and would
+be detrimental to other analytical process.  Input sequences to this command should have already been
+demultiplexed, and had their barcodes/adapters removed.  Otherwise, partial removal of these markers would be
+difficult to detect and would likely cause errors down-stream.</p>
+<dl class="attribute">
+<dt id="clean.Clean_Quality_Command.Clean_Quality_Command.default_program">
+<code class="descname">default_program</code><a class="headerlink" href="#clean.Clean_Quality_Command.Clean_Quality_Command.default_program" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">Clean_Quality_Program_Trimmomatic</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="dereplication">
+<h2>Dereplication<a class="headerlink" href="#dereplication" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="dereplicate.Dereplicate_Command.Dereplicate_Command">
+<em class="property">class </em><code class="descclassname">dereplicate.Dereplicate_Command.</code><code class="descname">Dereplicate_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dereplicate/Dereplicate_Command.html#Dereplicate_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dereplicate.Dereplicate_Command.Dereplicate_Command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dereplicates a set of fasta files.  Identical or spanning (e.g. &#8216;ATA&#8217; spans the sequence &#8216;AT&#8217;) sequences are
+considered replicants.  NOTE: This command only dereplicates within each fasta file (not across all files).
+This means a sequence in one file will be unique within that file, but might exist in another file.
+To ensure sequences are uniqe across an entire dataset, merge all fasta files into one file, then dereplicate
+that fasta file.</p>
+<dl class="attribute">
+<dt id="dereplicate.Dereplicate_Command.Dereplicate_Command.default_program">
+<code class="descname">default_program</code><a class="headerlink" href="#dereplicate.Dereplicate_Command.Dereplicate_Command.default_program" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">Dereplicate_Program_Vsearch</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="file-splitting">
+<h2>File Splitting<a class="headerlink" href="#file-splitting" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="util.Partition_Command.Partition_Command">
+<em class="property">class </em><code class="descclassname">util.Partition_Command.</code><code class="descname">Partition_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/util/Partition_Command.html#Partition_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#util.Partition_Command.Partition_Command" title="Permalink to this definition">¶</a></dt>
+<dd><p>A utility command that partitions a fasta/fastq file into  a set of files (of the same file format), with a         user-specified (maximum) number of sequences per file.  Allows users to partition a large file into segments,         and perform discrete operations in parallel over those segments.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="file-merging">
+<h2>File Merging<a class="headerlink" href="#file-merging" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="util.Merge_Command.Merge_Command">
+<em class="property">class </em><code class="descclassname">util.Merge_Command.</code><code class="descname">Merge_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/util/Merge_Command.html#Merge_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#util.Merge_Command.Merge_Command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Concatenates multiple files into a single file.  Useful for combining the results of a parallel operation, or         when preparing for cross-sample derepication.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="file-conversion">
+<h2>File Conversion<a class="headerlink" href="#file-conversion" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="util.Convert_Fastq_Fasta_Command.Convert_Fastq_Fasta_Command">
+<em class="property">class </em><code class="descclassname">util.Convert_Fastq_Fasta_Command.</code><code class="descname">Convert_Fastq_Fasta_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/util/Convert_Fastq_Fasta_Command.html#Convert_Fastq_Fasta_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#util.Convert_Fastq_Fasta_Command.Convert_Fastq_Fasta_Command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a Fasta-formatted file to a FastQ-formatted file.  Useful for reducing data size and preparing for
+fasta-only operations.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="file-cleaning">
+<h2>File Cleaning<a class="headerlink" href="#file-cleaning" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="util.Ungap_Command.Ungap_Command">
+<em class="property">class </em><code class="descclassname">util.Ungap_Command.</code><code class="descname">Ungap_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/util/Ungap_Command.html#Ungap_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#util.Ungap_Command.Ungap_Command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes target characters from a fasta/fastq file.  Useful for removing gap characters from sequence alignments.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="sequence-renaming">
+<h2>Sequence Renaming<a class="headerlink" href="#sequence-renaming" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="rename.Rename_Command.Rename_Command">
+<em class="property">class </em><code class="descclassname">rename.Rename_Command.</code><code class="descname">Rename_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rename/Rename_Command.html#Rename_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rename.Rename_Command.Rename_Command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Renames sequences in a file with their filename and an ID#.  Useful for simplifying complex naming systems into     human-readable sequence names.</p>
+<dl class="docutils">
+<dt><strong>Inputs</strong>:</dt>
+<dd><ul class="first last simple">
+<li>One or more fasta/fastq files to rename.</li>
+</ul>
+</dd>
+<dt><strong>Outputs</strong>:</dt>
+<dd><ul class="first last simple">
+<li>_renamed.&lt;ext&gt; file - A fasta/fastq file with the renamed sequences.</li>
+<li><span class="xref std std-ref">.samples file</span> - A two-column, tab-delimited mapping between new sequence names and their sample.</li>
+<li><span class="xref std std-ref">.mapping file</span> - A two-column, tab-delimited mapping between old sequence names and their new names.</li>
+</ul>
+</dd>
+<dt><strong>Notes</strong>:</dt>
+<dd><ul class="first last simple">
+<li>In order for the .samples file to correctly list the sample name of the sequences in a file.</li>
+<li>Each input file will have a corresponding .samples, .mapping, and _renamed file.</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Example</strong>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">SampleA_0</span><span class="o">.</span><span class="n">fasta</span><span class="p">:</span>
+    <span class="nd">@M03292</span><span class="p">:</span><span class="mi">26</span><span class="p">:</span><span class="mi">000000000</span><span class="o">-</span><span class="n">AH6AG</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">1101</span><span class="p">:</span><span class="mi">22127</span><span class="p">:</span><span class="mi">1256</span>
+    <span class="n">AAAA</span>
+    <span class="nd">@M03292</span><span class="p">:</span><span class="mi">26</span><span class="p">:</span><span class="mi">000000000</span><span class="o">-</span><span class="n">AH6AG</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">1101</span><span class="p">:</span><span class="mi">22127</span><span class="p">:</span><span class="mi">1257</span>
+    <span class="n">AAAT</span>
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">$</span> <span class="pre">python</span> <span class="pre">chewbacca.py</span> <span class="pre">rename</span> <span class="pre">-i</span> <span class="pre">SampleA_0.fasta</span> <span class="pre">-o</span> <span class="pre">rslt</span></code></p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rslt</span><span class="o">/</span><span class="n">SampleA_0_renamed</span><span class="o">.</span><span class="n">fasta</span><span class="p">:</span>
+    <span class="nd">@SampleA_ID0</span>
+    <span class="n">AAAA</span>
+    <span class="nd">@SampleA_ID1</span>
+    <span class="n">AAAT</span>
+
+<span class="n">rslt_samples</span><span class="o">/</span><span class="n">SampleA_0_renamed</span><span class="o">.</span><span class="n">samples</span><span class="p">:</span>
+    <span class="n">SampleA_ID0</span> <span class="n">SampleA</span>
+    <span class="n">SampleA_ID1</span> <span class="n">SampleA</span>
+
+<span class="n">rslt_aux</span><span class="o">/</span><span class="n">SampleA_0_renamed</span><span class="o">.</span><span class="n">mapping</span><span class="p">:</span>
+    <span class="n">M03292</span><span class="p">:</span><span class="mi">26</span><span class="p">:</span><span class="mi">000000000</span><span class="o">-</span><span class="n">AH6AG</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">1101</span><span class="p">:</span><span class="mi">22127</span><span class="p">:</span><span class="mi">1256</span> <span class="n">SampleA_ID0</span>
+    <span class="n">M03292</span><span class="p">:</span><span class="mi">26</span><span class="p">:</span><span class="mi">000000000</span><span class="o">-</span><span class="n">AH6AG</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">1101</span><span class="p">:</span><span class="mi">22127</span><span class="p">:</span><span class="mi">1257</span> <span class="n">SampleA_ID1</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="aligning-sequences">
+<h2>Aligning Sequences<a class="headerlink" href="#aligning-sequences" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="align.Align_Command.Align_Command">
+<em class="property">class </em><code class="descclassname">align.Align_Command.</code><code class="descname">Align_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/align/Align_Command.html#Align_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#align.Align_Command.Align_Command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Aligns a set of fasta files.  See Align_Program_x documentation for program-specific details.   Input files to
+this command should first be dereplicated.  Doing so will reduce the total number of alignments required, and
+reduce computation time.</p>
+<dl class="attribute">
+<dt id="align.Align_Command.Align_Command.default_program">
+<code class="descname">default_program</code><a class="headerlink" href="#align.Align_Command.Align_Command.default_program" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">Align_Program_Macse</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="alignment-cleaning">
+<h2>Alignment Cleaning<a class="headerlink" href="#alignment-cleaning" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="align.Align_Clean_Command.Align_Clean_Command">
+<em class="property">class </em><code class="descclassname">align.Align_Clean_Command.</code><code class="descname">Align_Clean_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/align/Align_Clean_Command.html#Align_Clean_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#align.Align_Clean_Command.Align_Clean_Command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cleans aligned files by removing gap characters and reference sequences from the file.  Sequences passed to this
+command should have previously been aligned.</p>
+<dl class="attribute">
+<dt id="align.Align_Clean_Command.Align_Clean_Command.default_program">
+<code class="descname">default_program</code><a class="headerlink" href="#align.Align_Clean_Command.Align_Clean_Command.default_program" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">Align_Clean_Program_Macse</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="sequence-clustering">
+<h2>Sequence Clustering<a class="headerlink" href="#sequence-clustering" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="cluster.Cluster_Command.Cluster_Command">
+<em class="property">class </em><code class="descclassname">cluster.Cluster_Command.</code><code class="descname">Cluster_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cluster/Cluster_Command.html#Cluster_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cluster.Cluster_Command.Cluster_Command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clusters a set of fasta files.  Identical (or identical spanning) sequences are considered         replicants.  (100% match).  NOTE: only Clusters within each fasta file (not across all files).  Merge         files before hand if you want to dereplciate across multiple files.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="otu-table-construction">
+<h2>OTU Table Construction<a class="headerlink" href="#otu-table-construction" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="otu.Query_OTU_DB_Command.Query_OTU_DB_Command">
 <em class="property">class </em><code class="descclassname">otu.Query_OTU_DB_Command.</code><code class="descname">Query_OTU_DB_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/otu/Query_OTU_DB_Command.html#Query_OTU_DB_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#otu.Query_OTU_DB_Command.Query_OTU_DB_Command" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+</div>
+<div class="section" id="otu-identification">
+<h2>OTU Identification<a class="headerlink" href="#otu-identification" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="otu.Build_OTU_Table_Command.Build_OTU_Table_Command">
 <em class="property">class </em><code class="descclassname">otu.Build_OTU_Table_Command.</code><code class="descname">Build_OTU_Table_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/otu/Build_OTU_Table_Command.html#Build_OTU_Table_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#otu.Build_OTU_Table_Command.Build_OTU_Table_Command" title="Permalink to this definition">¶</a></dt>
@@ -202,6 +370,15 @@ conventions.  If a &#8216;name&#8217; parameter is provided, it will be used as 
 <dd></dd></dl>
 
 </div>
+<div class="section" id="otu-annotation">
+<h2>OTU Annotation<a class="headerlink" href="#otu-annotation" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="otu.Annotate_OTU_Table_Command.Annotate_OTU_Table_Command">
+<em class="property">class </em><code class="descclassname">otu.Annotate_OTU_Table_Command.</code><code class="descname">Annotate_OTU_Table_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/otu/Annotate_OTU_Table_Command.html#Annotate_OTU_Table_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#otu.Annotate_OTU_Table_Command.Annotate_OTU_Table_Command" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
 
 
           </div>
@@ -209,6 +386,33 @@ conventions.  If a &#8216;name&#8217; parameter is provided, it will be used as 
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Commands</a><ul>
+<li><a class="reference internal" href="#error-correction">Error Correction</a></li>
+<li><a class="reference internal" href="#assembling-sequences">Assembling Sequences</a></li>
+<li><a class="reference internal" href="#demultiplexing-by-barcode">Demultiplexing by Barcode</a></li>
+<li><a class="reference internal" href="#adapter-removal">Adapter Removal</a></li>
+<li><a class="reference internal" href="#quality-cleaning">Quality Cleaning</a></li>
+<li><a class="reference internal" href="#dereplication">Dereplication</a></li>
+<li><a class="reference internal" href="#file-splitting">File Splitting</a></li>
+<li><a class="reference internal" href="#file-merging">File Merging</a></li>
+<li><a class="reference internal" href="#file-conversion">File Conversion</a></li>
+<li><a class="reference internal" href="#file-cleaning">File Cleaning</a></li>
+<li><a class="reference internal" href="#sequence-renaming">Sequence Renaming</a></li>
+<li><a class="reference internal" href="#aligning-sequences">Aligning Sequences</a></li>
+<li><a class="reference internal" href="#alignment-cleaning">Alignment Cleaning</a></li>
+<li><a class="reference internal" href="#sequence-clustering">Sequence Clustering</a></li>
+<li><a class="reference internal" href="#otu-table-construction">OTU Table Construction</a></li>
+<li><a class="reference internal" href="#otu-identification">OTU Identification</a></li>
+<li><a class="reference internal" href="#otu-annotation">OTU Annotation</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="core_classes.html"
+                        title="previous chapter">Core Classes</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -236,7 +440,11 @@ conventions.  If a &#8216;name&#8217; parameter is provided, it will be used as 
         <li class="right" style="margin-right: 10px">
           <a href="../genindex.html" title="General Index"
              >index</a></li>
-        <li class="nav-item nav-item-0"><a href="../index.html">Chewbacca 0.1 documentation</a> &raquo;</li> 
+        <li class="right" >
+          <a href="core_classes.html" title="Core Classes"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Chewbacca 0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >API</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

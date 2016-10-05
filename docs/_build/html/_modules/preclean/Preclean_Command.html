@@ -50,8 +50,30 @@
 
 
 <div class="viewcode-block" id="Preclean_Command"><a class="viewcode-back" href="../../api/commands.html#preclean.Preclean_Command.Preclean_Command">[docs]</a><span class="k">class</span> <span class="nc">Preclean_Command</span><span class="p">(</span><span class="n">ChewbaccaCommand</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Fixes sequencing errors.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot; Attempts to fix minor sequencing errors caused by pyrosequencing.  By reducing errors prior to sequence assembly,</span>
+<span class="sd">        a greater number of paired reads can be sucessfully assembled.</span>
+
+<span class="sd">        **Inputs**:</span>
+<span class="sd">            * Left reads file(s).</span>
+<span class="sd">            * Right reads file(s).</span>
+
+<span class="sd">        **Outputs**:</span>
+<span class="sd">            * &lt;Left reads file&gt;_corrected.fastq file(s).</span>
+<span class="sd">            * &lt;Right reads file&gt;_corrected.fastq file(s).</span>
+
+<span class="sd">        **Example**:</span>
+
+<span class="sd">        Assuming a forwards read file &#39;Data_R1.fq&#39; and a reverse reads file &#39;Data_R1.fq&#39;,</span>
+
+<span class="sd">        ``$ python chewbacca.py preclean -f Data_R1.fq -r Data_R2.fq  -o rslt``</span>
+
+<span class="sd">        ::</span>
+
+<span class="sd">                rslt/</span>
+<span class="sd">                    Data_R1_corrected.fq</span>
+<span class="sd">                    Data_R1_corrected.fq</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
     <span class="n">supported_programs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Preclean_Program_Bayeshammer</span><span class="p">]</span>
     <span class="n">default_program</span> <span class="o">=</span> <span class="n">Preclean_Program_Bayeshammer</span>
     <span class="n">command_name</span> <span class="o">=</span> <span class="s2">&quot;Preclean&quot;</span></div>

@@ -67,19 +67,18 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;fastx&quot;</span>
 
-
     <span class="k">def</span> <span class="nf">execute_program</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">demux_fastx</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">input_f</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">barcodes</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">outdir</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">threads</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">demux_fastx</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">input_f</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">barcodes</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">outdir</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">processes</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">extraargstring</span><span class="p">)</span>
 
-
-    <span class="k">def</span> <span class="nf">demux_fastx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_f</span><span class="p">,</span> <span class="n">barcodes</span><span class="p">,</span> <span class="n">outdir</span><span class="p">,</span> <span class="n">threads</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">demux_fastx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_f</span><span class="p">,</span> <span class="n">barcodes</span><span class="p">,</span> <span class="n">outdir</span><span class="p">,</span> <span class="n">processes</span><span class="p">,</span> <span class="n">extraargstring</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Demuxes using FAST X BARCODE SPLITTER.</span>
 
 <span class="sd">        :param input_f: File path to input file or folder of input files.</span>
 <span class="sd">        :param barcodes: File path to input barcodes file.</span>
 <span class="sd">        :param outdir: Filepath to output directory.</span>
-<span class="sd">        :param threads: Number of processes to use to demux input fileset.</span>
+<span class="sd">        :param processes: Number of processes to use to demux input fileset.</span>
+<span class="sd">        :param extraargstring: Advanced program parameter string.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">makeDirOrdie</span><span class="p">(</span><span class="n">outdir</span><span class="p">)</span>
         <span class="c1"># Get input files</span>
@@ -88,21 +87,18 @@
         <span class="n">file_id</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">files_to_split</span><span class="p">))</span>
         <span class="n">file_id_pairs</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">files_to_split</span><span class="p">,</span> <span class="n">file_id</span><span class="p">)</span>
         <span class="n">debugPrintInputInfo</span><span class="p">(</span><span class="n">files_to_split</span><span class="p">,</span> <span class="s2">&quot;demux&quot;</span><span class="p">)</span>
-        <span class="n">pool</span> <span class="o">=</span> <span class="n">init_pool</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">file_id_pairs</span><span class="p">),</span> <span class="n">threads</span><span class="p">))</span>
+        <span class="n">pool</span> <span class="o">=</span> <span class="n">init_pool</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">file_id_pairs</span><span class="p">),</span> <span class="n">processes</span><span class="p">))</span>
 
         <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;Demuxing sequences...&quot;</span><span class="p">)</span>
-        <span class="n">parallel</span><span class="p">(</span><span class="n">runProgramRunnerInstance</span><span class="p">,</span> <span class="p">[</span><span class="n">ProgramRunner</span><span class="p">(</span><span class="n">ProgramRunnerCommands</span><span class="o">.</span><span class="n">DEMUX_FASTX</span><span class="p">,</span>
-                                                          <span class="p">[</span><span class="n">input_</span><span class="p">,</span> <span class="n">barcodes</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/&quot;</span> <span class="o">%</span> <span class="n">outdir</span><span class="p">,</span>
-                                                           <span class="s2">&quot;_</span><span class="si">%d</span><span class="s2">_splitOut.fastq&quot;</span> <span class="o">%</span> <span class="n">id_</span><span class="p">],</span> <span class="p">{</span><span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">input_</span><span class="p">,</span> <span class="n">barcodes</span><span class="p">]})</span>
-                                            <span class="k">for</span> <span class="n">input_</span><span class="p">,</span> <span class="n">id_</span> <span class="ow">in</span> <span class="n">file_id_pairs</span><span class="p">],</span> <span class="n">pool</span><span class="p">)</span>
+        <span class="n">parallel</span><span class="p">(</span><span class="n">runProgramRunnerInstance</span><span class="p">,</span>
+                 <span class="p">[</span><span class="n">ProgramRunner</span><span class="p">(</span><span class="n">ProgramRunnerCommands</span><span class="o">.</span><span class="n">DEMUX_FASTX</span><span class="p">,</span>
+                                <span class="p">[</span><span class="n">input_</span><span class="p">,</span> <span class="n">barcodes</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/&quot;</span> <span class="o">%</span> <span class="n">outdir</span><span class="p">,</span> <span class="s2">&quot;_</span><span class="si">%d</span><span class="s2">_splitOut.fastq&quot;</span> <span class="o">%</span> <span class="n">id_</span><span class="p">],</span>
+                                <span class="p">{</span><span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">input_</span><span class="p">,</span> <span class="n">barcodes</span><span class="p">]},</span> <span class="n">extraargstring</span><span class="p">)</span>
+                  <span class="k">for</span> <span class="n">input_</span><span class="p">,</span> <span class="n">id_</span> <span class="ow">in</span> <span class="n">file_id_pairs</span><span class="p">],</span> <span class="n">pool</span><span class="p">)</span>
         <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;Demuxed sequences.&quot;</span><span class="p">)</span>
 
-        <span class="c1"># gather output files and move them to their final destination</span>
-        <span class="n">output_files</span> <span class="o">=</span> <span class="n">enumerateDir</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="s2">&quot;*_splitOut_&quot;</span><span class="p">)</span>
-        <span class="n">bulk_move_to_dir</span><span class="p">(</span><span class="n">output_files</span><span class="p">,</span> <span class="n">outdir</span><span class="p">)</span>
-
         <span class="c1"># Grab all the auxillary files</span>
-        <span class="n">aux_files</span> <span class="o">=</span> <span class="n">getInputFiles</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="s2">&quot;unmatched_*&quot;</span><span class="p">)</span>
+        <span class="n">aux_files</span> <span class="o">=</span> <span class="n">getInputFiles</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="s2">&quot;unmatched_*&quot;</span><span class="p">,</span> <span class="n">ignore_empty_files</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="c1"># make aux dir for extraneous files and move them there</span>
         <span class="n">bulk_move_to_dir</span><span class="p">(</span><span class="n">aux_files</span><span class="p">,</span> <span class="n">makeAuxDir</span><span class="p">(</span><span class="n">outdir</span><span class="p">))</span>
         <span class="n">cleanup_pool</span><span class="p">(</span><span class="n">pool</span><span class="p">)</span>

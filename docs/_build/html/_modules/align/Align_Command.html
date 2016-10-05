@@ -50,9 +50,9 @@
 
 
 <div class="viewcode-block" id="Align_Command"><a class="viewcode-back" href="../../api/commands.html#align.Align_Command.Align_Command">[docs]</a><span class="k">class</span> <span class="nc">Align_Command</span><span class="p">(</span><span class="n">ChewbaccaCommand</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Aligns a set of fasta files.  Identical (or identical spanning) sequences are considered \</span>
-<span class="sd">        replicants.  (100% match).  NOTE: only Aligns within each fasta file (not across all files).  Merge \</span>
-<span class="sd">        files before hand if you want to dereplciate across multiple files.</span>
+    <span class="sd">&quot;&quot;&quot;Aligns a set of fasta files.  See Align_Program_x documentation for program-specific details.   Input files to</span>
+<span class="sd">        this command should first be dereplicated.  Doing so will reduce the total number of alignments required, and</span>
+<span class="sd">        reduce computation time.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">supported_programs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Align_Program_Macse</span><span class="p">]</span>
     <span class="n">default_program</span> <span class="o">=</span> <span class="n">Align_Program_Macse</span>

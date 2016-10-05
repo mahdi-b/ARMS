@@ -23,7 +23,10 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <link rel="top" title="Chewbacca 0.1 documentation" href="../index.html" /> 
+    <link rel="top" title="Chewbacca 0.1 documentation" href="../index.html" />
+    <link rel="up" title="API" href="index.html" />
+    <link rel="next" title="Commands" href="commands.html" />
+    <link rel="prev" title="API" href="index.html" /> 
   </head>
   <body role="document">
     <div class="related" role="navigation" aria-label="related navigation">
@@ -32,7 +35,14 @@
         <li class="right" style="margin-right: 10px">
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li class="nav-item nav-item-0"><a href="../index.html">Chewbacca 0.1 documentation</a> &raquo;</li> 
+        <li class="right" >
+          <a href="commands.html" title="Commands"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="API"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Chewbacca 0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">API</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -43,111 +53,6 @@
             
   <div class="section" id="core-classes">
 <h1>Core Classes<a class="headerlink" href="#core-classes" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="programrunner">
-<h2>ProgramRunner<a class="headerlink" href="#programrunner" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="classes.ProgramRunner.ProgramRunner">
-<em class="property">class </em><code class="descclassname">classes.ProgramRunner.</code><code class="descname">ProgramRunner</code><span class="sig-paren">(</span><em>program</em>, <em>params</em>, <em>conditions=None</em>, <em>stdin=''</em>, <em>stdout=''</em>, <em>stderr=''</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/classes/ProgramRunner.html#ProgramRunner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.ProgramRunner.ProgramRunner" title="Permalink to this definition">¶</a></dt>
-<dd><p>A class to interact with external command line programs and internal python functions.  The class contains a     dictionary of formatted command strings for external programs.  The class supports validation, sanitization, and     debugging of user-supplied parameters.</p>
-<dl class="docutils">
-<dt>Attributes:</dt>
-<dd><dl class="first docutils">
-<dt>DEFAULT_CONFIG_FILEPATH     The filepath to a config file containing user-specified overrides (such as file</dt>
-<dd>paths to exectuables.</dd>
-<dt>configsLoaded               Specifies that all config variables have been loaded, and that the file should not</dt>
-<dd>be read again durring the execution of this instance.</dd>
-</dl>
-<p>program_paths               Specifies the default location of executibles used in the commands dictionary.
-commandTemplates            A dictionary mapping chewbacca commands to un-paramaterized command line strings.</p>
-<blockquote class="last">
-<div>Used as templates for commands.</div></blockquote>
-</dd>
-</dl>
-<dl class="method">
-<dt id="classes.ProgramRunner.ProgramRunner.dryRun">
-<code class="descname">dryRun</code><span class="sig-paren">(</span><em>dryValidate=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/classes/ProgramRunner.html#ProgramRunner.dryRun"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.ProgramRunner.ProgramRunner.dryRun" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="docutils">
-<dt>Prints the validation procedures that would be performed, and the commands that would be run in an actual</dt>
-<dd>run, without actually executing them.</dd>
-</dl>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="classes.ProgramRunner.ProgramRunner.dryValidateConditions">
-<code class="descname">dryValidateConditions</code><span class="sig-paren">(</span><em>conditions</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/classes/ProgramRunner.html#ProgramRunner.dryValidateConditions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.ProgramRunner.ProgramRunner.dryValidateConditions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Prints validation procedures without actually executing them.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>conditions</strong> &#8211; A dictionary mapping &lt;Validator&gt;.function names to a list of parameters.  The dictionary
-key/function name is called on each parameter in the corresponding list of parameters.
-All parameters must satisfy their &lt;Validator&gt;.function in order for the specified
-program to execute.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="classes.ProgramRunner.ProgramRunner.initalizeCommands">
-<code class="descname">initalizeCommands</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/classes/ProgramRunner.html#ProgramRunner.initalizeCommands"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.ProgramRunner.ProgramRunner.initalizeCommands" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initalizes the commandTemplates dictionary.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="classes.ProgramRunner.ProgramRunner.loadConfigs">
-<code class="descname">loadConfigs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/classes/ProgramRunner.html#ProgramRunner.loadConfigs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.ProgramRunner.ProgramRunner.loadConfigs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Loads configuration settings from the chewbacca configuration file (located in
-ProgramRunner.DEFAULT_CONFIG_FILEPATH).  If the file is not found, default values are used. Overwrites the
-default values of any found entries.  Currently loads the [Program  Paths] section, updating the
-program_paths dictionary.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="classes.ProgramRunner.ProgramRunner.run">
-<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/classes/ProgramRunner.html#ProgramRunner.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.ProgramRunner.ProgramRunner.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Validates conditions (or prints them for a dry run) and then executes the command.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="classes.ProgramRunner.ProgramRunner.validateConditions">
-<code class="descname">validateConditions</code><span class="sig-paren">(</span><em>conditions</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/classes/ProgramRunner.html#ProgramRunner.validateConditions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.ProgramRunner.ProgramRunner.validateConditions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Validates this program&#8217;s conditions for execution.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>conditions</strong> &#8211; A dictionary mapping &lt;Validator&gt;.function names to a list of parameters.  The dictionary
-key/function name is called on each parameter in the corresponding list of parameters.
-All parameters must satisfy their &lt;Validator&gt;.function in order for the specified
-program to execute.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True if validation is successful, and raising an exception in &lt;Validator.function&gt; if not.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
-</div>
 <div class="section" id="chewbaccacommand">
 <h2>ChewbaccaCommand<a class="headerlink" href="#chewbaccacommand" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
@@ -210,6 +115,68 @@ used, or &#8220;chewbacca&#8221; if a custom script is used.</p>
 </dd></dl>
 
 </div>
+<div class="section" id="programrunner">
+<h2>ProgramRunner<a class="headerlink" href="#programrunner" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="classes.ProgramRunner.ProgramRunner">
+<em class="property">class </em><code class="descclassname">classes.ProgramRunner.</code><code class="descname">ProgramRunner</code><span class="sig-paren">(</span><em>program</em>, <em>params</em>, <em>conditions=None</em>, <em>custom_arg_string=''</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/classes/ProgramRunner.html#ProgramRunner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.ProgramRunner.ProgramRunner" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class to interact with external command line programs.  The class contains a     dictionary of formatted command strings for external programs.  The class supports validation, sanitization, and     debugging of user-supplied parameters.</p>
+<dl class="docutils">
+<dt>Attributes:</dt>
+<dd><p class="first">DEFAULT_CONFIG_FILEPATH:     The filepath to a config file containing user-specified overrides (such as file                                         paths to exectuables.</p>
+<p>program_paths:               Specifies the default location of executables used in the commandTemplates                                         dictionary.</p>
+<p class="last">commandTemplates:            A dictionary mapping chewbacca commands to un-paramaterized command line strings.                                         Used as templates for commands.</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="classes.ProgramRunner.ProgramRunner.dry_run">
+<code class="descname">dry_run</code><span class="sig-paren">(</span><em>dryValidate=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/classes/ProgramRunner.html#ProgramRunner.dry_run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.ProgramRunner.ProgramRunner.dry_run" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Prints the validation procedures that would be performed, and the commands that would be run in an actual</dt>
+<dd>run, without actually executing them.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dryValidate</strong> &#8211; If True, print the validation statements that would be executed, but don&#8217;t actually execute.
+If False, perform normal validation routine, exiting on invalid conditions.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The fully-formatted command string that would be executed.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.ProgramRunner.ProgramRunner.dry_validate_conditions">
+<code class="descname">dry_validate_conditions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/classes/ProgramRunner.html#ProgramRunner.dry_validate_conditions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.ProgramRunner.ProgramRunner.dry_validate_conditions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints validation procedures without actually executing them.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.ProgramRunner.ProgramRunner.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/classes/ProgramRunner.html#ProgramRunner.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.ProgramRunner.ProgramRunner.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates conditions (or prints them for a verbose/dry run) and then executes the command.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="classes.ProgramRunner.ProgramRunner.validate_conditions">
+<code class="descname">validate_conditions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/classes/ProgramRunner.html#ProgramRunner.validate_conditions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classes.ProgramRunner.ProgramRunner.validate_conditions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates this program&#8217;s conditions for execution.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if validation is successful, and raising an exception in &lt;Validator.function&gt; if not.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
 </div>
 
 
@@ -221,13 +188,19 @@ used, or &#8220;chewbacca&#8221; if a custom script is used.</p>
   <h3><a href="../index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Core Classes</a><ul>
-<li><a class="reference internal" href="#programrunner">ProgramRunner</a></li>
 <li><a class="reference internal" href="#chewbaccacommand">ChewbaccaCommand</a></li>
 <li><a class="reference internal" href="#chewbaccaprogram">ChewbaccaProgram</a></li>
+<li><a class="reference internal" href="#programrunner">ProgramRunner</a></li>
 </ul>
 </li>
 </ul>
 
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">API</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="commands.html"
+                        title="next chapter">Commands</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -255,7 +228,14 @@ used, or &#8220;chewbacca&#8221; if a custom script is used.</p>
         <li class="right" style="margin-right: 10px">
           <a href="../genindex.html" title="General Index"
              >index</a></li>
-        <li class="nav-item nav-item-0"><a href="../index.html">Chewbacca 0.1 documentation</a> &raquo;</li> 
+        <li class="right" >
+          <a href="commands.html" title="Commands"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="API"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Chewbacca 0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >API</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

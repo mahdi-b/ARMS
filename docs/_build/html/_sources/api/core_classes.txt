@@ -1,12 +1,6 @@
 Core Classes
 ============
 
-
-ProgramRunner
--------------
-.. autoclass:: classes.ProgramRunner.ProgramRunner
-   :members:
-
 ChewbaccaCommand
 ----------------
 .. autoclass:: classes.ChewbaccaCommand.ChewbaccaCommand
@@ -17,4 +11,8 @@ ChewbaccaProgram
 .. autoclass:: classes.ChewbaccaProgram.ChewbaccaProgram
    :members:
 
+ProgramRunner
+-------------
+.. autoclass:: classes.ProgramRunner.ProgramRunner
+   :members:
 

@@ -44,7 +44,7 @@
           <div class="body" role="main">
             
   <h1>Source code for align.Align_Program_Macse</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">classes.ChewbaccaProgram</span> <span class="k">import</span> <span class="o">*</span>
+<span></span><span class="kn">from</span> <span class="nn">classes.ChewbaccaProgram</span> <span class="k">import</span> <span class="n">ChewbaccaProgram</span>
 <span class="kn">from</span> <span class="nn">classes.ProgramRunner</span> <span class="k">import</span> <span class="o">*</span>
 
 <span class="kn">from</span> <span class="nn">classes.Helpers</span> <span class="k">import</span> <span class="o">*</span>
@@ -57,15 +57,17 @@
 
     <span class="k">def</span> <span class="nf">execute_program</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">align_macse</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">input_f</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">outdir</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">threads</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">align_macse</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">input_f</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">outdir</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">processes</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">extraargstring</span><span class="p">)</span>
 
 
-    <span class="k">def</span> <span class="nf">align_macse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_f</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">outdir</span><span class="p">,</span> <span class="n">threads</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">align_macse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_f</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">outdir</span><span class="p">,</span> <span class="n">processes</span><span class="p">,</span> <span class="n">extraargstring</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Aligns sequences by iteratively adding them to a known good alignment.</span>
 
 <span class="sd">        :param input_f: Filepath to an input file or folder to rename.</span>
 <span class="sd">        :param db: Filepath to a reference file or folder of reference files for alignment.</span>
 <span class="sd">        :param outdir: Filepath to the output directory.</span>
+<span class="sd">        :param processes: The maximum number of processes to use.</span>
+<span class="sd">        :param extraargstring: Advanced program parameter string.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># &quot;macse_align&quot;:      &quot;java -jar &quot; + programPaths[&quot;MACSE&quot;] + &quot; -prog enrichAlignment  -seq \&quot;%s\&quot; -align \</span>
         <span class="c1">#                                    \&quot;%s\&quot; -seq_lr \&quot;%s\&quot; -maxFS_inSeq 0  -maxSTOP_inSeq 0  -maxINS_inSeq 0 \</span>
@@ -73,13 +75,14 @@
         <span class="c1">#                                    -out_AA \&quot;%s\&quot;_AA -seqToAdd_logFile \&quot;%s\&quot;_log.csv&quot;,</span>
         <span class="n">makeDirOrdie</span><span class="p">(</span><span class="n">outdir</span><span class="p">)</span>
         <span class="n">inputs</span> <span class="o">=</span> <span class="n">getInputFiles</span><span class="p">(</span><span class="n">input_f</span><span class="p">)</span>
-        <span class="n">pool</span> <span class="o">=</span> <span class="n">init_pool</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="n">threads</span><span class="p">))</span>
+        <span class="n">pool</span> <span class="o">=</span> <span class="n">init_pool</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="n">processes</span><span class="p">))</span>
         <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;Aligning reads using MACSE&quot;</span><span class="p">)</span>
         <span class="n">inputs</span> <span class="o">=</span> <span class="n">getInputFiles</span><span class="p">(</span><span class="n">input_f</span><span class="p">)</span>
         <span class="n">parallel</span><span class="p">(</span><span class="n">runProgramRunnerInstance</span><span class="p">,</span> <span class="p">[</span><span class="n">ProgramRunner</span><span class="p">(</span><span class="n">ProgramRunnerCommands</span><span class="o">.</span><span class="n">MACSE_ALIGN</span><span class="p">,</span>
                                                           <span class="p">[</span><span class="n">db</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="nb">input</span><span class="p">]</span> <span class="o">+</span>
                                                           <span class="p">[</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">getFileName</span><span class="p">(</span><span class="nb">input</span><span class="p">))]</span> <span class="o">*</span> <span class="mi">3</span><span class="p">,</span>
-                                                          <span class="p">{</span><span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="p">[</span><span class="nb">input</span><span class="p">,</span> <span class="n">db</span><span class="p">]})</span> <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">],</span> <span class="n">pool</span><span class="p">)</span>
+                                                          <span class="p">{</span><span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="p">[</span><span class="nb">input</span><span class="p">,</span> <span class="n">db</span><span class="p">]},</span> <span class="n">extraargstring</span><span class="p">)</span>
+                                            <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">],</span> <span class="n">pool</span><span class="p">)</span>
         <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;Done with MACSE alignment.&quot;</span><span class="p">)</span>
         <span class="n">cleanup_pool</span><span class="p">(</span><span class="n">pool</span><span class="p">)</span>
 </pre></div>

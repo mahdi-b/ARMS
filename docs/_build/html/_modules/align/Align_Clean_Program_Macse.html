@@ -45,7 +45,7 @@
             
   <h1>Source code for align.Align_Clean_Program_Macse</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">align.align_clean</span> <span class="k">import</span> <span class="n">remove_refs_from_macse_out</span>
-<span class="kn">from</span> <span class="nn">classes.ChewbaccaProgram</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">classes.ChewbaccaProgram</span> <span class="k">import</span> <span class="n">ChewbaccaProgram</span>
 <span class="kn">from</span> <span class="nn">classes.ProgramRunner</span> <span class="k">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">util.merge</span> <span class="k">import</span> <span class="n">merge_files</span>
 
@@ -57,14 +57,12 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;macse&quot;</span>
 
-
     <span class="k">def</span> <span class="nf">execute_program</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">align_clean_macse</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">input_f</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">samplesdir</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">outdir</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">threads</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">align_clean_macse</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">input_f</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">samplesdir</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">outdir</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">processes</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">extraargstring</span><span class="p">)</span>
 
 
-
-    <span class="k">def</span> <span class="nf">align_clean_macse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_f</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">samplesdir</span><span class="p">,</span> <span class="n">outdir</span><span class="p">,</span> <span class="n">threads</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">align_clean_macse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_f</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">samplesdir</span><span class="p">,</span> <span class="n">outdir</span><span class="p">,</span> <span class="n">processes</span><span class="p">,</span> <span class="n">extraargstring</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Removes non-nucleotide characters in MACSE aligned sequences for all fasta files in the samples directory</span>
 <span class="sd">            (the samplesDir argument).</span>
 
@@ -72,25 +70,27 @@
 <span class="sd">        :param samplesdir: Filepath to the original, unaligned input files (the inputs to the macse aligner).</span>
 <span class="sd">        :param ref: Filepath to the reference file used to align the input files.</span>
 <span class="sd">        :param outdir: Filepath to the directory to write outputs to.</span>
-<span class="sd">        :param pool: A fully-initalized multiprocessing.Pool object.</span>
+<span class="sd">        :param processes: The maximum number of processes to use.</span>
+<span class="sd">        :param extraargstring: Advanced program parameter string.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># &quot;macse_format&quot;:     &quot;java -jar &quot; + programPaths[&quot;MACSE&quot;] + &quot;  -prog exportAlignment -align \&quot;%s\&quot; \</span>
         <span class="c1">#                                  -charForRemainingFS - -gc_def 5 -out_AA \&quot;%s\&quot; -out_NT \&quot;%s\&quot; -statFile \&quot;%s\&quot;&quot;</span>
         <span class="n">makeDirOrdie</span><span class="p">(</span><span class="n">outdir</span><span class="p">)</span>
         <span class="n">inputs</span> <span class="o">=</span> <span class="n">getInputFiles</span><span class="p">(</span><span class="n">input_f</span><span class="p">)</span>
-        <span class="n">pool</span> <span class="o">=</span> <span class="n">init_pool</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="n">threads</span><span class="p">))</span>
+        <span class="n">pool</span> <span class="o">=</span> <span class="n">init_pool</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="n">processes</span><span class="p">))</span>
         <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> Processing MACSE alignments&quot;</span><span class="p">)</span>
-        <span class="n">samplesList</span> <span class="o">=</span> <span class="n">getInputFiles</span><span class="p">(</span><span class="n">samplesdir</span><span class="p">)</span>
+        <span class="n">samples_list</span> <span class="o">=</span> <span class="n">getInputFiles</span><span class="p">(</span><span class="n">samplesdir</span><span class="p">)</span>
         <span class="n">parallel</span><span class="p">(</span><span class="n">runProgramRunnerInstance</span><span class="p">,</span> <span class="p">[</span><span class="n">ProgramRunner</span><span class="p">(</span><span class="n">ProgramRunnerCommands</span><span class="o">.</span><span class="n">MACSE_FORMAT</span><span class="p">,</span>
                                                           <span class="p">[</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_NT&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">input_f</span><span class="p">,</span> <span class="n">getFileName</span><span class="p">(</span><span class="n">sample</span><span class="p">)),</span>
                                                            <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_AA_macse.fasta&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">getFileName</span><span class="p">(</span><span class="n">sample</span><span class="p">)),</span>
                                                            <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_NT_macse.fasta&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">getFileName</span><span class="p">(</span><span class="n">sample</span><span class="p">)),</span>
                                                            <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_macse.csv&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">getFileName</span><span class="p">(</span><span class="n">sample</span><span class="p">))],</span>
-                                                          <span class="p">{</span><span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="p">[]})</span> <span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="n">samplesList</span><span class="p">],</span> <span class="n">pool</span><span class="p">)</span>
+                                                          <span class="p">{</span><span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="p">[]},</span> <span class="n">extraargstring</span><span class="p">)</span>
+                                            <span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="n">samples_list</span><span class="p">],</span> <span class="n">pool</span><span class="p">)</span>
         <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Cleaning MACSE alignments&quot;</span><span class="p">)</span>
 
-        <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;Processing </span><span class="si">%s</span><span class="s2"> samples...&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">samplesList</span><span class="p">))</span>
-        <span class="n">nt_macse_outs</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_NT_macse.fasta&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">strip_ixes</span><span class="p">(</span><span class="n">sample</span><span class="p">))</span> <span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="n">samplesList</span><span class="p">]</span>
+        <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;Processing </span><span class="si">%s</span><span class="s2"> samples...&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples_list</span><span class="p">))</span>
+        <span class="n">nt_macse_outs</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_NT_macse.fasta&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">strip_ixes</span><span class="p">(</span><span class="n">sample</span><span class="p">))</span> <span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="n">samples_list</span><span class="p">]</span>
 
         <span class="c1"># Clean the alignments</span>
         <span class="n">parallel</span><span class="p">(</span><span class="n">runPythonInstance</span><span class="p">,</span> <span class="p">[(</span><span class="n">remove_refs_from_macse_out</span><span class="p">,</span> <span class="n">input_</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span>
@@ -102,7 +102,7 @@
         <span class="n">merge_files</span><span class="p">(</span><span class="n">cleaned_alignments</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/MACSE_OUT_MERGED.fasta&quot;</span> <span class="o">%</span> <span class="n">outdir</span><span class="p">)</span>
 
         <span class="n">aux_dir</span> <span class="o">=</span> <span class="n">makeAuxDir</span><span class="p">(</span><span class="n">outdir</span><span class="p">)</span>
-        <span class="n">aux_files</span> <span class="o">=</span> <span class="n">getInputFiles</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="s2">&quot;MACSE_OUT_MERGED.fasta&quot;</span><span class="p">)</span>
+        <span class="n">aux_files</span> <span class="o">=</span> <span class="n">getInputFiles</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="s2">&quot;MACSE_OUT_MERGED.fasta&quot;</span><span class="p">,</span> <span class="n">ignore_empty_files</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">bulk_move_to_dir</span><span class="p">(</span><span class="n">aux_files</span><span class="p">,</span> <span class="n">aux_dir</span><span class="p">)</span>
         <span class="n">cleanup_pool</span><span class="p">(</span><span class="n">pool</span><span class="p">)</span>
 </pre></div>

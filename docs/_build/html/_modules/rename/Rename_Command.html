@@ -50,7 +50,51 @@
 
 
 <div class="viewcode-block" id="Rename_Command"><a class="viewcode-back" href="../../api/commands.html#rename.Rename_Command.Rename_Command">[docs]</a><span class="k">class</span> <span class="nc">Rename_Command</span><span class="p">(</span><span class="n">ChewbaccaCommand</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Renames sequences in a file with their filename and an ID#.  Useful for simplifying complex naming systems into \</span>
+<span class="sd">    human-readable sequence names.</span>
 
+<span class="sd">    **Inputs**:</span>
+<span class="sd">        * One or more fasta/fastq files to rename.</span>
+
+<span class="sd">    **Outputs**:</span>
+<span class="sd">        * _renamed.&lt;ext&gt; file - A fasta/fastq file with the renamed sequences.</span>
+<span class="sd">        * :ref:`.samples file` - A two-column, tab-delimited mapping between new sequence names and their sample.</span>
+<span class="sd">        * :ref:`.mapping file` - A two-column, tab-delimited mapping between old sequence names and their new names.</span>
+
+<span class="sd">    **Notes**:</span>
+<span class="sd">        * In order for the .samples file to correctly list the sample name of the sequences in a file.</span>
+<span class="sd">        * Each input file will have a corresponding .samples, .mapping, and _renamed file.</span>
+
+<span class="sd">    **Example**:</span>
+
+<span class="sd">    ::</span>
+
+<span class="sd">        SampleA_0.fasta:</span>
+<span class="sd">            @M03292:26:000000000-AH6AG:1:1101:22127:1256</span>
+<span class="sd">            AAAA</span>
+<span class="sd">            @M03292:26:000000000-AH6AG:1:1101:22127:1257</span>
+<span class="sd">            AAAT</span>
+
+<span class="sd">    ``$ python chewbacca.py rename -i SampleA_0.fasta -o rslt``</span>
+
+<span class="sd">    ::</span>
+
+<span class="sd">        rslt/SampleA_0_renamed.fasta:</span>
+<span class="sd">            @SampleA_ID0</span>
+<span class="sd">            AAAA</span>
+<span class="sd">            @SampleA_ID1</span>
+<span class="sd">            AAAT</span>
+
+<span class="sd">        rslt_samples/SampleA_0_renamed.samples:</span>
+<span class="sd">            SampleA_ID0	SampleA</span>
+<span class="sd">            SampleA_ID1	SampleA</span>
+
+<span class="sd">        rslt_aux/SampleA_0_renamed.mapping:</span>
+<span class="sd">            M03292:26:000000000-AH6AG:1:1101:22127:1256	SampleA_ID0</span>
+<span class="sd">            M03292:26:000000000-AH6AG:1:1101:22127:1257	SampleA_ID1</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">supported_programs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Rename_Program_Chewbacca</span><span class="p">]</span>
     <span class="n">default_program</span> <span class="o">=</span> <span class="n">Rename_Program_Chewbacca</span>
     <span class="n">command_name</span> <span class="o">=</span> <span class="s2">&quot;Rename&quot;</span></div>

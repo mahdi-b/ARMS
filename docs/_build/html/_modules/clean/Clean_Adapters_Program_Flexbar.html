@@ -59,10 +59,9 @@
     <span class="k">def</span> <span class="nf">execute_program</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">clean_trim_adapters_flexbar</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">input_f</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">adapters</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">adaptersrc</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">outdir</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">allowedns</span><span class="p">,</span>
-                                         <span class="n">args</span><span class="o">.</span><span class="n">threads</span><span class="p">)</span>
+                                         <span class="n">args</span><span class="o">.</span><span class="n">processes</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">extraargstring</span><span class="p">)</span>
 
-
-    <span class="k">def</span> <span class="nf">clean_trim_adapters_flexbar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_f</span><span class="p">,</span> <span class="n">adapters</span><span class="p">,</span> <span class="n">adaptersrc</span><span class="p">,</span> <span class="n">outdir</span><span class="p">,</span> <span class="n">allowedns</span><span class="p">,</span> <span class="n">threads</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">clean_trim_adapters_flexbar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_f</span><span class="p">,</span> <span class="n">adapters</span><span class="p">,</span> <span class="n">adaptersrc</span><span class="p">,</span> <span class="n">outdir</span><span class="p">,</span> <span class="n">allowedns</span><span class="p">,</span> <span class="n">processes</span><span class="p">,</span> <span class="n">extraargstring</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Use flexbar to trim adapters and barcodes from sequences.  By default, Flexbar does not allow any &#39;N&#39; \</span>
 <span class="sd">            characters in SEQUENCE, and will toss any sequences that do contain &#39;N&#39;.  To avoid this, use the -u or \</span>
 <span class="sd">            --allowedns flags to specify the maximum number of &#39;N&#39;s to allow</span>
@@ -72,10 +71,12 @@
 <span class="sd">        :param adaptersrc: Filepath to a list of reverse-complemented adapters.</span>
 <span class="sd">        :param outdir: Filepath to the output directory.</span>
 <span class="sd">        :param allowedns: Non-negative integer value indicating the maximum number of &#39;N&#39;s to tolerate in a sequence.</span>
+<span class="sd">        :param processes: The maximum number of processes to use.</span>
+<span class="sd">        :param extraargstring: Advanced program parameter string.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">makeDirOrdie</span><span class="p">(</span><span class="n">outdir</span><span class="p">)</span>
         <span class="n">inputs</span> <span class="o">=</span> <span class="n">getInputFiles</span><span class="p">(</span><span class="n">input_f</span><span class="p">)</span>
-        <span class="n">pool</span> <span class="o">=</span> <span class="n">init_pool</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="n">threads</span><span class="p">))</span>
+        <span class="n">pool</span> <span class="o">=</span> <span class="n">init_pool</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="n">processes</span><span class="p">))</span>
         <span class="n">debugPrintInputInfo</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="s2">&quot;trim adapters from&quot;</span><span class="p">)</span>
         <span class="c1"># &quot;flexbar&quot;:  &quot;flexbar -r \&quot;%s\&quot; -t \&quot;%s\&quot; -ae \&quot;%s\&quot; -a \&quot;%s\&quot;&quot;,</span>
         <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;Trimming barcodes and adapters with flexbar&quot;</span><span class="p">)</span>
@@ -86,7 +87,7 @@
                                                           <span class="p">[</span><span class="n">input_file</span><span class="p">,</span>
                                                            <span class="n">temp_file_name_template</span> <span class="o">%</span> <span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">strip_ixes</span><span class="p">(</span><span class="n">input_file</span><span class="p">)),</span>
                                                            <span class="s2">&quot;LEFT&quot;</span><span class="p">,</span> <span class="n">adapters</span><span class="p">,</span> <span class="n">allowedns</span><span class="p">],</span>
-                                                          <span class="p">{</span><span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">input_file</span><span class="p">,</span> <span class="n">adapters</span><span class="p">]})</span>
+                                                          <span class="p">{</span><span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">input_file</span><span class="p">,</span> <span class="n">adapters</span><span class="p">]},</span> <span class="n">extraargstring</span><span class="p">)</span>
                                             <span class="k">for</span> <span class="n">input_file</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">],</span> <span class="n">pool</span><span class="p">)</span>
 
         <span class="n">temp_files</span> <span class="o">=</span> <span class="n">getInputFiles</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="s2">&quot;temp_*&quot;</span><span class="p">)</span>
@@ -99,13 +100,15 @@
                                                                                             <span class="n">strip_ixes</span><span class="p">(</span><span class="n">input_file</span><span class="p">)[</span><span class="mi">5</span><span class="p">:]),</span>
                                                            <span class="s2">&quot;RIGHT&quot;</span><span class="p">,</span> <span class="n">adaptersrc</span><span class="p">,</span>
                                                            <span class="n">allowedns</span><span class="p">],</span>
-                                                          <span class="p">{</span><span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">input_file</span><span class="p">,</span> <span class="n">adaptersrc</span><span class="p">]})</span>
+                                                          <span class="p">{</span><span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">input_file</span><span class="p">,</span> <span class="n">adaptersrc</span><span class="p">]},</span> <span class="n">extraargstring</span><span class="p">)</span>
                                             <span class="k">for</span> <span class="n">input_file</span> <span class="ow">in</span> <span class="n">temp_files</span><span class="p">],</span> <span class="n">pool</span><span class="p">)</span>
         <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;Done Trimming sequences.&quot;</span><span class="p">)</span>
 
-        <span class="c1"># delete temp files</span>
-        <span class="k">for</span> <span class="n">file_</span> <span class="ow">in</span> <span class="n">getInputFiles</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="s2">&quot;temp_*&quot;</span><span class="p">):</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">file_</span><span class="p">)</span>
+        <span class="c1"># Move temp files</span>
+        <span class="n">aux_files</span>  <span class="o">=</span> <span class="n">getInputFiles</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="s2">&quot;temp_*&quot;</span><span class="p">,</span> <span class="n">ignore_empty_files</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">bulk_move_to_dir</span><span class="p">(</span><span class="n">aux_files</span><span class="p">,</span> <span class="n">makeAuxDir</span><span class="p">(</span><span class="n">outdir</span><span class="p">))</span>
+        <span class="n">cleanup_pool</span><span class="p">(</span><span class="n">pool</span><span class="p">)</span>
+
 </pre></div>
 
           </div>

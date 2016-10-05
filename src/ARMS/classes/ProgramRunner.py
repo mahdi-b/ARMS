@@ -4,11 +4,11 @@ import os
 import subprocess
 import sys
 from enum import Enum
-from classes.Helpers import printVerbose, helpValidate, debugPrint
-
+from classes.Helpers import *
+from classes import Validator
 
 class ProgramRunnerPrograms(Enum):
-    """An Enum class listing all known external programs used by chewbacca"""
+    """An Enum class listing all known external programs used by chewbacca."""
     CROP = "CROP"
     FASTX = "FASTX"
     FLEXBAR = "FLEXBAR"
@@ -44,16 +44,16 @@ class ProgramRunner(object):
     debugging of user-supplied parameters.
 
     Attributes:
-        DEFAULT_CONFIG_FILEPATH     The filepath to a config file containing user-specified overrides (such as file
+        DEFAULT_CONFIG_FILEPATH:     The filepath to a config file containing user-specified overrides (such as file \
                                         paths to exectuables.
-        configsLoaded               Specifies that all config variables have been loaded, and that the file should not
-                                        be read again durring the execution of this instance.
-        program_paths               Specifies the default location of executibles used in the commands dictionary.
-        commandTemplates            A dictionary mapping chewbacca commands to un-paramaterized command line strings.
+
+        program_paths:               Specifies the default location of executables used in the commandTemplates \
+                                        dictionary.
+
+        commandTemplates:            A dictionary mapping chewbacca commands to un-paramaterized command line strings. \
                                         Used as templates for commands.
     """
     DEFAULT_CONFIG_FILEPATH = "chewbacca.cfg"
-    configsLoaded = False
     run_dry = False
     # Actual commands
     commandTemplates = {}
@@ -89,9 +89,8 @@ class ProgramRunner(object):
         """
         if conditions is None:
             conditions = {}
-        ProgramRunner.loadConfigs(self)
-        ProgramRunner.initalize_commands(self)
-        ProgramRunner.configsLoaded = True
+        ProgramRunner.__load_configs__(self)
+        ProgramRunner.__initalize_commands__(self)
         self.program = program
         self.command = "%s %s" % (self.commandTemplates[program] % tuple(params), custom_arg_string)
         self.conditions = conditions
@@ -99,42 +98,39 @@ class ProgramRunner(object):
         if not printVerbose.VERBOSE:
             self.stdout = open(os.devnull, 'w')
 
-    def validate_conditions(self, conditions):
+    def validate_conditions(self):
         """Validates this program's conditions for execution.
-
-        :param conditions: A dictionary mapping <Validator>.function names to a list of parameters.  The dictionary
-                            key/function name is called on each parameter in the corresponding list of parameters.
-                            All parameters must satisfy their <Validator>.function in order for the specified
-                            program to execute.
 
         :return:            True if validation is successful, and raising an exception in <Validator.function> if not.
         """
-        return helpValidate(conditions)
+        for condition in self.conditions.items():
+            getattr(Validator, condition[0])(condition[1])
+        return True
 
-    def dry_validate_conditions(self, conditions):
+    def dry_validate_conditions(self):
         """Prints validation procedures without actually executing them.
-
-        :param conditions: A dictionary mapping <Validator>.function names to a list of parameters.  The dictionary
-                                key/function name is called on each parameter in the corresponding list of parameters.
-                                All parameters must satisfy their <Validator>.function in order for the specified
-                                program to execute.
         """
-        for condition in conditions.items():
+        for condition in self.conditions.items():
             print "\t\tvalidating that %s, %s" % (str(condition[1]), condition[0])
 
     def run(self):
-        """Validates conditions (or prints them for a dry run) and then executes the command.
+        """Validates conditions (or prints them for a verbose/dry run) and then executes the command.
         """
-        output = sys.stdout
-        self.validate_conditions(self.conditions)
-        if printVerbose.VERBOSE or self.run_dry:
-            self.dry_run()
-        else:
-            output = open(os.devnull, 'w')
-        # call and check_call are blocking, Popen is non-blocking
-        debugPrint("Running " + self.command)
 
-        subprocess.check_call(os.path.expanduser(self.command), shell=True, stdout=output)
+        # If verbose or dry run, print procedures, otherwise, silence stdout.
+        if self.run_dry:
+            return self.dry_run()
+        else:
+            if(printVerbose.VERBOSE):
+                output = sys.stdout
+                self.dry_validate_conditions()
+            else:
+                output = open(os.devnull, 'w')
+
+            self.validate_conditions()
+            debugPrint("Running " + self.command)
+            # call and check_call are blocking, Popen is non-blocking
+            return subprocess.check_call(os.path.expanduser(self.command), shell=True, stdout=output)
 
     def dry_run(self, dryValidate=True):
         """Prints the validation procedures that would be performed, and the commands that would be run in an actual
@@ -146,12 +142,12 @@ class ProgramRunner(object):
         :return: The fully-formatted command string that would be executed.
         """
         if dryValidate:
-            self.dry_validate_conditions(self.conditions)
+            self.dry_validate_conditions()
         else:
-            self.validate_conditions(self.conditions)
+            self.validate_conditions()
         return self.command
 
-    def loadConfigs(self):
+    def __load_configs__(self):
         """Loads configuration settings from the chewbacca configuration file (located in
             ProgramRunner.DEFAULT_CONFIG_FILEPATH).  If the file is not found, default values are used. Overwrites the
             default values of any found entries.  Currently loads the [Program  Paths] section, updating the
@@ -179,7 +175,7 @@ class ProgramRunner(object):
         else:
             logging.debug("Chewbacca config file not found.  Using defaults.")
 
-    def initalize_commands(self):
+    def __initalize_commands__(self):
         """Initalizes the commandTemplates dictionary.
         """
 

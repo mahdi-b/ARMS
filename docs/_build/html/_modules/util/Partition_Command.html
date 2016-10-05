@@ -49,7 +49,10 @@
 
 
 <div class="viewcode-block" id="Partition_Command"><a class="viewcode-back" href="../../api/commands.html#util.Partition_Command.Partition_Command">[docs]</a><span class="k">class</span> <span class="nc">Partition_Command</span><span class="p">(</span><span class="n">ChewbaccaCommand</span><span class="p">):</span>
-
+    <span class="sd">&quot;&quot;&quot;A utility command that partitions a fasta/fastq file into  a set of files (of the same file format), with a \</span>
+<span class="sd">        user-specified (maximum) number of sequences per file.  Allows users to partition a large file into segments, \</span>
+<span class="sd">        and perform discrete operations in parallel over those segments.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">supported_programs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Partition_Program_Chewbacca</span><span class="p">]</span>
     <span class="n">default_program</span> <span class="o">=</span> <span class="n">Partition_Program_Chewbacca</span>
     <span class="n">command_name</span> <span class="o">=</span> <span class="s2">&quot;Partition&quot;</span></div>

@@ -20,20 +20,7 @@ class printVerbose(object):
         if printVerbose.VERBOSE:
             out.write("\n%s\n" % msg)
 
-def helpValidate(conditions):
-    """Validates all conditions using a Validator object, returning True if successful and raising an exception
-        if not.
 
-    :param conditions: A dictionary mapping <Validator>.function names to a list of parameters.  The dictionary
-                            key/function name is called on each parameter in the corresponding list of parameters.
-                            All parameters must satisfy their <Validator>.function in order for the specified
-                            program to execute.
-    :return: True if validation is successful, and raising an exception in <Validator.function> if not.
-    """
-
-    for condition in conditions.iteritems():
-        getattr(classes.Validator, condition[0])(condition[1])
-    return True
 
 
 def runProgramRunnerInstance(my_instance):
@@ -164,7 +151,7 @@ def strip_ixes(path):
     # name = re.sub(r'_part_\d+', '', name)
     name = file_name
     ixes=[ "_renamed", "_debarcoded", ".assembled", ".discarded", ".unassembled", "_cleaned", "_derepCount","_derep",
-           "_uc", "_splitOut", ".denovo.uchime", "_derepCount", "_uncount", "_counts", "_seeds"]
+           "_uc", "_splitOut", ".denovo.uchime", "_derepCount", "_uncount", "_counts", "_seeds", ".00.0_0.cor"]
     for ix in ixes:
         name = name.replace(ix, "")
     return name

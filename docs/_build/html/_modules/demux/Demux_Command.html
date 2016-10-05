@@ -50,7 +50,11 @@
 
 
 <div class="viewcode-block" id="Demux_Command"><a class="viewcode-back" href="../../api/commands.html#demux.Demux_Command.Demux_Command">[docs]</a><span class="k">class</span> <span class="nc">Demux_Command</span><span class="p">(</span><span class="n">ChewbaccaCommand</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Splits a set of sequences into separate files by sample based on the barcode at the begining of each sequence.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Given a set of files, each file is assigned a file_ID#.  Each file is then split into separate child files where</span>
+<span class="sd">        each file holds only sequences belonging to a single sample.  These child files are named using the sample name</span>
+<span class="sd">        of the sequences it lists, and the file_ID# of the file it came from.  Demuxing is based on the nucleotide</span>
+<span class="sd">        barcode prefixing each sequence.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">supported_programs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Demux_Program_Fastx</span><span class="p">]</span>
     <span class="n">default_program</span> <span class="o">=</span> <span class="n">Demux_Program_Fastx</span>
     <span class="n">command_name</span> <span class="o">=</span> <span class="s2">&quot;Demux&quot;</span></div>

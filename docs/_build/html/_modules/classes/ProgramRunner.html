@@ -48,16 +48,13 @@
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">subprocess</span>
-
+<span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">Enum</span>
+<span class="kn">from</span> <span class="nn">classes.Helpers</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">classes</span> <span class="k">import</span> <span class="n">Validator</span>
 
-<span class="kn">from</span> <span class="nn">classes.Helpers</span> <span class="k">import</span> <span class="n">printVerbose</span><span class="p">,</span> <span class="n">helpValidate</span><span class="p">,</span> <span class="n">debugPrint</span>
-
-
-<span class="c1"># Names of available programs</span>
-<div class="viewcode-block" id="ProgramRunnerPrograms"><a class="viewcode-back" href="../../src.html#classes.ProgramRunner.ProgramRunnerPrograms">[docs]</a><span class="k">class</span> <span class="nc">ProgramRunnerPrograms</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;An Enum class listing all known external programs used by chewbacca</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="k">class</span> <span class="nc">ProgramRunnerPrograms</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An Enum class listing all known external programs used by chewbacca.&quot;&quot;&quot;</span>
     <span class="n">CROP</span> <span class="o">=</span> <span class="s2">&quot;CROP&quot;</span>
     <span class="n">FASTX</span> <span class="o">=</span> <span class="s2">&quot;FASTX&quot;</span>
     <span class="n">FLEXBAR</span> <span class="o">=</span> <span class="s2">&quot;FLEXBAR&quot;</span>
@@ -67,10 +64,10 @@
     <span class="n">TRIMMOMATIC</span> <span class="o">=</span> <span class="s2">&quot;TRIMMOMATIC&quot;</span>
     <span class="n">VSEARCH</span> <span class="o">=</span> <span class="s2">&quot;VSEARCH&quot;</span>
     <span class="n">MACSE</span> <span class="o">=</span> <span class="s2">&quot;MACSE&quot;</span>
-    <span class="n">JAVA</span> <span class="o">=</span> <span class="s2">&quot;JAVA&quot;</span></div>
+    <span class="n">JAVA</span> <span class="o">=</span> <span class="s2">&quot;JAVA&quot;</span>
 
-<span class="c1"># Names of available commands</span>
-<div class="viewcode-block" id="ProgramRunnerCommands"><a class="viewcode-back" href="../../src.html#classes.ProgramRunner.ProgramRunnerCommands">[docs]</a><span class="k">class</span> <span class="nc">ProgramRunnerCommands</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+
+<span class="k">class</span> <span class="nc">ProgramRunnerCommands</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;An Enum class listing all known external commandline operations.&quot;&quot;&quot;</span>
     <span class="n">ALIGN_VSEARCH</span> <span class="o">=</span> <span class="s2">&quot;ALIGN_VSEARCH&quot;</span>
     <span class="n">ASSEMBLE_PEAR</span> <span class="o">=</span> <span class="s2">&quot;ASSEMBLE_PEAR&quot;</span>
@@ -84,26 +81,26 @@
     <span class="n">TRIM_FLEXBAR</span> <span class="o">=</span> <span class="s2">&quot;TRIM_FLEXBAR&quot;</span>
     <span class="n">TEST_ECHO</span> <span class="o">=</span> <span class="s2">&quot;TEST_ECHO&quot;</span>
     <span class="n">MACSE_ALIGN</span> <span class="o">=</span> <span class="s2">&quot;MACSE_ALIGN&quot;</span>
-    <span class="n">MACSE_FORMAT</span> <span class="o">=</span> <span class="s2">&quot;MACSE_FORMAT&quot;</span></div>
+    <span class="n">MACSE_FORMAT</span> <span class="o">=</span> <span class="s2">&quot;MACSE_FORMAT&quot;</span>
 
 
 <div class="viewcode-block" id="ProgramRunner"><a class="viewcode-back" href="../../api/core_classes.html#classes.ProgramRunner.ProgramRunner">[docs]</a><span class="k">class</span> <span class="nc">ProgramRunner</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class to interact with external command line programs and internal python functions.  The class contains a \</span>
+    <span class="sd">&quot;&quot;&quot;A class to interact with external command line programs.  The class contains a \</span>
 <span class="sd">    dictionary of formatted command strings for external programs.  The class supports validation, sanitization, and \</span>
 <span class="sd">    debugging of user-supplied parameters.</span>
 
 <span class="sd">    Attributes:</span>
-<span class="sd">        DEFAULT_CONFIG_FILEPATH     The filepath to a config file containing user-specified overrides (such as file</span>
+<span class="sd">        DEFAULT_CONFIG_FILEPATH:     The filepath to a config file containing user-specified overrides (such as file \</span>
 <span class="sd">                                        paths to exectuables.</span>
-<span class="sd">        configsLoaded               Specifies that all config variables have been loaded, and that the file should not</span>
-<span class="sd">                                        be read again durring the execution of this instance.</span>
-<span class="sd">        program_paths               Specifies the default location of executibles used in the commands dictionary.</span>
-<span class="sd">        commandTemplates            A dictionary mapping chewbacca commands to un-paramaterized command line strings.</span>
+
+<span class="sd">        program_paths:               Specifies the default location of executables used in the commandTemplates \</span>
+<span class="sd">                                        dictionary.</span>
+
+<span class="sd">        commandTemplates:            A dictionary mapping chewbacca commands to un-paramaterized command line strings. \</span>
 <span class="sd">                                        Used as templates for commands.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">DEFAULT_CONFIG_FILEPATH</span> <span class="o">=</span> <span class="s2">&quot;chewbacca.cfg&quot;</span>
-    <span class="n">configsLoaded</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="n">dry_run</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">run_dry</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="c1"># Actual commands</span>
     <span class="n">commandTemplates</span> <span class="o">=</span> <span class="p">{}</span>
 
@@ -121,7 +118,7 @@
         <span class="n">ProgramRunnerPrograms</span><span class="o">.</span><span class="n">JAVA</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s2">&quot;java -jar&quot;</span><span class="p">)</span>
     <span class="p">}</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">program</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">conditions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stdin</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">program</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">conditions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">custom_arg_string</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initalizes a ProgramRunner object.  Reads chewbacca.cfg and loads configuration settings, builds the command</span>
 <span class="sd">        string, and configures stdIO pipes.</span>
 
@@ -132,75 +129,71 @@
 <span class="sd">                                key/function name is called on each parameter in the corresponding list of parameters.</span>
 <span class="sd">                                All parameters must satisfy their &lt;Validator&gt;.function in order for the specified</span>
 <span class="sd">                                program to execute.</span>
-<span class="sd">        :param stdin:       A handle to the stdin pipe for the command.  Defaults to os.devnull.</span>
-<span class="sd">        :param stdout:      A handle to the stdout pipe for the command.  Defaults to os.devnull.</span>
-<span class="sd">        :param stderr:      A hande to the stderr pipe for the command.  Defaults to os.devnull.</span>
+<span class="sd">        :param custom_arg_string: A string containing advanced command line parameters to pass to the called program.</span>
+<span class="sd">                                This string will be appended to the end of the normal commandline arguments.</span>
 <span class="sd">        :return             A list of output files to be moved to outdir.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">conditions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">conditions</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">ProgramRunner</span><span class="o">.</span><span class="n">loadConfigs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">ProgramRunner</span><span class="o">.</span><span class="n">initalizeCommands</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">ProgramRunner</span><span class="o">.</span><span class="n">configsLoaded</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">ProgramRunner</span><span class="o">.</span><span class="n">__load_configs__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">ProgramRunner</span><span class="o">.</span><span class="n">__initalize_commands__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">program</span> <span class="o">=</span> <span class="n">program</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">command</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">commandTemplates</span><span class="p">[</span><span class="n">program</span><span class="p">]</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">command</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">commandTemplates</span><span class="p">[</span><span class="n">program</span><span class="p">]</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">params</span><span class="p">),</span> <span class="n">custom_arg_string</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">conditions</span> <span class="o">=</span> <span class="n">conditions</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">stdin</span> <span class="o">=</span> <span class="n">stdin</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">stdout</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">stderr</span> <span class="o">=</span> <span class="n">stderr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extra_args</span> <span class="o">=</span> <span class="n">custom_arg_string</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">printVerbose</span><span class="o">.</span><span class="n">VERBOSE</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">devnull</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
 
-
-<div class="viewcode-block" id="ProgramRunner.validateConditions"><a class="viewcode-back" href="../../api/core_classes.html#classes.ProgramRunner.ProgramRunner.validateConditions">[docs]</a>    <span class="k">def</span> <span class="nf">validateConditions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conditions</span><span class="p">):</span>
+<div class="viewcode-block" id="ProgramRunner.validate_conditions"><a class="viewcode-back" href="../../api/core_classes.html#classes.ProgramRunner.ProgramRunner.validate_conditions">[docs]</a>    <span class="k">def</span> <span class="nf">validate_conditions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Validates this program&#39;s conditions for execution.</span>
-
-<span class="sd">        :param conditions: A dictionary mapping &lt;Validator&gt;.function names to a list of parameters.  The dictionary</span>
-<span class="sd">                            key/function name is called on each parameter in the corresponding list of parameters.</span>
-<span class="sd">                            All parameters must satisfy their &lt;Validator&gt;.function in order for the specified</span>
-<span class="sd">                            program to execute.</span>
 
 <span class="sd">        :return:            True if validation is successful, and raising an exception in &lt;Validator.function&gt; if not.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">helpValidate</span><span class="p">(</span><span class="n">conditions</span><span class="p">)</span></div>
+        <span class="k">for</span> <span class="n">condition</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">conditions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="n">Validator</span><span class="p">,</span> <span class="n">condition</span><span class="p">[</span><span class="mi">0</span><span class="p">])(</span><span class="n">condition</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
 
-
-<div class="viewcode-block" id="ProgramRunner.dryValidateConditions"><a class="viewcode-back" href="../../api/core_classes.html#classes.ProgramRunner.ProgramRunner.dryValidateConditions">[docs]</a>    <span class="k">def</span> <span class="nf">dryValidateConditions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conditions</span><span class="p">):</span>
+<div class="viewcode-block" id="ProgramRunner.dry_validate_conditions"><a class="viewcode-back" href="../../api/core_classes.html#classes.ProgramRunner.ProgramRunner.dry_validate_conditions">[docs]</a>    <span class="k">def</span> <span class="nf">dry_validate_conditions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Prints validation procedures without actually executing them.</span>
-
-<span class="sd">        :param conditions: A dictionary mapping &lt;Validator&gt;.function names to a list of parameters.  The dictionary</span>
-<span class="sd">                                key/function name is called on each parameter in the corresponding list of parameters.</span>
-<span class="sd">                                All parameters must satisfy their &lt;Validator&gt;.function in order for the specified</span>
-<span class="sd">                                program to execute.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">for</span> <span class="n">condition</span> <span class="ow">in</span> <span class="n">conditions</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">condition</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">conditions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="nb">print</span> <span class="s2">&quot;</span><span class="se">\t\t</span><span class="s2">validating that </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">condition</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">condition</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
 
 <div class="viewcode-block" id="ProgramRunner.run"><a class="viewcode-back" href="../../api/core_classes.html#classes.ProgramRunner.ProgramRunner.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Validates conditions (or prints them for a dry run) and then executes the command.</span>
-
-<span class="sd">        :return: None</span>
+        <span class="sd">&quot;&quot;&quot;Validates conditions (or prints them for a verbose/dry run) and then executes the command.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">validateConditions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conditions</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">printVerbose</span><span class="o">.</span><span class="n">VERBOSE</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">dry_run</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dryRun</span><span class="p">()</span>
+        <span class="c1"># If verbose or dry run, print procedures, otherwise, silence stdout.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_dry</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dry_run</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">printVerbose</span><span class="o">.</span><span class="n">VERBOSE</span><span class="p">):</span>
+                <span class="n">output</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dry_validate_conditions</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">output</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">devnull</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
 
-        <span class="c1"># call and check_call are blocking, Popen is non-blocking</span>
-        <span class="n">debugPrint</span><span class="p">(</span><span class="s2">&quot;Running &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">)</span>
-        <span class="n">subprocess</span><span class="o">.</span><span class="n">check_call</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">),</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">validate_conditions</span><span class="p">()</span>
+            <span class="n">debugPrint</span><span class="p">(</span><span class="s2">&quot;Running &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">)</span>
+            <span class="c1"># call and check_call are blocking, Popen is non-blocking</span>
+            <span class="k">return</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_call</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">),</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">output</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="ProgramRunner.dryRun"><a class="viewcode-back" href="../../api/core_classes.html#classes.ProgramRunner.ProgramRunner.dryRun">[docs]</a>    <span class="k">def</span> <span class="nf">dryRun</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dryValidate</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="ProgramRunner.dry_run"><a class="viewcode-back" href="../../api/core_classes.html#classes.ProgramRunner.ProgramRunner.dry_run">[docs]</a>    <span class="k">def</span> <span class="nf">dry_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dryValidate</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Prints the validation procedures that would be performed, and the commands that would be run in an actual</span>
 <span class="sd">            run, without actually executing them.</span>
 
-<span class="sd">        :return:</span>
+
+<span class="sd">        :param dryValidate: If True, print the validation statements that would be executed, but don&#39;t actually execute.</span>
+<span class="sd">                                If False, perform normal validation routine, exiting on invalid conditions.</span>
+<span class="sd">        :return: The fully-formatted command string that would be executed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">dryValidate</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dryValidateConditions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conditions</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dry_validate_conditions</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">validateConditions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conditions</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">validate_conditions</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">command</span></div>
 
-<div class="viewcode-block" id="ProgramRunner.loadConfigs"><a class="viewcode-back" href="../../api/core_classes.html#classes.ProgramRunner.ProgramRunner.loadConfigs">[docs]</a>    <span class="k">def</span> <span class="nf">loadConfigs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__load_configs__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Loads configuration settings from the chewbacca configuration file (located in</span>
 <span class="sd">            ProgramRunner.DEFAULT_CONFIG_FILEPATH).  If the file is not found, default values are used. Overwrites the</span>
 <span class="sd">            default values of any found entries.  Currently loads the [Program  Paths] section, updating the</span>
@@ -213,7 +206,7 @@
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Loaded Chewbacca config files from </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">config_file_path</span><span class="p">)</span>
             <span class="n">config</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="o">.</span><span class="n">RawConfigParser</span><span class="p">()</span>
             <span class="n">config</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">config_file_path</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">program_name</span><span class="p">,</span> <span class="n">program_enum</span> <span class="ow">in</span> <span class="n">ProgramRunnerPrograms</span><span class="o">.</span><span class="n">__members__</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">program_name</span><span class="p">,</span> <span class="n">program_enum</span> <span class="ow">in</span> <span class="n">ProgramRunnerPrograms</span><span class="o">.</span><span class="n">__members__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">has_option</span><span class="p">(</span><span class="n">config_section</span><span class="p">,</span> <span class="n">program_name</span><span class="p">):</span>
                     <span class="n">config_setting</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">config_section</span><span class="p">,</span> <span class="n">program_name</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">config_setting</span><span class="p">)):</span>
@@ -221,55 +214,54 @@
                     <span class="k">else</span><span class="p">:</span>
                         <span class="nb">print</span> <span class="s2">&quot;ERROR! The provided config path does not exist: </span><span class="si">%s</span><span class="s2"> = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">program_name</span><span class="p">,</span> <span class="n">config_setting</span><span class="p">)</span>
                         <span class="n">bad_configs</span> <span class="o">=</span> <span class="kc">True</span>
-                    <span class="c1"># logging.debug(&quot;Read %s filepath as %s&quot; % (program, config_setting))</span>
+                        <span class="c1"># logging.debug(&quot;Read %s filepath as %s&quot; % (program, config_setting))</span>
             <span class="k">if</span> <span class="n">bad_configs</span><span class="p">:</span>
                 <span class="nb">print</span> <span class="s2">&quot;Errors found in configs file.  Please check config settings.&quot;</span>
                 <span class="n">exit</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Chewbacca config file not found.  Using defaults.&quot;</span><span class="p">)</span></div>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Chewbacca config file not found.  Using defaults.&quot;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="ProgramRunner.initalizeCommands"><a class="viewcode-back" href="../../api/core_classes.html#classes.ProgramRunner.ProgramRunner.initalizeCommands">[docs]</a>    <span class="k">def</span> <span class="nf">initalizeCommands</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__initalize_commands__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initalizes the commandTemplates dictionary.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># NOTE: Mothur doesn&#39;t like quoted filenames.  Gross.</span>
-        <span class="c1"># NOTE: Java jars can&#39;t be resolved if string concatenation is used.</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">commandTemplates</span> <span class="o">=</span> <span class="p">{</span>
             <span class="n">ProgramRunnerCommands</span><span class="o">.</span><span class="n">DEMUX_FASTX</span><span class="p">:</span> <span class="s2">&quot;cat </span><span class="si">%s</span><span class="s2"> | &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">program_paths</span><span class="p">[</span><span class="n">ProgramRunnerPrograms</span><span class="o">.</span><span class="n">FASTX</span><span class="p">]</span> <span class="o">+</span>
-                                        <span class="s1">&#39;  --bcfile &quot;</span><span class="si">%s</span><span class="s1">&quot; -prefix &quot;</span><span class="si">%s</span><span class="s1">&quot; --suffix </span><span class="si">%s</span><span class="s1"> --bol --mismatches 1&#39;</span><span class="p">,</span>
+                                                    <span class="s2">&quot;  --bcfile </span><span class="si">%s</span><span class="s2"> -prefix </span><span class="si">%s</span><span class="s2"> --suffix </span><span class="si">%s</span><span class="s2"> --bol --mismatches 1&quot;</span><span class="p">,</span>
             <span class="n">ProgramRunnerCommands</span><span class="o">.</span><span class="n">TEST_ECHO</span><span class="p">:</span> <span class="s2">&quot;echo </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="n">ProgramRunnerCommands</span><span class="o">.</span><span class="n">TRIM_FLEXBAR</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">program_paths</span><span class="p">[</span><span class="n">ProgramRunnerPrograms</span><span class="o">.</span><span class="n">FLEXBAR</span><span class="p">]</span> <span class="o">+</span>
-                                        <span class="s2">&quot; -r </span><span class="si">%s</span><span class="s2"> -t </span><span class="si">%s</span><span class="s2"> -ae </span><span class="si">%s</span><span class="s2"> -a </span><span class="si">%s</span><span class="s2"> -u </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span>
+                                                    <span class="s2">&quot; -r </span><span class="si">%s</span><span class="s2"> -t </span><span class="si">%s</span><span class="s2"> -ae </span><span class="si">%s</span><span class="s2"> -a </span><span class="si">%s</span><span class="s2"> -u </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="n">ProgramRunnerCommands</span><span class="o">.</span><span class="n">ASSEMBLE_PEAR</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">program_paths</span><span class="p">[</span><span class="n">ProgramRunnerPrograms</span><span class="o">.</span><span class="n">PEAR</span><span class="p">]</span> <span class="o">+</span>
-                                        <span class="s2">&quot; -f </span><span class="si">%s</span><span class="s2"> -r </span><span class="si">%s</span><span class="s2"> -o </span><span class="si">%s</span><span class="s2"> -v 20 -j </span><span class="si">%d</span><span class="s2"> &quot;</span><span class="p">,</span>
+                                                    <span class="s2">&quot; -f </span><span class="si">%s</span><span class="s2"> -r </span><span class="si">%s</span><span class="s2"> -o </span><span class="si">%s</span><span class="s2"> -v 20 -j </span><span class="si">%d</span><span class="s2"> &quot;</span><span class="p">,</span>
             <span class="n">ProgramRunnerCommands</span><span class="o">.</span><span class="n">CLUSTER_CROP</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">program_paths</span><span class="p">[</span><span class="n">ProgramRunnerPrograms</span><span class="o">.</span><span class="n">CROP</span><span class="p">]</span> <span class="o">+</span>
-                                                 <span class="s2">&quot; -i </span><span class="si">%s</span><span class="s2"> -o </span><span class="si">%s</span><span class="s2"> -z </span><span class="si">%d</span><span class="s2"> -</span><span class="si">%s</span><span class="s2"> -e </span><span class="si">%d</span><span class="s2"> -m </span><span class="si">%d</span><span class="s2"> -r </span><span class="si">%d</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                                                    <span class="s2">&quot; -i </span><span class="si">%s</span><span class="s2"> -o </span><span class="si">%s</span><span class="s2"> -z </span><span class="si">%d</span><span class="s2"> -</span><span class="si">%s</span><span class="s2"> -e </span><span class="si">%d</span><span class="s2"> -m </span><span class="si">%d</span><span class="s2"> -r </span><span class="si">%d</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="n">ProgramRunnerCommands</span><span class="o">.</span><span class="n">CLUSTER_SWARM</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">program_paths</span><span class="p">[</span><span class="n">ProgramRunnerPrograms</span><span class="o">.</span><span class="n">SWARM</span><span class="p">]</span> <span class="o">+</span>
-                                        <span class="s2">&quot; </span><span class="si">%s</span><span class="s2"> -o </span><span class="si">%s</span><span class="s2"> -u </span><span class="si">%s</span><span class="s2"> -w </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                                                    <span class="s2">&quot; </span><span class="si">%s</span><span class="s2"> -o </span><span class="si">%s</span><span class="s2"> -u </span><span class="si">%s</span><span class="s2"> -w </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="n">ProgramRunnerCommands</span><span class="o">.</span><span class="n">CLUSTER_VSEARCH</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">program_paths</span><span class="p">[</span><span class="n">ProgramRunnerPrograms</span><span class="o">.</span><span class="n">VSEARCH</span><span class="p">]</span> <span class="o">+</span>
-                                        <span class="s2">&quot; --cluster_size </span><span class="si">%s</span><span class="s2"> -id </span><span class="si">%f</span><span class="s2"> --centroids </span><span class="si">%s</span><span class="s2"> --uc </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                                                    <span class="s2">&quot; --cluster_size </span><span class="si">%s</span><span class="s2"> -id </span><span class="si">%f</span><span class="s2"> --centroids </span><span class="si">%s</span><span class="s2"> --uc </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="n">ProgramRunnerCommands</span><span class="o">.</span><span class="n">CLEAN_TRIMMOMATIC</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">program_paths</span><span class="p">[</span><span class="n">ProgramRunnerPrograms</span><span class="o">.</span><span class="n">JAVA</span><span class="p">]</span> <span class="o">+</span>
-                                        <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">program_paths</span><span class="p">[</span><span class="n">ProgramRunnerPrograms</span><span class="o">.</span><span class="n">TRIMMOMATIC</span><span class="p">]</span> <span class="o">+</span>
-                                        <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="s2">&quot;SE -phred33 </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> SLIDINGWINDOW:</span><span class="si">%d</span><span class="s2">:</span><span class="si">%d</span><span class="s2"> MINLEN:</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span>
+                                                    <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">program_paths</span><span class="p">[</span><span class="n">ProgramRunnerPrograms</span><span class="o">.</span><span class="n">TRIMMOMATIC</span><span class="p">]</span> <span class="o">+</span>
+                                                    <span class="s2">&quot; SE -phred33 </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> SLIDINGWINDOW:</span><span class="si">%d</span><span class="s2">:</span><span class="si">%d</span><span class="s2"> MINLEN:</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="n">ProgramRunnerCommands</span><span class="o">.</span><span class="n">DEREP_VSEARCH</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">program_paths</span><span class="p">[</span><span class="n">ProgramRunnerPrograms</span><span class="o">.</span><span class="n">VSEARCH</span><span class="p">]</span> <span class="o">+</span>
-                                        <span class="s2">&quot; --threads </span><span class="si">%d</span><span class="s2"> --derep_fulllength </span><span class="si">%s</span><span class="s2"> --sizeout --fasta_width 0 --output </span><span class="si">%s</span><span class="s2"> </span><span class="se">\</span>
-<span class="s2">                                        -uc </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                                                    <span class="s2">&quot; --threads </span><span class="si">%d</span><span class="s2"> --quiet --derep_fulllength </span><span class="si">%s</span><span class="s2"> --sizeout </span><span class="se">\</span>
+<span class="s2">                                                    --fasta_width 0 --output </span><span class="si">%s</span><span class="s2"> -uc </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="n">ProgramRunnerCommands</span><span class="o">.</span><span class="n">ALIGN_VSEARCH</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">program_paths</span><span class="p">[</span><span class="n">ProgramRunnerPrograms</span><span class="o">.</span><span class="n">VSEARCH</span><span class="p">]</span> <span class="o">+</span>
-                                        <span class="s2">&quot; --threads </span><span class="si">%d</span><span class="s2"> --usearch_global </span><span class="si">%s</span><span class="s2"> --db </span><span class="si">%s</span><span class="s2"> --id 0.9 --userfields </span><span class="se">\</span>
-<span class="s2">                                        query+target+id+alnlen+qcov --userout </span><span class="si">%s</span><span class="s2"> --alnout </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                                                    <span class="s2">&quot; --threads </span><span class="si">%d</span><span class="s2"> --usearch_global </span><span class="si">%s</span><span class="s2"> --db </span><span class="si">%s</span><span class="s2"> --id 0.9 --userfields </span><span class="se">\</span>
+<span class="s2">                                                    query+target+id+alnlen+qcov --userout </span><span class="si">%s</span><span class="s2"> --alnout </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="n">ProgramRunnerCommands</span><span class="o">.</span><span class="n">PRECLEAN_SPADES</span><span class="p">:</span> <span class="s2">&quot;python &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">program_paths</span><span class="p">[</span><span class="n">ProgramRunnerPrograms</span><span class="o">.</span><span class="n">SPADES</span><span class="p">]</span> <span class="o">+</span>
-                                         <span class="s2">&quot; --only-error-correction --disable-gzip-output -1 </span><span class="si">%s</span><span class="s2"> -2 </span><span class="si">%s</span><span class="s2"> -o </span><span class="si">%s</span><span class="s2"> -t </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span>
-            <span class="n">ProgramRunnerCommands</span><span class="o">.</span><span class="n">MACSE_ALIGN</span><span class="p">:</span>  <span class="bp">self</span><span class="o">.</span><span class="n">program_paths</span><span class="p">[</span><span class="n">ProgramRunnerPrograms</span><span class="o">.</span><span class="n">JAVA</span><span class="p">]</span> <span class="o">+</span>
-                                        <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">program_paths</span><span class="p">[</span><span class="n">ProgramRunnerPrograms</span><span class="o">.</span><span class="n">MACSE</span><span class="p">]</span> <span class="o">+</span>
-                                        <span class="s2">&quot; -prog enrichAlignment  -seq </span><span class="si">%s</span><span class="s2"> -align </span><span class="se">\</span>
-<span class="s2">                                        </span><span class="si">%s</span><span class="s2"> -seq_lr </span><span class="si">%s</span><span class="s2"> -maxFS_inSeq 0  -maxSTOP_inSeq 0  -maxINS_inSeq 0 </span><span class="se">\</span>
-<span class="s2">                                        -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 -out_NT </span><span class="si">%s</span><span class="s2">_NT </span><span class="se">\</span>
-<span class="s2">                                        -out_AA </span><span class="si">%s</span><span class="s2">_AA -seqToAdd_logFile </span><span class="si">%s</span><span class="s2">_log.csv&quot;</span><span class="p">,</span>
+                                                    <span class="s2">&quot; --only-error-correction --disable-gzip-output -1 </span><span class="si">%s</span><span class="s2"> -2 </span><span class="si">%s</span><span class="s2"> -o </span><span class="si">%s</span><span class="s2"> </span><span class="se">\</span>
+<span class="s2">                                                    -t </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">ProgramRunnerCommands</span><span class="o">.</span><span class="n">MACSE_ALIGN</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">program_paths</span><span class="p">[</span><span class="n">ProgramRunnerPrograms</span><span class="o">.</span><span class="n">JAVA</span><span class="p">]</span> <span class="o">+</span>
+                                                    <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">program_paths</span><span class="p">[</span><span class="n">ProgramRunnerPrograms</span><span class="o">.</span><span class="n">MACSE</span><span class="p">]</span> <span class="o">+</span>
+                                                    <span class="s2">&quot; -prog enrichAlignment  -seq </span><span class="si">%s</span><span class="s2"> -align </span><span class="se">\</span>
+<span class="s2">                                                    </span><span class="si">%s</span><span class="s2"> -seq_lr </span><span class="si">%s</span><span class="s2"> -maxFS_inSeq 0  -maxSTOP_inSeq 0  -maxINS_inSeq 0 </span><span class="se">\</span>
+<span class="s2">                                                    -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 -out_NT </span><span class="si">%s</span><span class="s2">_NT </span><span class="se">\</span>
+<span class="s2">                                                    -out_AA </span><span class="si">%s</span><span class="s2">_AA -seqToAdd_logFile </span><span class="si">%s</span><span class="s2">_log.csv&quot;</span><span class="p">,</span>
             <span class="n">ProgramRunnerCommands</span><span class="o">.</span><span class="n">MACSE_FORMAT</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">program_paths</span><span class="p">[</span><span class="n">ProgramRunnerPrograms</span><span class="o">.</span><span class="n">JAVA</span><span class="p">]</span> <span class="o">+</span>
-                                        <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">program_paths</span><span class="p">[</span><span class="n">ProgramRunnerPrograms</span><span class="o">.</span><span class="n">MACSE</span><span class="p">]</span> <span class="o">+</span>
-                                        <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="s2">&quot; -prog exportAlignment -align </span><span class="si">%s</span><span class="s2"> </span><span class="se">\</span>
-<span class="s2">                                        -charForRemainingFS - -gc_def 5 -out_AA </span><span class="si">%s</span><span class="s2"> -out_NT </span><span class="si">%s</span><span class="s2"> -statFile </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
-<span class="p">}</span></div></div>
+                                                    <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">program_paths</span><span class="p">[</span><span class="n">ProgramRunnerPrograms</span><span class="o">.</span><span class="n">MACSE</span><span class="p">]</span> <span class="o">+</span>
+                                                    <span class="s2">&quot; -prog exportAlignment -align </span><span class="si">%s</span><span class="s2"> </span><span class="se">\</span>
+<span class="s2">                                                    -charForRemainingFS - -gc_def 5 -out_AA </span><span class="si">%s</span><span class="s2"> -out_NT </span><span class="si">%s</span><span class="s2"> -statFile </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">}</span></div>
 </pre></div>
 
           </div>

@@ -4,19 +4,50 @@ from Assemble_Program_Pear import Assemble_Program_Pear
 
 
 class Assemble_Command(ChewbaccaCommand):
-    """Assembles reads from two (left and right) fastq files/directories.  For a set of k forward read files, and k
+    """Assembles reads from two (forward and reverse) fastq files/directories.  For a set of k forward read files, and k
         reverse read files, return k assembled files.  Matching forward and reverse files should be identically named,
         except for a <forward>/<reverse> suffix that indicates the read orientation.  Two suffix conventions are
         supported:
-        '_forwards'/'_reverse',
+
+        _forwards/_reverse
+
         and
-        '_R1'/'R2'
-        Choose ONE suffix style and stick to it.
-        e.g. Sample_100_forwards.fq and Sample_100_reverse.fq will be assembled into Sample_100_assembled.fq.
-        Alternatively, Sample_100_R1.fq and Sample_100_R2.fq will be assembled into Sample_100_assembled.fq.
-        You can provide as many pairs of files as you wish as long as they follow exactly one of the above naming
-        conventions.  If a 'name' parameter is provided, it will be used as a filename (not path) prefix for all
-        assembled sequence files.
+
+        _R1/_R2
+
+        **Input**:
+            * Left Reads File(s)
+            * Right Reads File(s)
+
+        **Output**:
+            * Assembled Reads Files
+
+        **Notes**:
+            Choose ONE suffix style and stick to it!  Mixed suffixes are not supported.
+            e.g.
+            Sample_100_forwards.fq and Sample_100_reverse.fq will be assembled into Sample_100_assembled.fq.
+            Simmilarly, Sample_100_R1.fq and Sample_100_R2.fq will be assembled into Sample_100_assembled.fq.
+            However, Sample_100_forwards.fq and Sample_100_R2.fq are not guaranteed to be matched.
+
+            You can provide as many pairs of files as you wish as long as they follow exactly one of the above naming
+            conventions.  If a 'name' parameter is provided, it will be used as a filename (not path) prefix for all
+            assembled sequence files.
+
+        **Example**
+            Assuming a forwards reads file named "Data_R1.fq", and a reverse reads file "Data_R2.fq".
+
+        ::
+
+            ./
+                Data_R1.fq
+                Data_R2.fq
+
+        ``$ python chewbacca.py assemble -n BALI -f Data_R1.fq  -r Data_R2.fq  -o rslt``
+
+        ::
+
+            rslt/
+                BALI_DATA.assembled.fq
     """
     supported_programs = [Assemble_Program_Pear]
     default_program = Assemble_Program_Pear

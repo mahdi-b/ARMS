@@ -24,11 +24,12 @@ class Preclean_Program_Bayeshammer(ChewbaccaProgram):
         :param processes: The maximum number of processes to use.
         :param extraargstring: Advanced program parameter string.
         """
+
         makeDirOrdie(outdir)
         # Collect input files, and validate that they match
         inputs = validate_paired_fastq_reads(input_f, input_r)
         pool = init_pool(min(len(inputs), processes))
-        printVerbose("\tPrecleaning reads with Spades-Baye's Hammer...")
+        printVerbose("\tPrecleaning %s reads with Spades-Baye's Hammer..." % len(inputs))
         debugPrintInputInfo(inputs, "preclean/fix.")
 
         parallel(runProgramRunnerInstance,
@@ -55,4 +56,10 @@ class Preclean_Program_Bayeshammer(ChewbaccaProgram):
         # Gather aux files
         aux_dir = makeAuxDir(outdir)
         bulk_move_to_dir(aux_files, aux_dir)
+
+        # Rename output files
+        output_files = getInputFiles(outdir, "*")
+        for out_file in output_files:
+            move(out_file,"%s/%s_corrected.fastq" % (outdir, strip_ixes(out_file)))
+
         cleanup_pool(pool)

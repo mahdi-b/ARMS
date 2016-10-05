@@ -50,17 +50,50 @@
 
 
 <div class="viewcode-block" id="Assemble_Command"><a class="viewcode-back" href="../../api/commands.html#assemble.Assemble_Command.Assemble_Command">[docs]</a><span class="k">class</span> <span class="nc">Assemble_Command</span><span class="p">(</span><span class="n">ChewbaccaCommand</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Assembles reads from two (left and right) fastq files/directories.  For a set of k forward read files, and k</span>
+    <span class="sd">&quot;&quot;&quot;Assembles reads from two (forward and reverse) fastq files/directories.  For a set of k forward read files, and k</span>
 <span class="sd">        reverse read files, return k assembled files.  Matching forward and reverse files should be identically named,</span>
-<span class="sd">        except for a &lt;forward&gt;/&lt;reverse&gt; suffix that indicates the read orientation.  Two suffix pairs are supported:</span>
-<span class="sd">        &#39;_forwards&#39; and &#39;_reverse&#39;,</span>
+<span class="sd">        except for a &lt;forward&gt;/&lt;reverse&gt; suffix that indicates the read orientation.  Two suffix conventions are</span>
+<span class="sd">        supported:</span>
+
+<span class="sd">        _forwards/_reverse</span>
+
 <span class="sd">        and</span>
-<span class="sd">        &#39;_R1&#39; and &#39;R2&#39;</span>
-<span class="sd">        Choose ONE suffix style and stick to it.</span>
-<span class="sd">        e.g. Sample_100_forwards.fq and Sample_100_reverse.fq will be assembled into Sample_100_assembled.fq.</span>
-<span class="sd">          Alternatively, Sample_100_R1.fq and Sample_100_R2.fq will be assembled into Sample_100_assembled.fq.</span>
-<span class="sd">          You can provide as many pairs of files as you wish as long as they follow exactly on of the above naming</span>
-<span class="sd">          conventions.  If a &#39;name&#39; parameter is provided, it will be used as a suffix for all assembled sequence files.</span>
+
+<span class="sd">        _R1/_R2</span>
+
+<span class="sd">        **Input**:</span>
+<span class="sd">            * Left Reads File(s)</span>
+<span class="sd">            * Right Reads File(s)</span>
+
+<span class="sd">        **Output**:</span>
+<span class="sd">            * Assembled Reads Files</span>
+
+<span class="sd">        **Notes**:</span>
+<span class="sd">            Choose ONE suffix style and stick to it!  Mixed suffixes are not supported.</span>
+<span class="sd">            e.g.</span>
+<span class="sd">            Sample_100_forwards.fq and Sample_100_reverse.fq will be assembled into Sample_100_assembled.fq.</span>
+<span class="sd">            Simmilarly, Sample_100_R1.fq and Sample_100_R2.fq will be assembled into Sample_100_assembled.fq.</span>
+<span class="sd">            However, Sample_100_forwards.fq and Sample_100_R2.fq are not guaranteed to be matched.</span>
+
+<span class="sd">            You can provide as many pairs of files as you wish as long as they follow exactly one of the above naming</span>
+<span class="sd">            conventions.  If a &#39;name&#39; parameter is provided, it will be used as a filename (not path) prefix for all</span>
+<span class="sd">            assembled sequence files.</span>
+
+<span class="sd">        **Example**</span>
+<span class="sd">            Assuming a forwards reads file named &quot;Data_R1.fq&quot;, and a reverse reads file &quot;Data_R2.fq&quot;.</span>
+
+<span class="sd">        ::</span>
+
+<span class="sd">            ./</span>
+<span class="sd">                Data_R1.fq</span>
+<span class="sd">                Data_R2.fq</span>
+
+<span class="sd">        ``$ python chewbacca.py assemble -n BALI -f Data_R1.fq  -r Data_R2.fq  -o rslt``</span>
+
+<span class="sd">        ::</span>
+
+<span class="sd">            rslt/</span>
+<span class="sd">                BALI_DATA.assembled.fq</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">supported_programs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Assemble_Program_Pear</span><span class="p">]</span>
     <span class="n">default_program</span> <span class="o">=</span> <span class="n">Assemble_Program_Pear</span>
