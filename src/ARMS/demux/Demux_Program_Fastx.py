@@ -51,10 +51,6 @@ class Demux_Program_Fastx(ChewbaccaProgram):
                   for input_, id_ in file_id_pairs], pool)
         printVerbose("Demuxed sequences.")
 
-        # gather output files and move them to their final destination
-        output_files = getInputFiles("*_splitOut_", ignore_empty_files=False)
-        bulk_move_to_dir(output_files, outdir)
-
         # Grab all the auxillary files
         aux_files = getInputFiles(outdir, "unmatched_*", ignore_empty_files=False)
         # make aux dir for extraneous files and move them there
