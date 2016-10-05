@@ -52,7 +52,7 @@ class Demux_Program_Fastx(ChewbaccaProgram):
         printVerbose("Demuxed sequences.")
 
         # gather output files and move them to their final destination
-        output_files = enumerateDir(".", "*_splitOut_", ignore_empty_files=False)
+        output_files = getInputFiles("*_splitOut_", ignore_empty_files=False)
         bulk_move_to_dir(output_files, outdir)
 
         # Grab all the auxillary files

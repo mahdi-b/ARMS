@@ -3,7 +3,8 @@ from classes.ChewbaccaCommand import *
 
 
 class Align_Clean_Command(ChewbaccaCommand):
-    """Cleans a set of alignments by removing gap characters and reference sequences from the file.
+    """Cleans aligned files by removing gap characters and reference sequences from the file.  Sequences passed to this
+        command should have previously been aligned.
     """
     supported_programs = [Align_Clean_Program_Macse]
     default_program = Align_Clean_Program_Macse
