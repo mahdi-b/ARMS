@@ -1,3 +1,5 @@
+from classes.Helpers import *
+
 
 def parseGroupsFileToDictOfCounts(groups_file):
     """Given a .groups file, returns a dictionary mapping each seed to the number of children it represents.
@@ -28,7 +30,7 @@ def parseGroupsFileToDict(groups_file, thing_to_map):
             children's names
     """
     groups = {}
-    print "Reading count file: %s" % groups_file
+    printVerbose("Reading count file: %s" % groups_file)
     # collect the seed names, and the children sequence names
     i = 0
     nb_lines = 0
@@ -47,6 +49,6 @@ def parseGroupsFileToDict(groups_file, thing_to_map):
             groups[seed] = len(children.split(" "))
 
         if nb_lines % 100000 == 0:
-            print "%s lines processed" % nb_lines
-    print "Done reading count file."
+            printVerbose("%s lines processed" % nb_lines)
+    printVerbose("Done reading count file.")
     return groups

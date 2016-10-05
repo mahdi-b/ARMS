@@ -1,8 +1,8 @@
 import os
 import sys
+from classes.Helpers import *
 from parse.parseGroupsFileToDict import parseGroupsFileToDictOfChilden
 from util.merge import merge_files
-
 
 def update_groups(old_groups_files, new_groups_files, out_dir, out_prefix):
     """Updates an old_groups file with the results of a new_groups file, and writes the results to a new groups file.
@@ -33,8 +33,8 @@ def update_groups(old_groups_files, new_groups_files, out_dir, out_prefix):
         print "\n***WARNING***: Received empty file lists.  Aborting group file update.  If you provided a groups file, \
               something went wrong.\n"
         return
-    print "Using %s and %s to generate updated groups file %s_updated.groups" % \
-          (old_groups_files[0], new_groups_files[0], out_prefix)
+    printVerbose("Using %s and %s to generate updated groups file %s_updated.groups" % \
+                     (old_groups_files[0], new_groups_files[0], out_prefix))
     old_groups_temp_file = "%s/temp_old_merged.groups" % out_dir
     new_groups_temp_file = "%s/temp_new_merged.groups" % out_dir
     output_file = "%s/%s_updated.groups" % (out_dir, out_prefix)
@@ -54,7 +54,7 @@ def update_groups(old_groups_files, new_groups_files, out_dir, out_prefix):
         for new_seed in new_keys:
             i += 1
             if i % 10000 == 0:
-                print "Processed %d / %d lines\n" % (i, total)
+                printVerbose("Processed %d / %d lines\n" % (i, total))
                 output.write(outstring)
                 outstring = ""
             my_old_children = []

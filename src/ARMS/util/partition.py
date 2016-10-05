@@ -1,6 +1,6 @@
 import sys
 from Bio import SeqIO
-
+from classes.Helpers import *
 
 def splitK(inputFasta, prefix, nbSeqsPerFile, filetype):
     mySeqs = SeqIO.parse(inputFasta, filetype)
@@ -18,7 +18,7 @@ def splitK(inputFasta, prefix, nbSeqsPerFile, filetype):
             chunk+=1
     if sequences:
         SeqIO.write(sequences, open("%s_part_%d.%s" % (str(prefix), chunk, filetype), 'w'), filetype)
-    print("Split %s into %d parts." % (inputFasta, (chunk + 1)))
+    printVerbose("Split %s into %d parts." % (inputFasta, (chunk + 1)))
 
 if __name__ == "__main__":
     if len(sys.argv) < 5:

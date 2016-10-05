@@ -2,6 +2,7 @@ import ConfigParser
 import logging
 import os
 import subprocess
+import sys
 from enum import Enum
 from classes.Helpers import printVerbose, helpValidate, debugPrint
 
@@ -71,7 +72,7 @@ class ProgramRunner(object):
         ProgramRunnerPrograms.JAVA: os.path.expanduser("java -jar")
     }
 
-    def __init__(self, program, params, conditions=None, custom_arg_string="", stdin="", stdout="", stderr=""):
+    def __init__(self, program, params, conditions=None, custom_arg_string=""):
         """Initalizes a ProgramRunner object.  Reads chewbacca.cfg and loads configuration settings, builds the command
         string, and configures stdIO pipes.
 
@@ -84,9 +85,6 @@ class ProgramRunner(object):
                                 program to execute.
         :param custom_arg_string: A string containing advanced command line parameters to pass to the called program.
                                 This string will be appended to the end of the normal commandline arguments.
-        :param stdin:       A handle to the stdin pipe for the command.  Defaults to stdin.
-        :param stdout:      A handle to the stdout pipe for the command.  Defaults to stdout.
-        :param stderr:      A hande to the stderr pipe for the command.  Defaults to stderr.
         :return             A list of output files to be moved to outdir.
         """
         if conditions is None:
@@ -98,9 +96,8 @@ class ProgramRunner(object):
         self.command = "%s %s" % (self.commandTemplates[program] % tuple(params), custom_arg_string)
         self.conditions = conditions
         self.extra_args = custom_arg_string
-        self.stdin = stdin
-        self.stdout = stdout
-        self.stderr = stderr
+        if not printVerbose.VERBOSE:
+            self.stdout = open(os.devnull, 'w')
 
     def validate_conditions(self, conditions):
         """Validates this program's conditions for execution.
@@ -128,14 +125,16 @@ class ProgramRunner(object):
     def run(self):
         """Validates conditions (or prints them for a dry run) and then executes the command.
         """
-
+        output = sys.stdout
         self.validate_conditions(self.conditions)
         if printVerbose.VERBOSE or self.run_dry:
             self.dry_run()
-
+        else:
+            output = open(os.devnull, 'w')
         # call and check_call are blocking, Popen is non-blocking
         debugPrint("Running " + self.command)
-        subprocess.check_call(os.path.expanduser(self.command), shell=True)
+
+        subprocess.check_call(os.path.expanduser(self.command), shell=True, stdout=output)
 
     def dry_run(self, dryValidate=True):
         """Prints the validation procedures that would be performed, and the commands that would be run in an actual
@@ -202,8 +201,8 @@ class ProgramRunner(object):
                                                     " " + self.program_paths[ProgramRunnerPrograms.TRIMMOMATIC] +
                                                     " SE -phred33 %s %s SLIDINGWINDOW:%d:%d MINLEN:%d",
             ProgramRunnerCommands.DEREP_VSEARCH: self.program_paths[ProgramRunnerPrograms.VSEARCH] +
-                                                    " --threads %d --derep_fulllength %s --sizeout --fasta_width 0 \
-                                                    --output %s -uc %s",
+                                                    " --threads %d --quiet --derep_fulllength %s --sizeout \
+                                                    --fasta_width 0 --output %s -uc %s",
             ProgramRunnerCommands.ALIGN_VSEARCH: self.program_paths[ProgramRunnerPrograms.VSEARCH] +
                                                     " --threads %d --usearch_global %s --db %s --id 0.9 --userfields \
                                                     query+target+id+alnlen+qcov --userout %s --alnout %s %s",

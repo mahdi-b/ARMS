@@ -1,7 +1,7 @@
 import operator
 import sys
 from Bio import SeqIO
-
+from classes.Helpers import *
 from parse.parseGroupsFileToDict import parseGroupsFileToDictOfCounts
 
 
@@ -28,11 +28,11 @@ def renameWithReplicantCounts(input_fasta, groups_file, output_fasta, filetype):
     seeds = []
     seedSizes = parseGroupsFileToDictOfCounts(groups_file)
 
-    print "Indexing reads"
+    printVerbose("Indexing reads")
     reads = SeqIO.index(input_fasta, filetype)
-    print "Done indexing reads"
+    printVerbose("Done indexing reads")
 
-    print "Renaming sequences"
+    printVerbose("Renaming sequences")
     for name, count in sorted(seedSizes.items(), key=operator.itemgetter(1), reverse=True):
         s = reads[name]
         s.id = "%s_%s" % (name, count)
@@ -44,7 +44,7 @@ def renameWithReplicantCounts(input_fasta, groups_file, output_fasta, filetype):
             seeds =[]
     # write the rest of the chunk
     SeqIO.write(seeds, open(output_fasta, 'a'), filetype)
-    print "Done renaming sequences"
+    printVerbose("Done renaming sequences")
     return output_fasta
 
 if __name__ == "__main__":
