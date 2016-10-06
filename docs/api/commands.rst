@@ -16,6 +16,11 @@ Demultiplexing by Barcode
 .. autoclass:: demux.Demux_Command.Demux_Command
    :members:
 
+Sequence Renaming
+-----------------
+.. autoclass:: rename.Rename_Command.Rename_Command
+   :members:
+
 Adapter Removal
 ---------------
 .. autoclass:: clean.Clean_Adapters_Command.Clean_Adapters_Command
@@ -51,10 +56,6 @@ File Cleaning
 .. autoclass:: util.Ungap_Command.Ungap_Command
    :members:
 
-Sequence Renaming
------------------
-.. autoclass:: rename.Rename_Command.Rename_Command
-   :members:
 
 Aligning Sequences
 ------------------

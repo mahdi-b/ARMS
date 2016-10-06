@@ -46,7 +46,7 @@ class Demux_Program_Fastx(ChewbaccaProgram):
         printVerbose("Demuxing sequences...")
         parallel(runProgramRunnerInstance,
                  [ProgramRunner(ProgramRunnerCommands.DEMUX_FASTX,
-                                [input_, barcodes, "%s/" % outdir, "_%d_splitOut.fastq" % id_],
+                                [input_, barcodes, "%s/" % outdir, "_%d_demux.fastq" % id_],
                                 {"exists": [input_, barcodes]}, extraargstring)
                   for input_, id_ in file_id_pairs], pool)
         printVerbose("Demuxed sequences.")

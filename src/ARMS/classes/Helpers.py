@@ -151,7 +151,7 @@ def strip_ixes(path):
     # name = re.sub(r'_part_\d+', '', name)
     name = file_name
     ixes=[ "_renamed", "_debarcoded", ".assembled", ".discarded", ".unassembled", "_cleaned", "_derepCount","_derep",
-           "_uc", "_splitOut", ".denovo.uchime", "_derepCount", "_uncount", "_counts", "_seeds", ".00.0_0.cor"]
+           "_uc", "_demux", ".denovo.uchime", "_derepCount", "_uncount", "_counts", "_seeds", ".00.0_0.cor"]
     for ix in ixes:
         name = name.replace(ix, "")
     return name

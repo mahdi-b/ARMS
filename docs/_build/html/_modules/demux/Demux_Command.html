@@ -52,8 +52,79 @@
 <div class="viewcode-block" id="Demux_Command"><a class="viewcode-back" href="../../api/commands.html#demux.Demux_Command.Demux_Command">[docs]</a><span class="k">class</span> <span class="nc">Demux_Command</span><span class="p">(</span><span class="n">ChewbaccaCommand</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Given a set of files, each file is assigned a file_ID#.  Each file is then split into separate child files where</span>
 <span class="sd">        each file holds only sequences belonging to a single sample.  These child files are named using the sample name</span>
-<span class="sd">        of the sequences it lists, and the file_ID# of the file it came from.  Demuxing is based on the nucleotide</span>
+<span class="sd">        for the sequences it lists, and the file_ID# of the file it came from.  Demuxing is based on the nucleotide</span>
 <span class="sd">        barcode prefixing each sequence.</span>
+
+<span class="sd">    **Inputs**:</span>
+<span class="sd">        * One or more fasta/fastq files to demux.</span>
+<span class="sd">        * A single :ref:`.barcodes file`</span>
+
+<span class="sd">    **Outputs**:</span>
+<span class="sd">        * &lt;sample_name&gt;_&lt;file_id#&gt;_ demux.&lt;ext&gt; file(s) - &lt;fasta/fastq&gt; files, containing all the sequences from file \</span>
+<span class="sd">            &lt;file_id#&gt;, which had a barcode corresponding to sample &lt;sample_name&gt;.</span>
+<span class="sd">        * unmatched_&lt;file_id#&gt;_ demux.&lt;ext&gt; file(s) - &lt;fasta/fastq&gt; files, containing sequences from file \</span>
+<span class="sd">            &lt;file_id#&gt;, whose barcode did not match any of those listed in the .barcodes file.</span>
+
+<span class="sd">    **Notes**:</span>
+<span class="sd">        * The assignment of ID# to file should be treated as an arbitrary process and should not used for record \</span>
+<span class="sd">            keeping.</span>
+<span class="sd">        * Each input file will generate its own unmatched_ file (if applicable).</span>
+
+<span class="sd">    **Example**:</span>
+
+<span class="sd">    ::</span>
+
+<span class="sd">        data/</span>
+
+<span class="sd">            Data1.fasta:</span>
+<span class="sd">                @M03292:26:000000000-AH6AG:1:1101:22127:1254</span>
+<span class="sd">                AGACGCAAAAAA</span>
+<span class="sd">                @M03292:26:000000000-AH6AG:1:1101:22127:1255</span>
+<span class="sd">                AGTGTAAAAAAT</span>
+
+
+<span class="sd">            Data2.fasta:</span>
+<span class="sd">                @M03292:26:000000000-AH6AG:1:1101:22127:1256</span>
+<span class="sd">                AGACGCAAAAAC</span>
+<span class="sd">                @M03292:26:000000000-AH6AG:1:1101:22127:1257</span>
+<span class="sd">                AGTGTAAAAAAG</span>
+<span class="sd">                @M03292:26:000000000-AH6AG:1:1101:22127:1258</span>
+<span class="sd">                CGTGTAAAAAAG</span>
+<span class="sd">        ./</span>
+
+<span class="sd">            Data.barcodes:</span>
+<span class="sd">                SampleA        AGACGC</span>
+<span class="sd">                SampleB        AGTGTA</span>
+
+<span class="sd">    ``$ python chewbacca.py demux_samples -i data/ -b Data.barcodes -o rslt``</span>
+
+<span class="sd">    Here, we see that Data1.fasta was assigned &#39;0&#39; as an ID#, while Data2.fasta was assigned &#39;1&#39; as an ID#.  Because \</span>
+<span class="sd">    both files had sequences from SampleA, those sequences from Data1.fasta  were written to SampleA_0_demux.fastq, \</span>
+<span class="sd">    and those sequences from Data2.fasta were written to SampleA_1_demux.fastq.  The same is true for SampleB.</span>
+
+<span class="sd">    ::</span>
+
+<span class="sd">        rslt/</span>
+<span class="sd">            SampleA_0_demux.fastq:</span>
+<span class="sd">                @M03292:26:000000000-AH6AG:1:1101:22127:1254</span>
+<span class="sd">                AGACGCAAAAAA</span>
+
+<span class="sd">            SampleB_0_demux.fastq:</span>
+<span class="sd">                @M03292:26:000000000-AH6AG:1:1101:22127:1255</span>
+<span class="sd">                AGTGTAAAAAAT</span>
+
+<span class="sd">            SampleA_1_demux.fastq:</span>
+<span class="sd">                @M03292:26:000000000-AH6AG:1:1101:22127:1256</span>
+<span class="sd">                AGACGCAAAAAC</span>
+
+<span class="sd">            SampleB_1_demux.fastq:</span>
+<span class="sd">                @M03292:26:000000000-AH6AG:1:1101:22127:1257</span>
+<span class="sd">                AGTGTAAAAAAG</span>
+
+<span class="sd">        rslt_aux/</span>
+<span class="sd">            unmatched_0_demux.fastq:</span>
+<span class="sd">                @M03292:26:000000000-AH6AG:1:1101:22127:1258</span>
+<span class="sd">                CGTGTAAAAAAG</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">supported_programs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Demux_Program_Fastx</span><span class="p">]</span>
     <span class="n">default_program</span> <span class="o">=</span> <span class="n">Demux_Program_Fastx</span>

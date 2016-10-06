@@ -148,16 +148,140 @@ assembled sequence files.</p>
 <dl class="class">
 <dt id="demux.Demux_Command.Demux_Command">
 <em class="property">class </em><code class="descclassname">demux.Demux_Command.</code><code class="descname">Demux_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/demux/Demux_Command.html#Demux_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#demux.Demux_Command.Demux_Command" title="Permalink to this definition">¶</a></dt>
-<dd><p>Given a set of files, each file is assigned a file_ID#.  Each file is then split into separate child files where
-each file holds only sequences belonging to a single sample.  These child files are named using the sample name
-of the sequences it lists, and the file_ID# of the file it came from.  Demuxing is based on the nucleotide
-barcode prefixing each sequence.</p>
+<dd><dl class="docutils">
+<dt>Given a set of files, each file is assigned a file_ID#.  Each file is then split into separate child files where</dt>
+<dd>each file holds only sequences belonging to a single sample.  These child files are named using the sample name
+for the sequences it lists, and the file_ID# of the file it came from.  Demuxing is based on the nucleotide
+barcode prefixing each sequence.</dd>
+<dt><strong>Inputs</strong>:</dt>
+<dd><ul class="first last simple">
+<li>One or more fasta/fastq files to demux.</li>
+<li>A single <span class="xref std std-ref">.barcodes file</span></li>
+</ul>
+</dd>
+<dt><strong>Outputs</strong>:</dt>
+<dd><ul class="first last simple">
+<li>&lt;sample_name&gt;_&lt;file_id#&gt;_ demux.&lt;ext&gt; file(s) - &lt;fasta/fastq&gt; files, containing all the sequences from file             &lt;file_id#&gt;, which had a barcode corresponding to sample &lt;sample_name&gt;.</li>
+<li>unmatched_&lt;file_id#&gt;_ demux.&lt;ext&gt; file(s) - &lt;fasta/fastq&gt; files, containing sequences from file             &lt;file_id#&gt;, whose barcode did not match any of those listed in the .barcodes file.</li>
+</ul>
+</dd>
+<dt><strong>Notes</strong>:</dt>
+<dd><ul class="first last simple">
+<li>The assignment of ID# to file should be treated as an arbitrary process and should not used for record             keeping.</li>
+<li>Each input file will generate its own <a href="#id1"><span class="problematic" id="id2">unmatched_</span></a> file (if applicable).</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Example</strong>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">data</span><span class="o">/</span>
+
+    <span class="n">Data1</span><span class="o">.</span><span class="n">fasta</span><span class="p">:</span>
+        <span class="nd">@M03292</span><span class="p">:</span><span class="mi">26</span><span class="p">:</span><span class="mi">000000000</span><span class="o">-</span><span class="n">AH6AG</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">1101</span><span class="p">:</span><span class="mi">22127</span><span class="p">:</span><span class="mi">1254</span>
+        <span class="n">AGACGCAAAAAA</span>
+        <span class="nd">@M03292</span><span class="p">:</span><span class="mi">26</span><span class="p">:</span><span class="mi">000000000</span><span class="o">-</span><span class="n">AH6AG</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">1101</span><span class="p">:</span><span class="mi">22127</span><span class="p">:</span><span class="mi">1255</span>
+        <span class="n">AGTGTAAAAAAT</span>
+
+
+    <span class="n">Data2</span><span class="o">.</span><span class="n">fasta</span><span class="p">:</span>
+        <span class="nd">@M03292</span><span class="p">:</span><span class="mi">26</span><span class="p">:</span><span class="mi">000000000</span><span class="o">-</span><span class="n">AH6AG</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">1101</span><span class="p">:</span><span class="mi">22127</span><span class="p">:</span><span class="mi">1256</span>
+        <span class="n">AGACGCAAAAAC</span>
+        <span class="nd">@M03292</span><span class="p">:</span><span class="mi">26</span><span class="p">:</span><span class="mi">000000000</span><span class="o">-</span><span class="n">AH6AG</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">1101</span><span class="p">:</span><span class="mi">22127</span><span class="p">:</span><span class="mi">1257</span>
+        <span class="n">AGTGTAAAAAAG</span>
+        <span class="nd">@M03292</span><span class="p">:</span><span class="mi">26</span><span class="p">:</span><span class="mi">000000000</span><span class="o">-</span><span class="n">AH6AG</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">1101</span><span class="p">:</span><span class="mi">22127</span><span class="p">:</span><span class="mi">1258</span>
+        <span class="n">CGTGTAAAAAAG</span>
+<span class="o">./</span>
+
+    <span class="n">Data</span><span class="o">.</span><span class="n">barcodes</span><span class="p">:</span>
+        <span class="n">SampleA</span>        <span class="n">AGACGC</span>
+        <span class="n">SampleB</span>        <span class="n">AGTGTA</span>
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">$</span> <span class="pre">python</span> <span class="pre">chewbacca.py</span> <span class="pre">demux_samples</span> <span class="pre">-i</span> <span class="pre">data/</span> <span class="pre">-b</span> <span class="pre">Data.barcodes</span> <span class="pre">-o</span> <span class="pre">rslt</span></code></p>
+<p>Here, we see that Data1.fasta was assigned &#8216;0&#8217; as an ID#, while Data2.fasta was assigned &#8216;1&#8217; as an ID#.  Because     both files had sequences from SampleA, those sequences from Data1.fasta  were written to SampleA_0_demux.fastq,     and those sequences from Data2.fasta were written to SampleA_1_demux.fastq.  The same is true for SampleB.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rslt</span><span class="o">/</span>
+    <span class="n">SampleA_0_demux</span><span class="o">.</span><span class="n">fastq</span><span class="p">:</span>
+        <span class="nd">@M03292</span><span class="p">:</span><span class="mi">26</span><span class="p">:</span><span class="mi">000000000</span><span class="o">-</span><span class="n">AH6AG</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">1101</span><span class="p">:</span><span class="mi">22127</span><span class="p">:</span><span class="mi">1254</span>
+        <span class="n">AGACGCAAAAAA</span>
+
+    <span class="n">SampleB_0_demux</span><span class="o">.</span><span class="n">fastq</span><span class="p">:</span>
+        <span class="nd">@M03292</span><span class="p">:</span><span class="mi">26</span><span class="p">:</span><span class="mi">000000000</span><span class="o">-</span><span class="n">AH6AG</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">1101</span><span class="p">:</span><span class="mi">22127</span><span class="p">:</span><span class="mi">1255</span>
+        <span class="n">AGTGTAAAAAAT</span>
+
+    <span class="n">SampleA_1_demux</span><span class="o">.</span><span class="n">fastq</span><span class="p">:</span>
+        <span class="nd">@M03292</span><span class="p">:</span><span class="mi">26</span><span class="p">:</span><span class="mi">000000000</span><span class="o">-</span><span class="n">AH6AG</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">1101</span><span class="p">:</span><span class="mi">22127</span><span class="p">:</span><span class="mi">1256</span>
+        <span class="n">AGACGCAAAAAC</span>
+
+    <span class="n">SampleB_1_demux</span><span class="o">.</span><span class="n">fastq</span><span class="p">:</span>
+        <span class="nd">@M03292</span><span class="p">:</span><span class="mi">26</span><span class="p">:</span><span class="mi">000000000</span><span class="o">-</span><span class="n">AH6AG</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">1101</span><span class="p">:</span><span class="mi">22127</span><span class="p">:</span><span class="mi">1257</span>
+        <span class="n">AGTGTAAAAAAG</span>
+
+<span class="n">rslt_aux</span><span class="o">/</span>
+    <span class="n">unmatched_0_demux</span><span class="o">.</span><span class="n">fastq</span><span class="p">:</span>
+        <span class="nd">@M03292</span><span class="p">:</span><span class="mi">26</span><span class="p">:</span><span class="mi">000000000</span><span class="o">-</span><span class="n">AH6AG</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">1101</span><span class="p">:</span><span class="mi">22127</span><span class="p">:</span><span class="mi">1258</span>
+        <span class="n">CGTGTAAAAAAG</span>
+</pre></div>
+</div>
 <dl class="attribute">
 <dt id="demux.Demux_Command.Demux_Command.default_program">
 <code class="descname">default_program</code><a class="headerlink" href="#demux.Demux_Command.Demux_Command.default_program" title="Permalink to this definition">¶</a></dt>
 <dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">Demux_Program_Fastx</span></code></p>
 </dd></dl>
 
+</dd></dl>
+
+</div>
+<div class="section" id="sequence-renaming">
+<h2>Sequence Renaming<a class="headerlink" href="#sequence-renaming" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="rename.Rename_Command.Rename_Command">
+<em class="property">class </em><code class="descclassname">rename.Rename_Command.</code><code class="descname">Rename_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rename/Rename_Command.html#Rename_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rename.Rename_Command.Rename_Command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Renames sequences in a file with their filename and a serial ID#.  Useful for simplifying complex naming systems into     human-readable sequence names.  In order to ensure the correct sample names are preserved, it is reccomended that     this command be run immediately after the <span class="xref std std-ref">Demux Command</span>.</p>
+<dl class="docutils">
+<dt><strong>Inputs</strong>:</dt>
+<dd><ul class="first last simple">
+<li>One or more fasta/fastq files to rename.</li>
+</ul>
+</dd>
+<dt><strong>Outputs</strong>:</dt>
+<dd><ul class="first last simple">
+<li>_renamed.&lt;ext&gt; file - A &lt;fasta/fastq&gt; file with the renamed sequences.</li>
+<li><span class="xref std std-ref">.samples file</span> - A two-column, tab-delimited mapping between new sequence names and their sample.</li>
+<li><span class="xref std std-ref">.mapping file</span> - A two-column, tab-delimited mapping between old sequence names and their new names.</li>
+</ul>
+</dd>
+<dt><strong>Notes</strong>:</dt>
+<dd><ul class="first last simple">
+<li>In order for the .samples file to correctly list the sample name of the sequences in a file, this command             should be run immediately after the Demux Command.</li>
+<li>Each input file will have a corresponding .samples, .mapping, and _renamed file.</li>
+<li>The .samples file is needed by downstream Chewbacca processes, (Building the OTU Table).</li>
+<li>The .mapping file is purely for user convenience and record-keeping.</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Example</strong>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">SampleA_0</span><span class="o">.</span><span class="n">fasta</span><span class="p">:</span>
+    <span class="nd">@M03292</span><span class="p">:</span><span class="mi">26</span><span class="p">:</span><span class="mi">000000000</span><span class="o">-</span><span class="n">AH6AG</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">1101</span><span class="p">:</span><span class="mi">22127</span><span class="p">:</span><span class="mi">1256</span>
+    <span class="n">AAAA</span>
+    <span class="nd">@M03292</span><span class="p">:</span><span class="mi">26</span><span class="p">:</span><span class="mi">000000000</span><span class="o">-</span><span class="n">AH6AG</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">1101</span><span class="p">:</span><span class="mi">22127</span><span class="p">:</span><span class="mi">1257</span>
+    <span class="n">AAAT</span>
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">$</span> <span class="pre">python</span> <span class="pre">chewbacca.py</span> <span class="pre">rename</span> <span class="pre">-i</span> <span class="pre">SampleA_0.fasta</span> <span class="pre">-o</span> <span class="pre">rslt</span></code></p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rslt</span><span class="o">/</span><span class="n">SampleA_0_renamed</span><span class="o">.</span><span class="n">fasta</span><span class="p">:</span>
+    <span class="nd">@SampleA_ID0</span>
+    <span class="n">AAAA</span>
+    <span class="nd">@SampleA_ID1</span>
+    <span class="n">AAAT</span>
+
+<span class="n">rslt_samples</span><span class="o">/</span><span class="n">SampleA_0_renamed</span><span class="o">.</span><span class="n">samples</span><span class="p">:</span>
+    <span class="n">SampleA_ID0</span> <span class="n">SampleA</span>
+    <span class="n">SampleA_ID1</span> <span class="n">SampleA</span>
+
+<span class="n">rslt_aux</span><span class="o">/</span><span class="n">SampleA_0_renamed</span><span class="o">.</span><span class="n">mapping</span><span class="p">:</span>
+    <span class="n">M03292</span><span class="p">:</span><span class="mi">26</span><span class="p">:</span><span class="mi">000000000</span><span class="o">-</span><span class="n">AH6AG</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">1101</span><span class="p">:</span><span class="mi">22127</span><span class="p">:</span><span class="mi">1256</span> <span class="n">SampleA_ID0</span>
+    <span class="n">M03292</span><span class="p">:</span><span class="mi">26</span><span class="p">:</span><span class="mi">000000000</span><span class="o">-</span><span class="n">AH6AG</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">1101</span><span class="p">:</span><span class="mi">22127</span><span class="p">:</span><span class="mi">1257</span> <span class="n">SampleA_ID1</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>
@@ -254,59 +378,6 @@ fasta-only operations.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="sequence-renaming">
-<h2>Sequence Renaming<a class="headerlink" href="#sequence-renaming" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="rename.Rename_Command.Rename_Command">
-<em class="property">class </em><code class="descclassname">rename.Rename_Command.</code><code class="descname">Rename_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rename/Rename_Command.html#Rename_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rename.Rename_Command.Rename_Command" title="Permalink to this definition">¶</a></dt>
-<dd><p>Renames sequences in a file with their filename and an ID#.  Useful for simplifying complex naming systems into     human-readable sequence names.</p>
-<dl class="docutils">
-<dt><strong>Inputs</strong>:</dt>
-<dd><ul class="first last simple">
-<li>One or more fasta/fastq files to rename.</li>
-</ul>
-</dd>
-<dt><strong>Outputs</strong>:</dt>
-<dd><ul class="first last simple">
-<li>_renamed.&lt;ext&gt; file - A fasta/fastq file with the renamed sequences.</li>
-<li><span class="xref std std-ref">.samples file</span> - A two-column, tab-delimited mapping between new sequence names and their sample.</li>
-<li><span class="xref std std-ref">.mapping file</span> - A two-column, tab-delimited mapping between old sequence names and their new names.</li>
-</ul>
-</dd>
-<dt><strong>Notes</strong>:</dt>
-<dd><ul class="first last simple">
-<li>In order for the .samples file to correctly list the sample name of the sequences in a file.</li>
-<li>Each input file will have a corresponding .samples, .mapping, and _renamed file.</li>
-</ul>
-</dd>
-</dl>
-<p><strong>Example</strong>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">SampleA_0</span><span class="o">.</span><span class="n">fasta</span><span class="p">:</span>
-    <span class="nd">@M03292</span><span class="p">:</span><span class="mi">26</span><span class="p">:</span><span class="mi">000000000</span><span class="o">-</span><span class="n">AH6AG</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">1101</span><span class="p">:</span><span class="mi">22127</span><span class="p">:</span><span class="mi">1256</span>
-    <span class="n">AAAA</span>
-    <span class="nd">@M03292</span><span class="p">:</span><span class="mi">26</span><span class="p">:</span><span class="mi">000000000</span><span class="o">-</span><span class="n">AH6AG</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">1101</span><span class="p">:</span><span class="mi">22127</span><span class="p">:</span><span class="mi">1257</span>
-    <span class="n">AAAT</span>
-</pre></div>
-</div>
-<p><code class="docutils literal"><span class="pre">$</span> <span class="pre">python</span> <span class="pre">chewbacca.py</span> <span class="pre">rename</span> <span class="pre">-i</span> <span class="pre">SampleA_0.fasta</span> <span class="pre">-o</span> <span class="pre">rslt</span></code></p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rslt</span><span class="o">/</span><span class="n">SampleA_0_renamed</span><span class="o">.</span><span class="n">fasta</span><span class="p">:</span>
-    <span class="nd">@SampleA_ID0</span>
-    <span class="n">AAAA</span>
-    <span class="nd">@SampleA_ID1</span>
-    <span class="n">AAAT</span>
-
-<span class="n">rslt_samples</span><span class="o">/</span><span class="n">SampleA_0_renamed</span><span class="o">.</span><span class="n">samples</span><span class="p">:</span>
-    <span class="n">SampleA_ID0</span> <span class="n">SampleA</span>
-    <span class="n">SampleA_ID1</span> <span class="n">SampleA</span>
-
-<span class="n">rslt_aux</span><span class="o">/</span><span class="n">SampleA_0_renamed</span><span class="o">.</span><span class="n">mapping</span><span class="p">:</span>
-    <span class="n">M03292</span><span class="p">:</span><span class="mi">26</span><span class="p">:</span><span class="mi">000000000</span><span class="o">-</span><span class="n">AH6AG</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">1101</span><span class="p">:</span><span class="mi">22127</span><span class="p">:</span><span class="mi">1256</span> <span class="n">SampleA_ID0</span>
-    <span class="n">M03292</span><span class="p">:</span><span class="mi">26</span><span class="p">:</span><span class="mi">000000000</span><span class="o">-</span><span class="n">AH6AG</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">1101</span><span class="p">:</span><span class="mi">22127</span><span class="p">:</span><span class="mi">1257</span> <span class="n">SampleA_ID1</span>
-</pre></div>
-</div>
-</dd></dl>
-
-</div>
 <div class="section" id="aligning-sequences">
 <h2>Aligning Sequences<a class="headerlink" href="#aligning-sequences" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
@@ -392,6 +463,7 @@ command should have previously been aligned.</p>
 <li><a class="reference internal" href="#error-correction">Error Correction</a></li>
 <li><a class="reference internal" href="#assembling-sequences">Assembling Sequences</a></li>
 <li><a class="reference internal" href="#demultiplexing-by-barcode">Demultiplexing by Barcode</a></li>
+<li><a class="reference internal" href="#sequence-renaming">Sequence Renaming</a></li>
 <li><a class="reference internal" href="#adapter-removal">Adapter Removal</a></li>
 <li><a class="reference internal" href="#quality-cleaning">Quality Cleaning</a></li>
 <li><a class="reference internal" href="#dereplication">Dereplication</a></li>
@@ -399,7 +471,6 @@ command should have previously been aligned.</p>
 <li><a class="reference internal" href="#file-merging">File Merging</a></li>
 <li><a class="reference internal" href="#file-conversion">File Conversion</a></li>
 <li><a class="reference internal" href="#file-cleaning">File Cleaning</a></li>
-<li><a class="reference internal" href="#sequence-renaming">Sequence Renaming</a></li>
 <li><a class="reference internal" href="#aligning-sequences">Aligning Sequences</a></li>
 <li><a class="reference internal" href="#alignment-cleaning">Alignment Cleaning</a></li>
 <li><a class="reference internal" href="#sequence-clustering">Sequence Clustering</a></li>
