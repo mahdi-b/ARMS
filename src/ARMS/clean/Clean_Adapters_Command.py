@@ -7,7 +7,7 @@ class Clean_Adapters_Command(ChewbaccaCommand):
         the following format: <BARCODE><ADAPTER><SEQUENCE><RC_ADAPTER>.  Valid ADAPTER sequences, and their
         reverse-complements (RC_ADAPTER) should be defined separately in a pair of fasta-formatted files.  Sequences
         passed to this command should have already been demultiplexed, as this process will remove the identifying
-        barcode sequences. 
+        barcode sequences.
     """
     supported_programs = [Clean_Adapters_Program_Flexbar]
     default_program = Clean_Adapters_Program_Flexbar

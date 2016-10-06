@@ -29,7 +29,6 @@ class Demux_Command(ChewbaccaCommand):
     ::
 
         data/
-
             Data1.fasta:
                 @M03292:26:000000000-AH6AG:1:1101:22127:1254
                 AGACGCAAAAAA
@@ -45,7 +44,6 @@ class Demux_Command(ChewbaccaCommand):
                 @M03292:26:000000000-AH6AG:1:1101:22127:1258
                 CGTGTAAAAAAG
         ./
-
             Data.barcodes:
                 SampleA        AGACGC
                 SampleB        AGTGTA
