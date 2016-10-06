@@ -53,8 +53,51 @@
 <span class="sd">        the following format: &lt;BARCODE&gt;&lt;ADAPTER&gt;&lt;SEQUENCE&gt;&lt;RC_ADAPTER&gt;.  Valid ADAPTER sequences, and their</span>
 <span class="sd">        reverse-complements (RC_ADAPTER) should be defined separately in a pair of fasta-formatted files.  Sequences</span>
 <span class="sd">        passed to this command should have already been demultiplexed, as this process will remove the identifying</span>
-<span class="sd">        barcode sequences. </span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">        barcode sequences.</span>
+
+<span class="sd">        **Inputs**:</span>
+<span class="sd">            * One or more fasta/fastq files to clean.</span>
+<span class="sd">            * A single :ref:`.adapters file`</span>
+<span class="sd">            * A single :ref:`.adaptersRC file`</span>
+
+<span class="sd">        **Outputs**:</span>
+<span class="sd">            * &lt;filename&gt;_debarcoded.&lt;ext&gt; file(s) - &lt;fasta/fastq&gt; files, containing sequences with their leading \</span>
+<span class="sd">                adapters, trailing adapters, and barcodes removed.</span>
+
+<span class="sd">        **Notes**:</span>
+<span class="sd">            * Be aware of the program-specific details around &#39;N&#39; nucleotide characters.</span>
+
+<span class="sd">        **Example**:</span>
+
+<span class="sd">        Given Data_ID#1 with  barcode=AGACGC:</span>
+
+<span class="sd">        ::</span>
+
+<span class="sd">            ./</span>
+<span class="sd">                Data.fasta:</span>
+<span class="sd">                    @Data_ID#1</span>
+<span class="sd">                    AGACGCGGWACWGGWTGAACWGTWTAYCCYCCATCGATCGATCGTGRTTYTTYGGNCAYCCNGARGTNTA</span>
+
+<span class="sd">                Data.adapters:</span>
+<span class="sd">                    &gt;1</span>
+<span class="sd">                    GGWACWGGWTGAACWGTWTAYCCYCC</span>
+
+<span class="sd">                Data.adaptersRC:</span>
+<span class="sd">                    &gt;first</span>
+<span class="sd">                    TGRTTYTTYGGNCAYCCNGARGTNTA</span>
+
+<span class="sd">        ``$ python chewbacca.py trim_adapters  -i Data.fasta -o rslt -a Data.adapters -arc Data.adapters_RC``</span>
+
+
+<span class="sd">        ::</span>
+
+<span class="sd">            rslt/</span>
+<span class="sd">                Data_debarcoded.fastq:</span>
+<span class="sd">                    @Data_ID#1</span>
+<span class="sd">                    ATCGATCGATCG</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+
     <span class="n">supported_programs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Clean_Adapters_Program_Flexbar</span><span class="p">]</span>
     <span class="n">default_program</span> <span class="o">=</span> <span class="n">Clean_Adapters_Program_Flexbar</span>
     <span class="n">command_name</span> <span class="o">=</span> <span class="s2">&quot;Clean Adapters&quot;</span></div>

@@ -52,6 +52,46 @@
     <span class="sd">&quot;&quot;&quot;A utility command that partitions a fasta/fastq file into  a set of files (of the same file format), with a \</span>
 <span class="sd">        user-specified (maximum) number of sequences per file.  Allows users to partition a large file into segments, \</span>
 <span class="sd">        and perform discrete operations in parallel over those segments.</span>
+
+<span class="sd">    **Inputs**:</span>
+<span class="sd">        * One or more fasta/fastq files to partition.</span>
+<span class="sd">        * C: An integer defining the maximum number of sequences per file</span>
+
+<span class="sd">    **Outputs**:</span>
+<span class="sd">        * &lt;filename&gt;_part_&lt;part_#&gt;.&lt;ext&gt; file(s) - &lt;fasta/fastq&gt; files, with at most C sequences per file.</span>
+
+<span class="sd">    **Example**:</span>
+
+<span class="sd">    ::</span>
+
+<span class="sd">        ./</span>
+<span class="sd">            Data.fq:</span>
+<span class="sd">                @Data_ID1</span>
+<span class="sd">                GATTTGGGG</span>
+<span class="sd">                +</span>
+<span class="sd">                !zzzzzzzzz</span>
+<span class="sd">                @Data_ID2</span>
+<span class="sd">                GATTTGGGG</span>
+<span class="sd">                +</span>
+<span class="sd">                !zzzzzzzzz</span>
+<span class="sd">                @Data_ID3</span>
+<span class="sd">                GATTTGGGG</span>
+<span class="sd">                +</span>
+<span class="sd">                !zzzzzzzzz</span>
+
+
+<span class="sd">    ``$ python chewbacca.py convert_fastq_to_fasta -i Data.fq -o rslt/``</span>
+
+<span class="sd">    ::</span>
+
+<span class="sd">        rslt/</span>
+<span class="sd">            Data.fasta:</span>
+<span class="sd">                @Data_ID1</span>
+<span class="sd">                GATTTGGGG</span>
+<span class="sd">                @Data_ID2</span>
+<span class="sd">                GATTTGGGG</span>
+<span class="sd">                @Data_ID3</span>
+<span class="sd">                GATTTGGGG</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">supported_programs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Partition_Program_Chewbacca</span><span class="p">]</span>
     <span class="n">default_program</span> <span class="o">=</span> <span class="n">Partition_Program_Chewbacca</span>

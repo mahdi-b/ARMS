@@ -50,7 +50,34 @@
 
 <div class="viewcode-block" id="Convert_Fastq_Fasta_Command"><a class="viewcode-back" href="../../api/commands.html#util.Convert_Fastq_Fasta_Command.Convert_Fastq_Fasta_Command">[docs]</a><span class="k">class</span> <span class="nc">Convert_Fastq_Fasta_Command</span><span class="p">(</span><span class="n">ChewbaccaCommand</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Converts a Fasta-formatted file to a FastQ-formatted file.  Useful for reducing data size and preparing for</span>
-<span class="sd">        fasta-only operations.&quot;&quot;&quot;</span>
+<span class="sd">        fasta-only operations.</span>
+
+<span class="sd">        **Inputs**:</span>
+<span class="sd">            * One or more fastq files to convert to fasta.</span>
+
+<span class="sd">        **Outputs**:</span>
+<span class="sd">            * &lt;filename&gt;.fasta file(s) - Converted fasta files.</span>
+
+<span class="sd">        **Example**:</span>
+
+<span class="sd">        ::</span>
+
+<span class="sd">            ./</span>
+<span class="sd">                Data.fasta:</span>
+<span class="sd">                    @Data_ID#1</span>
+<span class="sd">                    AGACGCGGWACWGGWTGAACWGTWTAYCCYCCATCGATCGATCGTGRTTYTTYGGNCAYCCNGARGTNTA</span>
+
+
+<span class="sd">        ``$ python chewbacca.py trim_adapters  -i Data.fasta -o rslt -a Data.adapters -arc Data.adapters_RC``</span>
+
+
+<span class="sd">        ::</span>
+
+<span class="sd">            rslt/</span>
+<span class="sd">                Data_debarcoded.fastq:</span>
+<span class="sd">                    @Data_ID#1</span>
+<span class="sd">                    ATCGATCGATCG</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">supported_programs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Convert_Fastq_Fasta_Program_Chewbacca</span><span class="p">]</span>
     <span class="n">default_program</span> <span class="o">=</span> <span class="n">Convert_Fastq_Fasta_Program_Chewbacca</span>
     <span class="n">command_name</span> <span class="o">=</span> <span class="s2">&quot;Convert Fastq to Fasta&quot;</span></div>

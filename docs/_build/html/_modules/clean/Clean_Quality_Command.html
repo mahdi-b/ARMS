@@ -52,8 +52,51 @@
 <div class="viewcode-block" id="Clean_Quality_Command"><a class="viewcode-back" href="../../api/commands.html#clean.Clean_Quality_Command.Clean_Quality_Command">[docs]</a><span class="k">class</span> <span class="nc">Clean_Quality_Command</span><span class="p">(</span><span class="n">ChewbaccaCommand</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Removes regions of low quality from fastq-formatted reads.  These regions are likely sources of error, and would</span>
 <span class="sd">        be detrimental to other analytical process.  Input sequences to this command should have already been</span>
-<span class="sd">        demultiplexed, and had their barcodes/adapters removed.  Otherwise, partial removal of these markers would be</span>
-<span class="sd">        difficult to detect and would likely cause errors down-stream.</span>
+<span class="sd">        demultiplexed, and had their barcodes/adapters removed.  Otherwise, the partial removal of these markers would</span>
+<span class="sd">        leave behind invalid fragments that would be difficult to detect and likely cause errors down-stream.</span>
+
+
+<span class="sd">        **Inputs**:</span>
+<span class="sd">            * One or more fastq files to clean.</span>
+
+<span class="sd">        **Outputs**:</span>
+<span class="sd">            * &lt;filename&gt;_cleaned.fastq file(s) - Fastq files, containing sequences with areas of low quality removed.</span>
+
+<span class="sd">        **Notes**:</span>
+<span class="sd">            * Be aware of the program-specific details around &#39;N&#39; nucleotide characters.</span>
+<span class="sd">            * Be aware of the program-specific defaults for minimum surviving sequence lengths.</span>
+
+<span class="sd">        **Example**:</span>
+
+<span class="sd">        ::</span>
+
+<span class="sd">            ./</span>
+<span class="sd">                Data.fasta:</span>
+<span class="sd">                    @Data_ID#1</span>
+<span class="sd">                    GATTTGGGGTTCAAAGCAGTATCGATCAAATAGTAAATCCATTTGTTCAACTCTTTACAG</span>
+<span class="sd">                    +</span>
+<span class="sd">                    !zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz%%%zzzz</span>
+
+<span class="sd">        The command below asks Chewbacca to trim away any section of length 3 NT in Data_ID#1 that has quality worse \</span>
+<span class="sd">            than 20, keeping the \</span>
+<span class="sd">            longer of the remaining ends.  If the remaining sequence at the end of this process is shorter than 15 NT, \</span>
+<span class="sd">            discard the whole sequence (these values are chosen for illustrative purposes).</span>
+
+<span class="sd">        ``$ python chewbacca.py clean_seqs -i Data.fasta -o rslt -m 15 -w 3 -q 20``</span>
+
+<span class="sd">        Note that the &#39;TTT&#39; subsequence has been cut, because its average quality (5) is less than the threshold (20). \</span>
+<span class="sd">        After this cut, the longest surviving subsequence (the subsequence to the left of the cut) was kept, and the \</span>
+<span class="sd">        shorter subsequence (to the right of the cut) was discarded.  Because the final sequence is longer than 15NT, \</span>
+<span class="sd">        it is kept and written to the output file.</span>
+
+<span class="sd">        ::</span>
+
+<span class="sd">            rslt/</span>
+<span class="sd">                Data_cleaned.fastq:</span>
+<span class="sd">                    @Data_ID#1</span>
+<span class="sd">                    GATTTGGGGTTCAAAGCAGTATCGATCAAATAGTAAATCCATTTGTTCAACTC</span>
+<span class="sd">                    +</span>
+<span class="sd">                    !zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">supported_programs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Clean_Quality_Program_Trimmomatic</span><span class="p">]</span>
     <span class="n">default_program</span> <span class="o">=</span> <span class="n">Clean_Quality_Program_Trimmomatic</span>

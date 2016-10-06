@@ -174,7 +174,6 @@ barcode prefixing each sequence.</dd>
 </dl>
 <p><strong>Example</strong>:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">data</span><span class="o">/</span>
-
     <span class="n">Data1</span><span class="o">.</span><span class="n">fasta</span><span class="p">:</span>
         <span class="nd">@M03292</span><span class="p">:</span><span class="mi">26</span><span class="p">:</span><span class="mi">000000000</span><span class="o">-</span><span class="n">AH6AG</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">1101</span><span class="p">:</span><span class="mi">22127</span><span class="p">:</span><span class="mi">1254</span>
         <span class="n">AGACGCAAAAAA</span>
@@ -190,7 +189,6 @@ barcode prefixing each sequence.</dd>
         <span class="nd">@M03292</span><span class="p">:</span><span class="mi">26</span><span class="p">:</span><span class="mi">000000000</span><span class="o">-</span><span class="n">AH6AG</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">1101</span><span class="p">:</span><span class="mi">22127</span><span class="p">:</span><span class="mi">1258</span>
         <span class="n">CGTGTAAAAAAG</span>
 <span class="o">./</span>
-
     <span class="n">Data</span><span class="o">.</span><span class="n">barcodes</span><span class="p">:</span>
         <span class="n">SampleA</span>        <span class="n">AGACGC</span>
         <span class="n">SampleB</span>        <span class="n">AGTGTA</span>
@@ -295,6 +293,48 @@ the following format: &lt;BARCODE&gt;&lt;ADAPTER&gt;&lt;SEQUENCE&gt;&lt;RC_ADAPT
 reverse-complements (RC_ADAPTER) should be defined separately in a pair of fasta-formatted files.  Sequences
 passed to this command should have already been demultiplexed, as this process will remove the identifying
 barcode sequences.</p>
+<dl class="docutils">
+<dt><strong>Inputs</strong>:</dt>
+<dd><ul class="first last simple">
+<li>One or more fasta/fastq files to clean.</li>
+<li>A single <span class="xref std std-ref">.adapters file</span></li>
+<li>A single <span class="xref std std-ref">.adaptersRC file</span></li>
+</ul>
+</dd>
+<dt><strong>Outputs</strong>:</dt>
+<dd><ul class="first last simple">
+<li>&lt;filename&gt;_debarcoded.&lt;ext&gt; file(s) - &lt;fasta/fastq&gt; files, containing sequences with their leading                 adapters, trailing adapters, and barcodes removed.</li>
+</ul>
+</dd>
+<dt><strong>Notes</strong>:</dt>
+<dd><ul class="first last simple">
+<li>Be aware of the program-specific details around &#8216;N&#8217; nucleotide characters.</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Example</strong>:</p>
+<p>Given Data_ID#1 with  barcode=AGACGC:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">./</span>
+    <span class="n">Data</span><span class="o">.</span><span class="n">fasta</span><span class="p">:</span>
+        <span class="nd">@Data_ID</span><span class="c1">#1</span>
+        <span class="n">AGACGCGGWACWGGWTGAACWGTWTAYCCYCCATCGATCGATCGTGRTTYTTYGGNCAYCCNGARGTNTA</span>
+
+    <span class="n">Data</span><span class="o">.</span><span class="n">adapters</span><span class="p">:</span>
+        <span class="o">&gt;</span><span class="mi">1</span>
+        <span class="n">GGWACWGGWTGAACWGTWTAYCCYCC</span>
+
+    <span class="n">Data</span><span class="o">.</span><span class="n">adaptersRC</span><span class="p">:</span>
+        <span class="o">&gt;</span><span class="n">first</span>
+        <span class="n">TGRTTYTTYGGNCAYCCNGARGTNTA</span>
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">$</span> <span class="pre">python</span> <span class="pre">chewbacca.py</span> <span class="pre">trim_adapters</span>&nbsp; <span class="pre">-i</span> <span class="pre">Data.fasta</span> <span class="pre">-o</span> <span class="pre">rslt</span> <span class="pre">-a</span> <span class="pre">Data.adapters</span> <span class="pre">-arc</span> <span class="pre">Data.adapters_RC</span></code></p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rslt</span><span class="o">/</span>
+    <span class="n">Data_debarcoded</span><span class="o">.</span><span class="n">fastq</span><span class="p">:</span>
+        <span class="nd">@Data_ID</span><span class="c1">#1</span>
+        <span class="n">ATCGATCGATCG</span>
+</pre></div>
+</div>
 <dl class="attribute">
 <dt id="clean.Clean_Adapters_Command.Clean_Adapters_Command.default_program">
 <code class="descname">default_program</code><a class="headerlink" href="#clean.Clean_Adapters_Command.Clean_Adapters_Command.default_program" title="Permalink to this definition">¶</a></dt>
@@ -311,14 +351,88 @@ barcode sequences.</p>
 <em class="property">class </em><code class="descclassname">clean.Clean_Quality_Command.</code><code class="descname">Clean_Quality_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clean/Clean_Quality_Command.html#Clean_Quality_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clean.Clean_Quality_Command.Clean_Quality_Command" title="Permalink to this definition">¶</a></dt>
 <dd><p>Removes regions of low quality from fastq-formatted reads.  These regions are likely sources of error, and would
 be detrimental to other analytical process.  Input sequences to this command should have already been
-demultiplexed, and had their barcodes/adapters removed.  Otherwise, partial removal of these markers would be
-difficult to detect and would likely cause errors down-stream.</p>
+demultiplexed, and had their barcodes/adapters removed.  Otherwise, the partial removal of these markers would
+leave behind invalid fragments that would be difficult to detect and likely cause errors down-stream.</p>
+<dl class="docutils">
+<dt><strong>Inputs</strong>:</dt>
+<dd><ul class="first last simple">
+<li>One or more fastq files to clean.</li>
+</ul>
+</dd>
+<dt><strong>Outputs</strong>:</dt>
+<dd><ul class="first last simple">
+<li>&lt;filename&gt;_cleaned.fastq file(s) - Fastq files, containing sequences with areas of low quality removed.</li>
+</ul>
+</dd>
+<dt><strong>Notes</strong>:</dt>
+<dd><ul class="first last simple">
+<li>Be aware of the program-specific details around &#8216;N&#8217; nucleotide characters.</li>
+<li>Be aware of the program-specific defaults for minimum surviving sequence lengths.</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Example</strong>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>./
+    Data.fasta:
+        @Data_ID#1
+        GATTTGGGGTTCAAAGCAGTATCGATCAAATAGTAAATCCATTTGTTCAACTCTTTACAG
+        +
+        !zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz%%%zzzz
+</pre></div>
+</div>
+<p>The command below asks Chewbacca to trim away any section of length 3 NT in Data_ID#1 that has quality worse             than 20, keeping the             longer of the remaining ends.  If the remaining sequence at the end of this process is shorter than 15 NT,             discard the whole sequence (these values are chosen for illustrative purposes).</p>
+<p><code class="docutils literal"><span class="pre">$</span> <span class="pre">python</span> <span class="pre">chewbacca.py</span> <span class="pre">clean_seqs</span> <span class="pre">-i</span> <span class="pre">Data.fasta</span> <span class="pre">-o</span> <span class="pre">rslt</span> <span class="pre">-m</span> <span class="pre">15</span> <span class="pre">-w</span> <span class="pre">3</span> <span class="pre">-q</span> <span class="pre">20</span></code></p>
+<p>Note that the &#8216;TTT&#8217; subsequence has been cut, because its average quality (5) is less than the threshold (20).         After this cut, the longest surviving subsequence (the subsequence to the left of the cut) was kept, and the         shorter subsequence (to the right of the cut) was discarded.  Because the final sequence is longer than 15NT,         it is kept and written to the output file.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>rslt/
+    Data_cleaned.fastq:
+        @Data_ID#1
+        GATTTGGGGTTCAAAGCAGTATCGATCAAATAGTAAATCCATTTGTTCAACTC
+        +
+        !zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+</pre></div>
+</div>
 <dl class="attribute">
 <dt id="clean.Clean_Quality_Command.Clean_Quality_Command.default_program">
 <code class="descname">default_program</code><a class="headerlink" href="#clean.Clean_Quality_Command.Clean_Quality_Command.default_program" title="Permalink to this definition">¶</a></dt>
 <dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">Clean_Quality_Program_Trimmomatic</span></code></p>
 </dd></dl>
 
+</dd></dl>
+
+</div>
+<div class="section" id="file-conversion">
+<h2>File Conversion<a class="headerlink" href="#file-conversion" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="util.Convert_Fastq_Fasta_Command.Convert_Fastq_Fasta_Command">
+<em class="property">class </em><code class="descclassname">util.Convert_Fastq_Fasta_Command.</code><code class="descname">Convert_Fastq_Fasta_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/util/Convert_Fastq_Fasta_Command.html#Convert_Fastq_Fasta_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#util.Convert_Fastq_Fasta_Command.Convert_Fastq_Fasta_Command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a Fasta-formatted file to a FastQ-formatted file.  Useful for reducing data size and preparing for
+fasta-only operations.</p>
+<dl class="docutils">
+<dt><strong>Inputs</strong>:</dt>
+<dd><ul class="first last simple">
+<li>One or more fastq files to convert to fasta.</li>
+</ul>
+</dd>
+<dt><strong>Outputs</strong>:</dt>
+<dd><ul class="first last simple">
+<li>&lt;filename&gt;.fasta file(s) - Converted fasta files.</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Example</strong>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">./</span>
+    <span class="n">Data</span><span class="o">.</span><span class="n">fasta</span><span class="p">:</span>
+        <span class="nd">@Data_ID</span><span class="c1">#1</span>
+        <span class="n">AGACGCGGWACWGGWTGAACWGTWTAYCCYCCATCGATCGATCGTGRTTYTTYGGNCAYCCNGARGTNTA</span>
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">$</span> <span class="pre">python</span> <span class="pre">chewbacca.py</span> <span class="pre">trim_adapters</span>&nbsp; <span class="pre">-i</span> <span class="pre">Data.fasta</span> <span class="pre">-o</span> <span class="pre">rslt</span> <span class="pre">-a</span> <span class="pre">Data.adapters</span> <span class="pre">-arc</span> <span class="pre">Data.adapters_RC</span></code></p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rslt</span><span class="o">/</span>
+    <span class="n">Data_debarcoded</span><span class="o">.</span><span class="n">fastq</span><span class="p">:</span>
+        <span class="nd">@Data_ID</span><span class="c1">#1</span>
+        <span class="n">ATCGATCGATCG</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>
@@ -347,6 +461,47 @@ that fasta file.</p>
 <dt id="util.Partition_Command.Partition_Command">
 <em class="property">class </em><code class="descclassname">util.Partition_Command.</code><code class="descname">Partition_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/util/Partition_Command.html#Partition_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#util.Partition_Command.Partition_Command" title="Permalink to this definition">¶</a></dt>
 <dd><p>A utility command that partitions a fasta/fastq file into  a set of files (of the same file format), with a         user-specified (maximum) number of sequences per file.  Allows users to partition a large file into segments,         and perform discrete operations in parallel over those segments.</p>
+<dl class="docutils">
+<dt><strong>Inputs</strong>:</dt>
+<dd><ul class="first last simple">
+<li>One or more fasta/fastq files to partition.</li>
+<li>C: An integer defining the maximum number of sequences per file</li>
+</ul>
+</dd>
+<dt><strong>Outputs</strong>:</dt>
+<dd><ul class="first last simple">
+<li>&lt;filename&gt;_part_&lt;part_#&gt;.&lt;ext&gt; file(s) - &lt;fasta/fastq&gt; files, with at most C sequences per file.</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Example</strong>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>./
+    Data.fq:
+        @Data_ID1
+        GATTTGGGG
+        +
+        !zzzzzzzzz
+        @Data_ID2
+        GATTTGGGG
+        +
+        !zzzzzzzzz
+        @Data_ID3
+        GATTTGGGG
+        +
+        !zzzzzzzzz
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">$</span> <span class="pre">python</span> <span class="pre">chewbacca.py</span> <span class="pre">convert_fastq_to_fasta</span> <span class="pre">-i</span> <span class="pre">Data.fq</span> <span class="pre">-o</span> <span class="pre">rslt/</span></code></p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rslt</span><span class="o">/</span>
+    <span class="n">Data</span><span class="o">.</span><span class="n">fasta</span><span class="p">:</span>
+        <span class="nd">@Data_ID1</span>
+        <span class="n">GATTTGGGG</span>
+        <span class="nd">@Data_ID2</span>
+        <span class="n">GATTTGGGG</span>
+        <span class="nd">@Data_ID3</span>
+        <span class="n">GATTTGGGG</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>
@@ -356,16 +511,53 @@ that fasta file.</p>
 <dt id="util.Merge_Command.Merge_Command">
 <em class="property">class </em><code class="descclassname">util.Merge_Command.</code><code class="descname">Merge_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/util/Merge_Command.html#Merge_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#util.Merge_Command.Merge_Command" title="Permalink to this definition">¶</a></dt>
 <dd><p>Concatenates multiple files into a single file.  Useful for combining the results of a parallel operation, or         when preparing for cross-sample derepication.</p>
-</dd></dl>
+<dl class="docutils">
+<dt><strong>Inputs</strong>:</dt>
+<dd><ul class="first last simple">
+<li>A set of files to merge.</li>
+<li>An &lt;output_filename&gt;.</li>
+<li>An &lt;output_prefix&gt;.</li>
+</ul>
+</dd>
+<dt><strong>Outputs</strong>:</dt>
+<dd><ul class="first last simple">
+<li>&lt;output_filename&gt;.&lt;output_prefix&gt; - A file consisting of all the input files concatenated together.</li>
+</ul>
+</dd>
+<dt><strong>Notes</strong>:</dt>
+<dd><ul class="first last simple">
+<li>The order of the content in the concatenated files is not guaranteed.</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Example</strong>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>targets/
+    Data.fq:
+        @Data_ID1
+        GATTTGGGG
+        +
+        !zzzzzzzzz
 
+    Data2.fa:
+        @Data_ID1
+        GATTTGGGG
+
+    Blah.txt
+        Hello World!
+</pre></div>
 </div>
-<div class="section" id="file-conversion">
-<h2>File Conversion<a class="headerlink" href="#file-conversion" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="util.Convert_Fastq_Fasta_Command.Convert_Fastq_Fasta_Command">
-<em class="property">class </em><code class="descclassname">util.Convert_Fastq_Fasta_Command.</code><code class="descname">Convert_Fastq_Fasta_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/util/Convert_Fastq_Fasta_Command.html#Convert_Fastq_Fasta_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#util.Convert_Fastq_Fasta_Command.Convert_Fastq_Fasta_Command" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts a Fasta-formatted file to a FastQ-formatted file.  Useful for reducing data size and preparing for
-fasta-only operations.</p>
+<p><code class="docutils literal"><span class="pre">$</span> <span class="pre">python</span> <span class="pre">chewbacca.py</span> <span class="pre">merge_files</span> <span class="pre">-i</span> <span class="pre">targets/</span> <span class="pre">-o</span> <span class="pre">rslt/</span> <span class="pre">-f</span> <span class="pre">txt</span> <span class="pre">-n</span> <span class="pre">Merged</span></code></p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>rslt/
+    Merged.txt:
+        Hello World!
+        @Data_ID1
+        GATTTGGGG
+        +
+        !zzzzzzzzz
+        @Data_ID1
+        GATTTGGGG
+</pre></div>
+</div>
 </dd></dl>
 
 </div>
@@ -466,10 +658,10 @@ command should have previously been aligned.</p>
 <li><a class="reference internal" href="#sequence-renaming">Sequence Renaming</a></li>
 <li><a class="reference internal" href="#adapter-removal">Adapter Removal</a></li>
 <li><a class="reference internal" href="#quality-cleaning">Quality Cleaning</a></li>
+<li><a class="reference internal" href="#file-conversion">File Conversion</a></li>
 <li><a class="reference internal" href="#dereplication">Dereplication</a></li>
 <li><a class="reference internal" href="#file-splitting">File Splitting</a></li>
 <li><a class="reference internal" href="#file-merging">File Merging</a></li>
-<li><a class="reference internal" href="#file-conversion">File Conversion</a></li>
 <li><a class="reference internal" href="#file-cleaning">File Cleaning</a></li>
 <li><a class="reference internal" href="#aligning-sequences">Aligning Sequences</a></li>
 <li><a class="reference internal" href="#alignment-cleaning">Alignment Cleaning</a></li>

@@ -51,7 +51,52 @@
 
 <div class="viewcode-block" id="Merge_Command"><a class="viewcode-back" href="../../api/commands.html#util.Merge_Command.Merge_Command">[docs]</a><span class="k">class</span> <span class="nc">Merge_Command</span><span class="p">(</span><span class="n">ChewbaccaCommand</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Concatenates multiple files into a single file.  Useful for combining the results of a parallel operation, or \</span>
-<span class="sd">        when preparing for cross-sample derepication.&quot;&quot;&quot;</span>
+<span class="sd">        when preparing for cross-sample derepication.</span>
+
+<span class="sd">    **Inputs**:</span>
+<span class="sd">        * A set of files to merge.</span>
+<span class="sd">        * An &lt;output_filename&gt;.</span>
+<span class="sd">        * An &lt;output_prefix&gt;.</span>
+
+<span class="sd">    **Outputs**:</span>
+<span class="sd">        * &lt;output_filename&gt;.&lt;output_prefix&gt; - A file consisting of all the input files concatenated together.</span>
+
+<span class="sd">    **Notes**:</span>
+<span class="sd">        * The order of the content in the concatenated files is not guaranteed.</span>
+
+<span class="sd">    **Example**:</span>
+
+<span class="sd">    ::</span>
+
+<span class="sd">        targets/</span>
+<span class="sd">            Data.fq:</span>
+<span class="sd">                @Data_ID1</span>
+<span class="sd">                GATTTGGGG</span>
+<span class="sd">                +</span>
+<span class="sd">                !zzzzzzzzz</span>
+
+<span class="sd">            Data2.fa:</span>
+<span class="sd">                @Data_ID1</span>
+<span class="sd">                GATTTGGGG</span>
+
+<span class="sd">            Blah.txt</span>
+<span class="sd">                Hello World!</span>
+
+
+<span class="sd">    ``$ python chewbacca.py merge_files -i targets/ -o rslt/ -f txt -n Merged``</span>
+
+<span class="sd">    ::</span>
+
+<span class="sd">        rslt/</span>
+<span class="sd">            Merged.txt:</span>
+<span class="sd">                Hello World!</span>
+<span class="sd">                @Data_ID1</span>
+<span class="sd">                GATTTGGGG</span>
+<span class="sd">                +</span>
+<span class="sd">                !zzzzzzzzz</span>
+<span class="sd">                @Data_ID1</span>
+<span class="sd">                GATTTGGGG</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">supported_programs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Merge_Program_Chewbacca</span><span class="p">]</span>
     <span class="n">default_program</span> <span class="o">=</span> <span class="n">Merge_Program_Chewbacca</span>
     <span class="n">command_name</span> <span class="o">=</span> <span class="s2">&quot;Merge&quot;</span></div>

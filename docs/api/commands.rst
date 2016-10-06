@@ -31,6 +31,11 @@ Quality Cleaning
 .. autoclass:: clean.Clean_Quality_Command.Clean_Quality_Command
    :members:
 
+File Conversion
+---------------
+.. autoclass:: util.Convert_Fastq_Fasta_Command.Convert_Fastq_Fasta_Command
+   :members:
+
 Dereplication
 -------------
 .. autoclass:: dereplicate.Dereplicate_Command.Dereplicate_Command
@@ -46,16 +51,10 @@ File Merging
 .. autoclass:: util.Merge_Command.Merge_Command
    :members:
 
-File Conversion
----------------
-.. autoclass:: util.Convert_Fastq_Fasta_Command.Convert_Fastq_Fasta_Command
-   :members:
-
 File Cleaning
 -------------
 .. autoclass:: util.Ungap_Command.Ungap_Command
    :members:
-
 
 Aligning Sequences
 ------------------
