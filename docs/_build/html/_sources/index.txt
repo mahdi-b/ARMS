@@ -3,22 +3,25 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Chewbacca's documentation!
-=====================================
+.. _index:
+
+Chewbacca - A Toolkit for COI Analysis
+=======================================
+Chewbacca is a bioinformatics toolkit for COI analysis, meshing commonly used programs together to create a framework for automated analysis.
+Chewbacca currently supports the cleaning, assembly, demultiplexing, clustering, Aligning, and Identification of COI data.
+Chewbacca also allows users to build OTU tables and visualize their data.
+
+
+:ref:`quick_start`
+
+
+FAQ
+
+:ref:`API`
 
 Contents:
-
+---------
 .. toctree::
 
-   intro
-   file_types/file_types
-   quick_start
-   api/index
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   file_types
 

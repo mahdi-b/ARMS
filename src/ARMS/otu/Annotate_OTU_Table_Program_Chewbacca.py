@@ -1,6 +1,5 @@
 from itertools import product
 from classes.ChewbaccaProgram import *
-from classes.ProgramRunner import *
 from annotate_OTU_table import annotateOTUtable
 from classes.Helpers import *
 
@@ -26,7 +25,8 @@ class Annotate_OTU_Table_Program_Chewbacca(ChewbaccaProgram):
         # if all the annotations files are empty, just copy over files.
         if len(annotations) == 0 and len(getInputFiles(annotation, ignore_empty_files=False)) > 0:
             pool = init_pool(min(len(matricies), processes))
-            print "**WARNING**: Annotation File is empty.  Skipping annotation and copying old OTU tables to output directory.\n"
+            print "**WARNING**: Annotation File is empty.  Skipping annotation and copying old OTU tables to output \
+                    directory.\n"
             parallel(runPythonInstance,[(copy_file, matrix, outdir) for matrix in matricies], pool)
         else:
             pool = init_pool(min(len(matricies) * len(annotations), processes))

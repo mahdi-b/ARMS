@@ -51,7 +51,8 @@
 
 <div class="viewcode-block" id="Rename_Command"><a class="viewcode-back" href="../../api/commands.html#rename.Rename_Command.Rename_Command">[docs]</a><span class="k">class</span> <span class="nc">Rename_Command</span><span class="p">(</span><span class="n">ChewbaccaCommand</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Renames sequences in a file with their filename and a serial ID#.  Useful for simplifying complex naming systems into \</span>
+<span class="sd">    Renames sequences in a file with their filename and a serial ID#.  Useful for simplifying complex naming systems \</span>
+<span class="sd">    into \</span>
 <span class="sd">    human-readable sequence names.  In order to ensure the correct sample names are preserved, it is reccomended that \</span>
 <span class="sd">    this command be run immediately after the :ref:`Demux Command`.</span>
 
@@ -60,8 +61,8 @@
 
 <span class="sd">    **Outputs**:</span>
 <span class="sd">        * _renamed.&lt;ext&gt; file - A &lt;fasta/fastq&gt; file with the renamed sequences.</span>
-<span class="sd">        * :ref:`.samples file` - A two-column, tab-delimited mapping between new sequence names and their sample.</span>
-<span class="sd">        * :ref:`.mapping file` - A two-column, tab-delimited mapping between old sequence names and their new names.</span>
+<span class="sd">        * .samples file - A :ref:`.samples`.</span>
+<span class="sd">        * .mapping file - A :ref:`.mapping`.</span>
 
 <span class="sd">    **Notes**:</span>
 <span class="sd">        * In order for the .samples file to correctly list the sample name of the sequences in a file, this command \</span>

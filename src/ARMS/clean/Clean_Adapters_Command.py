@@ -17,8 +17,8 @@ class Clean_Adapters_Command(ChewbaccaCommand):
 
         **Inputs**:
             * One or more fasta/fastq files to clean.
-            * A single :ref:`.adapters file`
-            * A single :ref:`.adaptersRC file`
+            * A single :ref:`.adapters` file
+            * A single :ref:`.adaptersRC` file
 
         **Outputs**:
             * <filename>_debarcoded.<ext> file(s) - <fasta/fastq> files, containing sequences with their leading \

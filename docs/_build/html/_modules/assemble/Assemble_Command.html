@@ -52,35 +52,39 @@
 <div class="viewcode-block" id="Assemble_Command"><a class="viewcode-back" href="../../api/commands.html#assemble.Assemble_Command.Assemble_Command">[docs]</a><span class="k">class</span> <span class="nc">Assemble_Command</span><span class="p">(</span><span class="n">ChewbaccaCommand</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Assembles reads from two (forward and reverse) fastq files/directories.  For a set of k forward read files, and k</span>
 <span class="sd">        reverse read files, return k assembled files.  Matching forward and reverse files should be identically named,</span>
-<span class="sd">        except for a &lt;forward&gt;/&lt;reverse&gt; suffix that indicates the read orientation.  Two suffix conventions are</span>
-<span class="sd">        supported:</span>
+<span class="sd">        except for a &lt;forward&gt;/&lt;reverse&gt; suffix that indicates the read orientation.  The two suffix conventions below \</span>
+<span class="sd">        are supported.  Choose ONE suffix style and stick to it!  Mixed suffixes are not supported.</span>
 
-<span class="sd">        _forwards/_reverse</span>
+<span class="sd">        ::</span>
 
-<span class="sd">        and</span>
+<span class="sd">            _forwards/_reverse</span>
+<span class="sd">            and</span>
+<span class="sd">            _R1/_R2</span>
 
-<span class="sd">        _R1/_R2</span>
 
 <span class="sd">        **Inputs**:</span>
-<span class="sd">            * Left Reads File(s)</span>
-<span class="sd">            * Right Reads File(s)</span>
+<span class="sd">            * fastq file(s) with left reads</span>
+<span class="sd">            * fastq file(s) with right reads</span>
 
 <span class="sd">        **Outputs**:</span>
-<span class="sd">            * Assembled Reads Files</span>
+<span class="sd">            * fastq File(s) with assembled reads</span>
 
 <span class="sd">        **Notes**:</span>
-<span class="sd">            Choose ONE suffix style and stick to it!  Mixed suffixes are not supported.</span>
-<span class="sd">            e.g.</span>
-<span class="sd">            Sample_100_forwards.fq and Sample_100_reverse.fq will be assembled into Sample_100_assembled.fq.</span>
-<span class="sd">            Simmilarly, Sample_100_R1.fq and Sample_100_R2.fq will be assembled into Sample_100_assembled.fq.</span>
-<span class="sd">            However, Sample_100_forwards.fq and Sample_100_R2.fq are not guaranteed to be matched.</span>
+<span class="sd">            * Choose ONE suffix style and stick to it!  Mixed suffixes are not supported. \</span>
+<span class="sd">                e.g.\</span>
+<span class="sd">                Sample_100_forwards.fq and Sample_100_reverse.fq will be assembled into Sample_100_assembled.fq. \</span>
+<span class="sd">                Simmilarly, Sample_100_R1.fq and Sample_100_R2.fq will be assembled into Sample_100_assembled.fq. \</span>
+<span class="sd">                However, Sample_100_forwards.fq and Sample_100_R2.fq are not guaranteed to be matched.</span>
 
-<span class="sd">            You can provide as many pairs of files as you wish as long as they follow exactly one of the above naming</span>
-<span class="sd">            conventions.  If a &#39;name&#39; parameter is provided, it will be used as a filename (not path) prefix for all</span>
-<span class="sd">            assembled sequence files.</span>
+<span class="sd">            * You can provide as many pairs of files as you wish as long as they follow exactly one of the above  \</span>
+<span class="sd">                naming \</span>
+<span class="sd">                conventions.  If a &#39;name&#39; parameter is provided, it will be used as a filename (not path) prefix for \</span>
+<span class="sd">                 all \</span>
+<span class="sd">                assembled sequence files.</span>
 
 <span class="sd">        **Example**</span>
-<span class="sd">            Assuming a forwards reads file named &quot;Data_R1.fq&quot;, and a reverse reads file &quot;Data_R2.fq&quot;.</span>
+
+<span class="sd">        Assuming a forwards read file &#39;Data_R1.fq&#39; and a reverse reads file &#39;Data_R1.fq&#39;,</span>
 
 <span class="sd">        ::</span>
 

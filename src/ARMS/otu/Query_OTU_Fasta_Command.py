@@ -12,8 +12,7 @@ class Query_OTU_Fasta_Command(ChewbaccaCommand):
             identifiers.
 
     **Outputs**:
-        * A `.tax file`- A five-column, tab-delimited output file listing the *'query', 'target', 'id', 'alnlen'*, and \
-            *'qcov'* fields from a blast6 output file. Maps input sequences to their identified Taxonomic names.
+        * A :ref:`.tax`.
 
     **Notes**:
         * The files 'bold.fna' and 'seq_lin.mapping' are included in the Chewbacca Docker distributions.

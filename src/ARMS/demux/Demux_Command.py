@@ -11,7 +11,7 @@ class Demux_Command(ChewbaccaCommand):
 
     **Inputs**:
         * One or more fasta/fastq files to demux.
-        * A single :ref:`.barcodes file`: A two-column, tab-delimited file mapping barcode sequences and sample names.
+        * A single .barcodes file: A :ref:`.barcodes`.
 
     **Outputs**:
         * <sample_name>_<file_id#>_ demux.<ext> file(s) - <fasta/fastq> files, containing all the sequences from file \
@@ -22,7 +22,7 @@ class Demux_Command(ChewbaccaCommand):
     **Notes**:
         * The assignment of ID# to file should be treated as an arbitrary process and should not used for record \
             keeping.
-        * Each input file will generate its own unmatched_ file (if applicable).
+        * Each input file will generate its own unmatched_* file (if applicable).
 
     **Example**:
 
@@ -51,7 +51,7 @@ class Demux_Command(ChewbaccaCommand):
     ``$ python chewbacca.py demux_samples -i data/ -b Data.barcodes -o rslt``
 
     Here, we see that Data1.fasta was assigned '0' as an ID#, while Data2.fasta was assigned '1' as an ID#.  Because \
-    both files had sequences from SampleA, those sequences from Data1.fasta  were written to SampleA_0_demux.fastq, \
+    both files had sequences from SampleA, the sequences from Data1.fasta  were written to SampleA_0_demux.fastq, \
     and those sequences from Data2.fasta were written to SampleA_1_demux.fastq.  The same is true for SampleB.
 
     ::

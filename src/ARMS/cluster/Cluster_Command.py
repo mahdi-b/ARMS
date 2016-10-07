@@ -13,14 +13,13 @@ class Cluster_Command(ChewbaccaCommand):
 
     **Inputs**:
         * One or more fasta files to cluster.
-        * Optional: :ref:`.groups file` - A list of representative names and the names of their replicant \
+        * Optional: :ref:`.groups` - A list of representative names and the names of their replicant \
                                             sequences.  You likely have one of these files if you've previously run a \
                                             clustering or dereplication command.
 
     **Outputs**:
         * \*.fasta file - A fasta file with unique sequences and their replication counts.
-        * _derep:ref:`.groups file` - A list of representative names and the names of their replicant \
-                                            sequences.
+        * \*.groups  - A :ref:`.groups`
 
     **Notes**:
         * The input fasta file(s) should have been dereplicated before clustering.

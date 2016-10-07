@@ -1,22 +1,13 @@
-.. Chewbacca documentation master file, created by
-   sphinx-quickstart on Tue Sep 13 17:53:16 2016.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. _`quick_start`:
 
-Welcome to Chewbacca's documentation!
-=====================================
+Quick Start
+===========
+1. Grab the Docker image version x.x.x.
+2. In your docker shell:
 
-Contents:
+::
 
-.. toctree::
-   :maxdepth: 2
-   intro
-   tutorial
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+	$ docker load -it chewbacca_vx.x.x
+	# cd ~/ARMS/testARMS
+	# bash commands.sh
 

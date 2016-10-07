@@ -7,18 +7,16 @@ class Build_OTU_Table_Command(ChewbaccaCommand):
     sample.
 
     **Inputs**:
-        * One or more :ref:`.samples file` - A two-column, tab-delimited mapping between sequence names and \
-                            their sample.
-        * One or more :ref:`.barcodes file` - A two-column, tab-delimited file mapping sample names and barcode \
-                            sequences.
-        * one or more :ref:`.groups file`- A list of representative names and the names of their replicant \
-                                            sequences.
+        * One or more :ref:`.samples`.
+        * One or more :ref:`.barcodes`.
+        * one or more :ref:`.groups`.
 
     **Outputs**:
         * matrix.txt - A tab-delimited table mapping OTUs (groups) to their abundance in each sample.
 
     **Notes**:
-        * A sequence name may not appear in more than one group file (or group for that matter!).
+        * A sequence name may not appear in more than one group file (or more than one line in a gropus file for \
+            that matter!).
 
     **Example**:
 

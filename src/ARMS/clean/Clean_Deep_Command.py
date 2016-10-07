@@ -8,8 +8,8 @@ class Clean_Deep_Command(ChewbaccaCommand):
     reduce the total number of alignments required, and reduce computation time.
 
     **Inputs**:
-        * One or more fasta/fastq files to deep clean.
-        * Nucleotide reference fasta.
+        * One or more fasta/fastq files to deep clean (nucleotide sequences).
+        * One reference fasta (nucleotide sequences).
 
     **Outputs**:
         * \*_AA - Amino Acid Alignment file, including reference sequences.

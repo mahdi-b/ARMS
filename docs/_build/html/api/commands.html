@@ -23,9 +23,7 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <link rel="top" title="Chewbacca 0.1 documentation" href="../index.html" />
-    <link rel="up" title="API" href="index.html" />
-    <link rel="prev" title="Core Classes" href="core_classes.html" /> 
+    <link rel="top" title="Chewbacca 0.1 documentation" href="../index.html" /> 
   </head>
   <body role="document">
     <div class="related" role="navigation" aria-label="related navigation">
@@ -34,11 +32,7 @@
         <li class="right" style="margin-right: 10px">
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="core_classes.html" title="Core Classes"
-             accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">Chewbacca 0.1 documentation</a> &raquo;</li>
-          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">API</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">Chewbacca 0.1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -50,32 +44,43 @@
   <div class="section" id="commands">
 <h1>Commands<a class="headerlink" href="#commands" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="error-correction">
-<h2>Error Correction<a class="headerlink" href="#error-correction" title="Permalink to this headline">¶</a></h2>
+<span id="preclean"></span><h2>Error Correction<a class="headerlink" href="#error-correction" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="preclean.Preclean_Command.Preclean_Command">
 <em class="property">class </em><code class="descclassname">preclean.Preclean_Command.</code><code class="descname">Preclean_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/preclean/Preclean_Command.html#Preclean_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preclean.Preclean_Command.Preclean_Command" title="Permalink to this definition">¶</a></dt>
 <dd><p>Attempts to fix minor sequencing errors caused by pyrosequencing.  By reducing errors prior to sequence assembly,
-a greater number of paired reads can be sucessfully assembled.</p>
+a greater number of paired reads can be sucessfully assembled.  Matching forward and reverse files should be         identically named,
+except for a &lt;forward&gt;/&lt;reverse&gt; suffix that indicates the read orientation.  The two suffix conventions below         are supported. Choose ONE suffix style and stick to it!  Mixed suffixes are not supported.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">_forwards</span><span class="o">/</span><span class="n">_reverse</span>
+<span class="ow">and</span>
+<span class="n">_R1</span><span class="o">/</span><span class="n">_R2</span>
+</pre></div>
+</div>
 <dl class="docutils">
 <dt><strong>Inputs</strong>:</dt>
 <dd><ul class="first last simple">
-<li>Left reads file(s).</li>
-<li>Right reads file(s).</li>
+<li>fastq file(s) with left reads .</li>
+<li>fastq file(s) with right reads .</li>
 </ul>
 </dd>
 <dt><strong>Outputs</strong>:</dt>
 <dd><ul class="first last simple">
-<li>&lt;Left reads file&gt;_corrected.fastq file(s).</li>
-<li>&lt;Right reads file&gt;_corrected.fastq file(s).</li>
+<li>&lt;left reads file&gt;_corrected.fastq file(s).</li>
+<li>&lt;right reads file&gt;_corrected.fastq file(s).</li>
 </ul>
 </dd>
 </dl>
 <p><strong>Example</strong>:</p>
 <p>Assuming a forwards read file &#8216;Data_R1.fq&#8217; and a reverse reads file &#8216;Data_R1.fq&#8217;,</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">./</span>
+    <span class="n">Data_R1</span><span class="o">.</span><span class="n">fq</span>
+    <span class="n">Data_R2</span><span class="o">.</span><span class="n">fq</span>
+</pre></div>
+</div>
 <p><code class="docutils literal"><span class="pre">$</span> <span class="pre">python</span> <span class="pre">chewbacca.py</span> <span class="pre">preclean</span> <span class="pre">-f</span> <span class="pre">Data_R1.fq</span> <span class="pre">-r</span> <span class="pre">Data_R2.fq</span>&nbsp; <span class="pre">-o</span> <span class="pre">rslt</span></code></p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rslt</span><span class="o">/</span>
     <span class="n">Data_R1_corrected</span><span class="o">.</span><span class="n">fq</span>
-    <span class="n">Data_R1_corrected</span><span class="o">.</span><span class="n">fq</span>
+    <span class="n">Data_R2_corrected</span><span class="o">.</span><span class="n">fq</span>
 </pre></div>
 </div>
 <dl class="attribute">
@@ -88,42 +93,39 @@ a greater number of paired reads can be sucessfully assembled.</p>
 
 </div>
 <div class="section" id="assembling-sequences">
-<h2>Assembling Sequences<a class="headerlink" href="#assembling-sequences" title="Permalink to this headline">¶</a></h2>
+<span id="assemble"></span><h2>Assembling Sequences<a class="headerlink" href="#assembling-sequences" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="assemble.Assemble_Command.Assemble_Command">
 <em class="property">class </em><code class="descclassname">assemble.Assemble_Command.</code><code class="descname">Assemble_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/assemble/Assemble_Command.html#Assemble_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#assemble.Assemble_Command.Assemble_Command" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assembles reads from two (forward and reverse) fastq files/directories.  For a set of k forward read files, and k
 reverse read files, return k assembled files.  Matching forward and reverse files should be identically named,
-except for a &lt;forward&gt;/&lt;reverse&gt; suffix that indicates the read orientation.  Two suffix conventions are
-supported:</p>
-<p>_forwards/_reverse</p>
-<p>and</p>
-<p>_R1/_R2</p>
+except for a &lt;forward&gt;/&lt;reverse&gt; suffix that indicates the read orientation.  The two suffix conventions below         are supported.  Choose ONE suffix style and stick to it!  Mixed suffixes are not supported.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">_forwards</span><span class="o">/</span><span class="n">_reverse</span>
+<span class="ow">and</span>
+<span class="n">_R1</span><span class="o">/</span><span class="n">_R2</span>
+</pre></div>
+</div>
 <dl class="docutils">
 <dt><strong>Inputs</strong>:</dt>
 <dd><ul class="first last simple">
-<li>Left Reads File(s)</li>
-<li>Right Reads File(s)</li>
+<li>fastq file(s) with left reads</li>
+<li>fastq file(s) with right reads</li>
 </ul>
 </dd>
 <dt><strong>Outputs</strong>:</dt>
 <dd><ul class="first last simple">
-<li>Assembled Reads Files</li>
+<li>fastq File(s) with assembled reads</li>
 </ul>
 </dd>
 <dt><strong>Notes</strong>:</dt>
-<dd><p class="first">Choose ONE suffix style and stick to it!  Mixed suffixes are not supported.
-e.g.
-Sample_100_forwards.fq and Sample_100_reverse.fq will be assembled into Sample_100_assembled.fq.
-Simmilarly, Sample_100_R1.fq and Sample_100_R2.fq will be assembled into Sample_100_assembled.fq.
-However, Sample_100_forwards.fq and Sample_100_R2.fq are not guaranteed to be matched.</p>
-<p class="last">You can provide as many pairs of files as you wish as long as they follow exactly one of the above naming
-conventions.  If a &#8216;name&#8217; parameter is provided, it will be used as a filename (not path) prefix for all
-assembled sequence files.</p>
+<dd><ul class="first last simple">
+<li>Choose ONE suffix style and stick to it!  Mixed suffixes are not supported.                 e.g.                Sample_100_forwards.fq and Sample_100_reverse.fq will be assembled into Sample_100_assembled.fq.                 Simmilarly, Sample_100_R1.fq and Sample_100_R2.fq will be assembled into Sample_100_assembled.fq.                 However, Sample_100_forwards.fq and Sample_100_R2.fq are not guaranteed to be matched.</li>
+<li>You can provide as many pairs of files as you wish as long as they follow exactly one of the above                  naming                 conventions.  If a &#8216;name&#8217; parameter is provided, it will be used as a filename (not path) prefix for                  all                 assembled sequence files.</li>
+</ul>
 </dd>
-<dt><strong>Example</strong></dt>
-<dd>Assuming a forwards reads file named &#8220;Data_R1.fq&#8221;, and a reverse reads file &#8220;Data_R2.fq&#8221;.</dd>
 </dl>
+<p><strong>Example</strong></p>
+<p>Assuming a forwards read file &#8216;Data_R1.fq&#8217; and a reverse reads file &#8216;Data_R1.fq&#8217;,</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">./</span>
     <span class="n">Data_R1</span><span class="o">.</span><span class="n">fq</span>
     <span class="n">Data_R2</span><span class="o">.</span><span class="n">fq</span>
@@ -144,7 +146,7 @@ assembled sequence files.</p>
 
 </div>
 <div class="section" id="demultiplexing-by-barcode">
-<h2>Demultiplexing by Barcode<a class="headerlink" href="#demultiplexing-by-barcode" title="Permalink to this headline">¶</a></h2>
+<span id="demux"></span><h2>Demultiplexing by Barcode<a class="headerlink" href="#demultiplexing-by-barcode" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="demux.Demux_Command.Demux_Command">
 <em class="property">class </em><code class="descclassname">demux.Demux_Command.</code><code class="descname">Demux_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/demux/Demux_Command.html#Demux_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#demux.Demux_Command.Demux_Command" title="Permalink to this definition">¶</a></dt>
@@ -156,7 +158,7 @@ barcode prefixing each sequence.</dd>
 <dt><strong>Inputs</strong>:</dt>
 <dd><ul class="first last simple">
 <li>One or more fasta/fastq files to demux.</li>
-<li>A single <span class="xref std std-ref">.barcodes file</span>: A two-column, tab-delimited file mapping barcode sequences and sample names.</li>
+<li>A single .barcodes file: A <a class="reference internal" href="../file_types.html#barcodes"><span class="std std-ref">Barcodes file</span></a>.</li>
 </ul>
 </dd>
 <dt><strong>Outputs</strong>:</dt>
@@ -168,7 +170,7 @@ barcode prefixing each sequence.</dd>
 <dt><strong>Notes</strong>:</dt>
 <dd><ul class="first last simple">
 <li>The assignment of ID# to file should be treated as an arbitrary process and should not used for record             keeping.</li>
-<li>Each input file will generate its own <a href="#id3"><span class="problematic" id="id4">unmatched_</span></a> file (if applicable).</li>
+<li>Each input file will generate its own unmatched_* file (if applicable).</li>
 </ul>
 </dd>
 </dl>
@@ -195,7 +197,7 @@ barcode prefixing each sequence.</dd>
 </pre></div>
 </div>
 <p><code class="docutils literal"><span class="pre">$</span> <span class="pre">python</span> <span class="pre">chewbacca.py</span> <span class="pre">demux_samples</span> <span class="pre">-i</span> <span class="pre">data/</span> <span class="pre">-b</span> <span class="pre">Data.barcodes</span> <span class="pre">-o</span> <span class="pre">rslt</span></code></p>
-<p>Here, we see that Data1.fasta was assigned &#8216;0&#8217; as an ID#, while Data2.fasta was assigned &#8216;1&#8217; as an ID#.  Because     both files had sequences from SampleA, those sequences from Data1.fasta  were written to SampleA_0_demux.fastq,     and those sequences from Data2.fasta were written to SampleA_1_demux.fastq.  The same is true for SampleB.</p>
+<p>Here, we see that Data1.fasta was assigned &#8216;0&#8217; as an ID#, while Data2.fasta was assigned &#8216;1&#8217; as an ID#.  Because     both files had sequences from SampleA, the sequences from Data1.fasta  were written to SampleA_0_demux.fastq,     and those sequences from Data2.fasta were written to SampleA_1_demux.fastq.  The same is true for SampleB.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rslt</span><span class="o">/</span>
     <span class="n">SampleA_0_demux</span><span class="o">.</span><span class="n">fastq</span><span class="p">:</span>
         <span class="nd">@M03292</span><span class="p">:</span><span class="mi">26</span><span class="p">:</span><span class="mi">000000000</span><span class="o">-</span><span class="n">AH6AG</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">1101</span><span class="p">:</span><span class="mi">22127</span><span class="p">:</span><span class="mi">1254</span>
@@ -229,11 +231,11 @@ barcode prefixing each sequence.</dd>
 
 </div>
 <div class="section" id="sequence-renaming">
-<h2>Sequence Renaming<a class="headerlink" href="#sequence-renaming" title="Permalink to this headline">¶</a></h2>
+<span id="rename"></span><h2>Sequence Renaming<a class="headerlink" href="#sequence-renaming" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="rename.Rename_Command.Rename_Command">
 <em class="property">class </em><code class="descclassname">rename.Rename_Command.</code><code class="descname">Rename_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rename/Rename_Command.html#Rename_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rename.Rename_Command.Rename_Command" title="Permalink to this definition">¶</a></dt>
-<dd><p>Renames sequences in a file with their filename and a serial ID#.  Useful for simplifying complex naming systems into     human-readable sequence names.  In order to ensure the correct sample names are preserved, it is reccomended that     this command be run immediately after the <span class="xref std std-ref">Demux Command</span>.</p>
+<dd><p>Renames sequences in a file with their filename and a serial ID#.  Useful for simplifying complex naming systems     into     human-readable sequence names.  In order to ensure the correct sample names are preserved, it is reccomended that     this command be run immediately after the <span class="xref std std-ref">Demux Command</span>.</p>
 <dl class="docutils">
 <dt><strong>Inputs</strong>:</dt>
 <dd><ul class="first last simple">
@@ -243,8 +245,8 @@ barcode prefixing each sequence.</dd>
 <dt><strong>Outputs</strong>:</dt>
 <dd><ul class="first last simple">
 <li>_renamed.&lt;ext&gt; file - A &lt;fasta/fastq&gt; file with the renamed sequences.</li>
-<li><span class="xref std std-ref">.samples file</span> - A two-column, tab-delimited mapping between new sequence names and their sample.</li>
-<li><span class="xref std std-ref">.mapping file</span> - A two-column, tab-delimited mapping between old sequence names and their new names.</li>
+<li>.samples file - A <a class="reference internal" href="../file_types.html#samples"><span class="std std-ref">Samples File</span></a>.</li>
+<li>.mapping file - A <a class="reference internal" href="../file_types.html#mapping"><span class="std std-ref">Mapping file</span></a>.</li>
 </ul>
 </dd>
 <dt><strong>Notes</strong>:</dt>
@@ -296,7 +298,7 @@ parameter to False.</p>
 
 </div>
 <div class="section" id="adapter-removal">
-<h2>Adapter Removal<a class="headerlink" href="#adapter-removal" title="Permalink to this headline">¶</a></h2>
+<span id="trim"></span><h2>Adapter Removal<a class="headerlink" href="#adapter-removal" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="clean.Clean_Adapters_Command.Clean_Adapters_Command">
 <em class="property">class </em><code class="descclassname">clean.Clean_Adapters_Command.</code><code class="descname">Clean_Adapters_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clean/Clean_Adapters_Command.html#Clean_Adapters_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clean.Clean_Adapters_Command.Clean_Adapters_Command" title="Permalink to this definition">¶</a></dt>
@@ -313,8 +315,8 @@ barcode sequences.</p>
 <dt><strong>Inputs</strong>:</dt>
 <dd><ul class="first last simple">
 <li>One or more fasta/fastq files to clean.</li>
-<li>A single <span class="xref std std-ref">.adapters file</span></li>
-<li>A single <span class="xref std std-ref">.adaptersRC file</span></li>
+<li>A single <a class="reference internal" href="../file_types.html#adapters"><span class="std std-ref">Adapters file</span></a> file</li>
+<li>A single <a class="reference internal" href="../file_types.html#adaptersrc"><span class="std std-ref">RC Adapters file</span></a> file</li>
 </ul>
 </dd>
 <dt><strong>Outputs</strong>:</dt>
@@ -361,7 +363,7 @@ barcode sequences.</p>
 
 </div>
 <div class="section" id="quality-cleaning">
-<h2>Quality Cleaning<a class="headerlink" href="#quality-cleaning" title="Permalink to this headline">¶</a></h2>
+<span id="trimmomatic"></span><h2>Quality Cleaning<a class="headerlink" href="#quality-cleaning" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="clean.Clean_Quality_Command.Clean_Quality_Command">
 <em class="property">class </em><code class="descclassname">clean.Clean_Quality_Command.</code><code class="descname">Clean_Quality_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clean/Clean_Quality_Command.html#Clean_Quality_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clean.Clean_Quality_Command.Clean_Quality_Command" title="Permalink to this definition">¶</a></dt>
@@ -417,7 +419,7 @@ leave behind invalid fragments that would be difficult to detect and likely caus
 
 </div>
 <div class="section" id="file-conversion">
-<h2>File Conversion<a class="headerlink" href="#file-conversion" title="Permalink to this headline">¶</a></h2>
+<span id="to-fasta"></span><h2>File Conversion<a class="headerlink" href="#file-conversion" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="util.Convert_Fastq_Fasta_Command.Convert_Fastq_Fasta_Command">
 <em class="property">class </em><code class="descclassname">util.Convert_Fastq_Fasta_Command.</code><code class="descname">Convert_Fastq_Fasta_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/util/Convert_Fastq_Fasta_Command.html#Convert_Fastq_Fasta_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#util.Convert_Fastq_Fasta_Command.Convert_Fastq_Fasta_Command" title="Permalink to this definition">¶</a></dt>
@@ -453,7 +455,7 @@ fasta-only operations.</p>
 
 </div>
 <div class="section" id="dereplication">
-<h2>Dereplication<a class="headerlink" href="#dereplication" title="Permalink to this headline">¶</a></h2>
+<span id="derep"></span><h2>Dereplication<a class="headerlink" href="#dereplication" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="dereplicate.Dereplicate_Command.Dereplicate_Command">
 <em class="property">class </em><code class="descclassname">dereplicate.Dereplicate_Command.</code><code class="descname">Dereplicate_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dereplicate/Dereplicate_Command.html#Dereplicate_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dereplicate.Dereplicate_Command.Dereplicate_Command" title="Permalink to this definition">¶</a></dt>
@@ -468,13 +470,13 @@ suffix of &#8216;_K&#8217; on the sequence name, where K is the replication coun
 <dt><strong>Inputs</strong>:</dt>
 <dd><ul class="first last simple">
 <li>One or more fasta files to dereplicate.</li>
-<li>Optional: <span class="xref std std-ref">.groups file</span> - A list of representative names and the names of their replicant                                             sequences.  You likely have one of these files if you&#8217;ve previously run a                                             clustering or dereplication command.</li>
+<li>Optional: <a class="reference internal" href="../file_types.html#groups"><span class="std std-ref">Groups File</span></a> - A list of representative names and the names of their replicant                                             sequences.  You likely have one of these files if you&#8217;ve previously run a                                             clustering or dereplication command.</li>
 </ul>
 </dd>
 <dt><strong>Outputs</strong>:</dt>
 <dd><ul class="first last simple">
 <li>_counts.fasta file - A fasta file with unique sequences and their replication counts.</li>
-<li>_derep:ref:<cite>.groups file</cite> - A list of representative names and the names of their replicant                                             sequences.</li>
+<li>_derep:ref:<cite>.groups</cite> - A list of representative names and the names of their replicant                                             sequences.</li>
 </ul>
 </dd>
 <dt><strong>Notes</strong>:</dt>
@@ -535,7 +537,7 @@ notice that seq4 had previous replication data (stored in the Data.groups file).
 
 </div>
 <div class="section" id="file-splitting">
-<h2>File Splitting<a class="headerlink" href="#file-splitting" title="Permalink to this headline">¶</a></h2>
+<span id="partition"></span><h2>File Splitting<a class="headerlink" href="#file-splitting" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="util.Partition_Command.Partition_Command">
 <em class="property">class </em><code class="descclassname">util.Partition_Command.</code><code class="descname">Partition_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/util/Partition_Command.html#Partition_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#util.Partition_Command.Partition_Command" title="Permalink to this definition">¶</a></dt>
@@ -585,7 +587,7 @@ notice that seq4 had previous replication data (stored in the Data.groups file).
 
 </div>
 <div class="section" id="file-merging">
-<h2>File Merging<a class="headerlink" href="#file-merging" title="Permalink to this headline">¶</a></h2>
+<span id="merge"></span><h2>File Merging<a class="headerlink" href="#file-merging" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="util.Merge_Command.Merge_Command">
 <em class="property">class </em><code class="descclassname">util.Merge_Command.</code><code class="descname">Merge_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/util/Merge_Command.html#Merge_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#util.Merge_Command.Merge_Command" title="Permalink to this definition">¶</a></dt>
@@ -641,7 +643,7 @@ notice that seq4 had previous replication data (stored in the Data.groups file).
 
 </div>
 <div class="section" id="file-cleaning">
-<h2>File Cleaning<a class="headerlink" href="#file-cleaning" title="Permalink to this headline">¶</a></h2>
+<span id="ungap"></span><h2>File Cleaning<a class="headerlink" href="#file-cleaning" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="util.Ungap_Command.Ungap_Command">
 <em class="property">class </em><code class="descclassname">util.Ungap_Command.</code><code class="descname">Ungap_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/util/Ungap_Command.html#Ungap_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#util.Ungap_Command.Ungap_Command" title="Permalink to this definition">¶</a></dt>
@@ -675,7 +677,7 @@ notice that seq4 had previous replication data (stored in the Data.groups file).
 
 </div>
 <div class="section" id="deep-cleaning">
-<h2>Deep Cleaning<a class="headerlink" href="#deep-cleaning" title="Permalink to this headline">¶</a></h2>
+<span id="macse"></span><h2>Deep Cleaning<a class="headerlink" href="#deep-cleaning" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="clean.Clean_Deep_Command.Clean_Deep_Command">
 <em class="property">class </em><code class="descclassname">clean.Clean_Deep_Command.</code><code class="descname">Clean_Deep_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clean/Clean_Deep_Command.html#Clean_Deep_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clean.Clean_Deep_Command.Clean_Deep_Command" title="Permalink to this definition">¶</a></dt>
@@ -685,8 +687,8 @@ reduce the total number of alignments required, and reduce computation time.</p>
 <dl class="docutils">
 <dt><strong>Inputs</strong>:</dt>
 <dd><ul class="first last simple">
-<li>One or more fasta/fastq files to deep clean.</li>
-<li>Nucleotide reference fasta.</li>
+<li>One or more fasta/fastq files to deep clean (nucleotide sequences).</li>
+<li>One reference fasta (nucleotide sequences).</li>
 </ul>
 </dd>
 <dt><strong>Outputs</strong>:</dt>
@@ -724,7 +726,7 @@ reduce the total number of alignments required, and reduce computation time.</p>
 
 </div>
 <div class="section" id="deep-cleaning-repair">
-<h2>Deep Cleaning Repair<a class="headerlink" href="#deep-cleaning-repair" title="Permalink to this headline">¶</a></h2>
+<span id="macse-clean"></span><h2>Deep Cleaning Repair<a class="headerlink" href="#deep-cleaning-repair" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="clean.Clean_Deep_Repair_Command.Clean_Deep_Repair_Command">
 <em class="property">class </em><code class="descclassname">clean.Clean_Deep_Repair_Command.</code><code class="descname">Clean_Deep_Repair_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clean/Clean_Deep_Repair_Command.html#Clean_Deep_Repair_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clean.Clean_Deep_Repair_Command.Clean_Deep_Repair_Command" title="Permalink to this definition">¶</a></dt>
@@ -748,7 +750,7 @@ reduce the total number of alignments required, and reduce computation time.</p>
 </dd>
 <dt><strong>Notes</strong>:</dt>
 <dd><ul class="first last simple">
-<li>A single <a href="#id1"><span class="problematic" id="id2">*</span></a>_MERGED.fasta is generated regardless of the number of input files.</li>
+<li>A single *_MERGED.fasta is generated regardless of the number of input files.</li>
 </ul>
 </dd>
 </dl>
@@ -778,7 +780,7 @@ reduce the total number of alignments required, and reduce computation time.</p>
 
 </div>
 <div class="section" id="sequence-clustering">
-<h2>Sequence Clustering<a class="headerlink" href="#sequence-clustering" title="Permalink to this headline">¶</a></h2>
+<span id="cluster"></span><h2>Sequence Clustering<a class="headerlink" href="#sequence-clustering" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="cluster.Cluster_Command.Cluster_Command">
 <em class="property">class </em><code class="descclassname">cluster.Cluster_Command.</code><code class="descname">Cluster_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cluster/Cluster_Command.html#Cluster_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cluster.Cluster_Command.Cluster_Command" title="Permalink to this definition">¶</a></dt>
@@ -790,13 +792,13 @@ replication data from previous commands.  If a .groups file is supplied, only on
 <dt><strong>Inputs</strong>:</dt>
 <dd><ul class="first last simple">
 <li>One or more fasta files to cluster.</li>
-<li>Optional: <span class="xref std std-ref">.groups file</span> - A list of representative names and the names of their replicant                                             sequences.  You likely have one of these files if you&#8217;ve previously run a                                             clustering or dereplication command.</li>
+<li>Optional: <a class="reference internal" href="../file_types.html#groups"><span class="std std-ref">Groups File</span></a> - A list of representative names and the names of their replicant                                             sequences.  You likely have one of these files if you&#8217;ve previously run a                                             clustering or dereplication command.</li>
 </ul>
 </dd>
 <dt><strong>Outputs</strong>:</dt>
 <dd><ul class="first last simple">
 <li>*.fasta file - A fasta file with unique sequences and their replication counts.</li>
-<li>_derep:ref:<cite>.groups file</cite> - A list of representative names and the names of their replicant                                             sequences.</li>
+<li>*.groups  - A <a class="reference internal" href="../file_types.html#groups"><span class="std std-ref">Groups File</span></a></li>
 </ul>
 </dd>
 <dt><strong>Notes</strong>:</dt>
@@ -849,7 +851,7 @@ replication data from previous commands.  If a .groups file is supplied, only on
 
 </div>
 <div class="section" id="otu-table-construction">
-<h2>OTU Table Construction<a class="headerlink" href="#otu-table-construction" title="Permalink to this headline">¶</a></h2>
+<span id="build-otu"></span><h2>OTU Table Construction<a class="headerlink" href="#otu-table-construction" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="otu.Build_OTU_Table_Command.Build_OTU_Table_Command">
 <em class="property">class </em><code class="descclassname">otu.Build_OTU_Table_Command.</code><code class="descname">Build_OTU_Table_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/otu/Build_OTU_Table_Command.html#Build_OTU_Table_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#otu.Build_OTU_Table_Command.Build_OTU_Table_Command" title="Permalink to this definition">¶</a></dt>
@@ -858,9 +860,9 @@ sample.</p>
 <dl class="docutils">
 <dt><strong>Inputs</strong>:</dt>
 <dd><ul class="first last simple">
-<li>One or more <span class="xref std std-ref">.samples file</span> - A two-column, tab-delimited mapping between sequence names and                             their sample.</li>
-<li>One or more <span class="xref std std-ref">.barcodes file</span> - A two-column, tab-delimited file mapping sample names and barcode                             sequences.</li>
-<li>one or more <span class="xref std std-ref">.groups file</span>- A list of representative names and the names of their replicant                                             sequences.</li>
+<li>One or more <a class="reference internal" href="../file_types.html#samples"><span class="std std-ref">Samples File</span></a>.</li>
+<li>One or more <a class="reference internal" href="../file_types.html#barcodes"><span class="std std-ref">Barcodes file</span></a>.</li>
+<li>one or more <a class="reference internal" href="../file_types.html#groups"><span class="std std-ref">Groups File</span></a>.</li>
 </ul>
 </dd>
 <dt><strong>Outputs</strong>:</dt>
@@ -870,7 +872,7 @@ sample.</p>
 </dd>
 <dt><strong>Notes</strong>:</dt>
 <dd><ul class="first last simple">
-<li>A sequence name may not appear in more than one group file (or group for that matter!).</li>
+<li>A sequence name may not appear in more than one group file (or more than one line in a gropus file for             that matter!).</li>
 </ul>
 </dd>
 </dl>
@@ -908,7 +910,7 @@ sample.</p>
 
 </div>
 <div class="section" id="otu-identification">
-<h2>OTU Identification<a class="headerlink" href="#otu-identification" title="Permalink to this headline">¶</a></h2>
+<span id="id-otu"></span><h2>OTU Identification<a class="headerlink" href="#otu-identification" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="otu.Query_OTU_DB_Command.Query_OTU_DB_Command">
 <em class="property">class </em><code class="descclassname">otu.Query_OTU_DB_Command.</code><code class="descname">Query_OTU_DB_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/otu/Query_OTU_DB_Command.html#Query_OTU_DB_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#otu.Query_OTU_DB_Command.Query_OTU_DB_Command" title="Permalink to this definition">¶</a></dt>
@@ -923,7 +925,7 @@ sample.</p>
 </dd>
 <dt><strong>Outputs</strong>:</dt>
 <dd><ul class="first last simple">
-<li>A <cite>.tax file</cite>- A five-column, tab-delimited output file listing the &#8216;query&#8217;, &#8216;target&#8217;, &#8216;id&#8217;, &#8216;alnlen&#8217;, and             &#8216;qcov&#8217; fields from a blast6 output file. Maps input sequences to their identified Taxonomic names.</li>
+<li>A <a class="reference internal" href="../file_types.html#tax"><span class="std std-ref">Tax file</span></a>.</li>
 </ul>
 </dd>
 <dt><strong>Notes</strong>:</dt>
@@ -974,7 +976,7 @@ sample.</p>
 </dd>
 <dt><strong>Outputs</strong>:</dt>
 <dd><ul class="first last simple">
-<li>A <cite>.tax file</cite>- A five-column, tab-delimited output file listing the <em>&#8216;query&#8217;, &#8216;target&#8217;, &#8216;id&#8217;, &#8216;alnlen&#8217;</em>, and             <em>&#8216;qcov&#8217;</em> fields from a blast6 output file. Maps input sequences to their identified Taxonomic names.</li>
+<li>A <a class="reference internal" href="../file_types.html#tax"><span class="std std-ref">Tax file</span></a>.</li>
 </ul>
 </dd>
 <dt><strong>Notes</strong>:</dt>
@@ -1017,7 +1019,7 @@ sample.</p>
 
 </div>
 <div class="section" id="otu-annotation">
-<h2>OTU Annotation<a class="headerlink" href="#otu-annotation" title="Permalink to this headline">¶</a></h2>
+<span id="annotate-otu"></span><h2>OTU Annotation<a class="headerlink" href="#otu-annotation" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="otu.Annotate_OTU_Table_Command.Annotate_OTU_Table_Command">
 <em class="property">class </em><code class="descclassname">otu.Annotate_OTU_Table_Command.</code><code class="descname">Annotate_OTU_Table_Command</code><span class="sig-paren">(</span><em>args_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/otu/Annotate_OTU_Table_Command.html#Annotate_OTU_Table_Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#otu.Annotate_OTU_Table_Command.Annotate_OTU_Table_Command" title="Permalink to this definition">¶</a></dt>
@@ -1027,14 +1029,14 @@ sample.</p>
 <dt><strong>Inputs</strong>:</dt>
 <dd><blockquote class="first">
 <div><ul class="simple">
-<li>An <span class="xref std std-ref">OTU table</span> to annotate.</li>
-<li>One or more <span class="xref std std-ref">.tax</span> to read annotations from.</li>
+<li>An <a class="reference internal" href="../file_types.html#otu-table"><span class="std std-ref">OTU Table</span></a> to annotate.</li>
+<li>One or more <a class="reference internal" href="../file_types.html#tax"><span class="std std-ref">Tax file</span></a> files to read annotations from.</li>
 </ul>
 </div></blockquote>
 <dl class="docutils">
 <dt><strong>Outputs</strong>:</dt>
 <dd><ul class="first last simple">
-<li>An OTU table with sequence names replaced by taxonomic names in the input .tax file.</li>
+<li>An <a class="reference internal" href="../file_types.html#otu-table"><span class="std std-ref">OTU Table</span></a> with sequence names replaced by taxonomic names in the input .tax file.</li>
 </ul>
 </dd>
 <dt><strong>Notes</strong>:</dt>
@@ -1099,9 +1101,6 @@ sample.</p>
 </li>
 </ul>
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="core_classes.html"
-                        title="previous chapter">Core Classes</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -1129,11 +1128,7 @@ sample.</p>
         <li class="right" style="margin-right: 10px">
           <a href="../genindex.html" title="General Index"
              >index</a></li>
-        <li class="right" >
-          <a href="core_classes.html" title="Core Classes"
-             >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">Chewbacca 0.1 documentation</a> &raquo;</li>
-          <li class="nav-item nav-item-1"><a href="index.html" >API</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">Chewbacca 0.1 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

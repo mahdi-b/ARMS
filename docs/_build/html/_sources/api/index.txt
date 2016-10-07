@@ -1,3 +1,5 @@
+.. _`API`:
+
 API
 ===
 .. toctree::

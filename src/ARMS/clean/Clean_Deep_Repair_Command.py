@@ -18,7 +18,7 @@ class Clean_Deep_Repair_Command(ChewbaccaCommand):
         * \*_MERGED.fasta - A clean fasta file with all the surviving sequences from deep cleaning.
 
     **Notes**:
-        * A single *_MERGED.fasta is generated regardless of the number of input files.
+        * A single \*_MERGED.fasta is generated regardless of the number of input files.
 
     **Example**:
 

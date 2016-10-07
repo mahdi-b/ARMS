@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Welcome to Chewbacca’s documentation! &mdash; Chewbacca 0.1 documentation</title>
+    <title>Chewbacca - A Toolkit for COI Analysis &mdash; Chewbacca 0.1 documentation</title>
     
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="Chewbacca 0.1 documentation" href="#" />
-    <link rel="next" title="Intro" href="intro.html" /> 
+    <link rel="next" title="File Types" href="file_types.html" /> 
   </head>
   <body role="document">
     <div class="related" role="navigation" aria-label="related navigation">
@@ -34,7 +34,7 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="intro.html" title="Intro"
+          <a href="file_types.html" title="File Types"
              accesskey="N">next</a> |</li>
         <li class="nav-item nav-item-0"><a href="#">Chewbacca 0.1 documentation</a> &raquo;</li> 
       </ul>
@@ -45,62 +45,34 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="welcome-to-chewbacca-s-documentation">
-<h1>Welcome to Chewbacca&#8217;s documentation!<a class="headerlink" href="#welcome-to-chewbacca-s-documentation" title="Permalink to this headline">¶</a></h1>
-<p>Contents:</p>
+  <div class="section" id="chewbacca-a-toolkit-for-coi-analysis">
+<span id="index"></span><h1>Chewbacca - A Toolkit for COI Analysis<a class="headerlink" href="#chewbacca-a-toolkit-for-coi-analysis" title="Permalink to this headline">¶</a></h1>
+<p>Chewbacca is a bioinformatics toolkit for COI analysis, meshing commonly used programs together to create a framework for automated analysis.
+Chewbacca currently supports the cleaning, assembly, demultiplexing, clustering, Aligning, and Identification of COI data.
+Chewbacca also allows users to build OTU tables and visualize their data.</p>
+<p><a class="reference internal" href="quick_start.html#quick-start"><span class="std std-ref">Quick Start</span></a></p>
+<p>FAQ</p>
+<p><a class="reference internal" href="api/index.html#api"><span class="std std-ref">API</span></a></p>
+<div class="section" id="contents">
+<h2>Contents:<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="intro.html">Intro</a></li>
-<li class="toctree-l1"><a class="reference internal" href="file_types/file_types.html">File Types</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="file_types/file_types.html#fasta-files">Fasta Files</a></li>
-<li class="toctree-l2"><a class="reference internal" href="file_types/file_types.html#fastq-files">FastQ Files</a></li>
-<li class="toctree-l2"><a class="reference internal" href="file_types/file_types.html#groups-files">Groups Files</a></li>
-<li class="toctree-l2"><a class="reference internal" href="file_types/file_types.html#samples-files">Samples Files</a></li>
-<li class="toctree-l2"><a class="reference internal" href="file_types/file_types.html#barcodes-files">Barcodes Files</a></li>
-<li class="toctree-l2"><a class="reference internal" href="file_types/file_types.html#adapters-files">Adapters files</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Welcome to Chewbacca&#8217;s documentation!</a></li>
-<li class="toctree-l1"><a class="reference internal" href="quick_start.html#indices-and-tables">Indices and tables</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/index.html">API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/core_classes.html">Core Classes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/core_classes.html#chewbaccacommand">ChewbaccaCommand</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/core_classes.html#chewbaccaprogram">ChewbaccaProgram</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/core_classes.html#programrunner">ProgramRunner</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="api/commands.html">Commands</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/commands.html#error-correction">Error Correction</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/commands.html#assembling-sequences">Assembling Sequences</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/commands.html#demultiplexing-by-barcode">Demultiplexing by Barcode</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/commands.html#sequence-renaming">Sequence Renaming</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/commands.html#adapter-removal">Adapter Removal</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/commands.html#quality-cleaning">Quality Cleaning</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/commands.html#file-conversion">File Conversion</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/commands.html#dereplication">Dereplication</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/commands.html#file-splitting">File Splitting</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/commands.html#file-merging">File Merging</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/commands.html#file-cleaning">File Cleaning</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/commands.html#deep-cleaning">Deep Cleaning</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/commands.html#deep-cleaning-repair">Deep Cleaning Repair</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/commands.html#sequence-clustering">Sequence Clustering</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/commands.html#otu-table-construction">OTU Table Construction</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/commands.html#otu-identification">OTU Identification</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/commands.html#otu-annotation">OTU Annotation</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="file_types.html">File Types</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="file_types.html#fasta-file">Fasta File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="file_types.html#fastq-file">FastQ File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="file_types.html#groups-file">Groups File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="file_types.html#samples-file">Samples File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="file_types.html#barcodes-file">Barcodes file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="file_types.html#adapters-file">Adapters file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="file_types.html#rc-adapters-file">RC Adapters file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="file_types.html#tax-file">Tax file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="file_types.html#otu-table">OTU Table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="file_types.html#mapping-file">Mapping file</a></li>
 </ul>
 </li>
 </ul>
 </div>
 </div>
-<div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
-<ul class="simple">
-<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
-<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
-<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
-</ul>
 </div>
 
 
@@ -111,13 +83,15 @@
         <div class="sphinxsidebarwrapper">
   <h3><a href="#">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Welcome to Chewbacca&#8217;s documentation!</a></li>
-<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+<li><a class="reference internal" href="#">Chewbacca - A Toolkit for COI Analysis</a><ul>
+<li><a class="reference internal" href="#contents">Contents:</a></li>
+</ul>
+</li>
 </ul>
 
   <h4>Next topic</h4>
-  <p class="topless"><a href="intro.html"
-                        title="next chapter">Intro</a></p>
+  <p class="topless"><a href="file_types.html"
+                        title="next chapter">File Types</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -146,7 +120,7 @@
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="intro.html" title="Intro"
+          <a href="file_types.html" title="File Types"
              >next</a> |</li>
         <li class="nav-item nav-item-0"><a href="#">Chewbacca 0.1 documentation</a> &raquo;</li> 
       </ul>

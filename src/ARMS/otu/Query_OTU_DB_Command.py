@@ -12,8 +12,7 @@ class Query_OTU_DB_Command(ChewbaccaCommand):
         * A database containing taxonomic identifiers for sequences in the curated fasta file.
 
     **Outputs**:
-        * A `.tax file`- A five-column, tab-delimited output file listing the 'query', 'target', 'id', 'alnlen', and \
-            'qcov' fields from a blast6 output file. Maps input sequences to their identified Taxonomic names.
+        * A :ref:`.tax`.
 
     **Notes**:
         * The files COI.fasta and ncbi.db are included in the Chewbacca Docker distributions.

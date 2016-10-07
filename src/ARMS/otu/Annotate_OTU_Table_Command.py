@@ -8,11 +8,11 @@ class Annotate_OTU_Table_Command(ChewbaccaCommand):
     taxonomies.
 
    **Inputs**:
-        * An :ref:`OTU table` to annotate.
-        * One or more :ref:`.tax` to read annotations from.
+        * An :ref:`OTU_table` to annotate.
+        * One or more :ref:`.tax` files to read annotations from.
 
     **Outputs**:
-        * An OTU table with sequence names replaced by taxonomic names in the input .tax file.
+        * An :ref:`OTU_table` with sequence names replaced by taxonomic names in the input .tax file.
 
     **Notes**:
         * The input annotation file(s) should list only one identification per sequence name.  If you find more than \

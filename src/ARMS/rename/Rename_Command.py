@@ -5,7 +5,8 @@ from Rename_Program_Chewbacca import Rename_Program_Chewbacca
 
 class Rename_Command(ChewbaccaCommand):
     """
-    Renames sequences in a file with their filename and a serial ID#.  Useful for simplifying complex naming systems into \
+    Renames sequences in a file with their filename and a serial ID#.  Useful for simplifying complex naming systems \
+    into \
     human-readable sequence names.  In order to ensure the correct sample names are preserved, it is reccomended that \
     this command be run immediately after the :ref:`Demux Command`.
 
@@ -14,8 +15,8 @@ class Rename_Command(ChewbaccaCommand):
 
     **Outputs**:
         * _renamed.<ext> file - A <fasta/fastq> file with the renamed sequences.
-        * :ref:`.samples file` - A two-column, tab-delimited mapping between new sequence names and their sample.
-        * :ref:`.mapping file` - A two-column, tab-delimited mapping between old sequence names and their new names.
+        * .samples file - A :ref:`.samples`.
+        * .mapping file - A :ref:`.mapping`.
 
     **Notes**:
         * In order for the .samples file to correctly list the sample name of the sequences in a file, this command \
