@@ -30,7 +30,6 @@ class Query_OTU_Fasta_Program_Vsearch(ChewbaccaProgram):
         :param processes: The number of processes to use in the identification process.
         :param extraargstring: Advanced program parameter string.
         """
-        makeDirOrdie(outdir)
         # vsearch --usearch_global %s seeds.pick.fasta  --db ../data/BiocodePASSED_SAP.txt --id 0.9 \
         #       --userfields query+target+id+alnlen+qcov --userout %sout --alnout %s alnout.txt
 
@@ -63,13 +62,13 @@ class Query_OTU_Fasta_Program_Vsearch(ChewbaccaProgram):
         inputs = [x for x in product(query_fastas, ref_data_pairs)]
         debugPrintInputInfo(inputs, "queryied against paired refereces.")
         parallel(runPythonInstance, [(parseVSearchOutputAgainstFasta, "%s/%s.out" % (outdir, strip_ixes(query)),
-                                      tax_info, "%s/%s_result.out" % (outdir, strip_ixes(query)),
+                                      tax_info, "%s/%s.tax" % (outdir, strip_ixes(query)),
                                       simmilarity, coverage)
                                      for query, (ref_fasta, tax_info) in inputs], pool)
         printVerbose("\nDone parsing...")
 
         # Gather and move auxillary files
-        aux_files = getInputFiles(outdir, "*", "*_result.out", ignore_empty_files=False)
+        aux_files = getInputFiles(outdir, "*", "*.tax", ignore_empty_files=False)
         bulk_move_to_dir(aux_files, makeAuxDir(outdir))
 
         cleanup_pool(pool)

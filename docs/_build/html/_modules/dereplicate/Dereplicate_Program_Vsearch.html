@@ -54,7 +54,7 @@
 
 
 <span class="k">class</span> <span class="nc">Dereplicate_Program_Vsearch</span><span class="p">(</span><span class="n">ChewbaccaProgram</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Dereplicates a fasta file by grouping identical (or spanning) reads together under one representative sequence.</span>
+    <span class="sd">&quot;&quot;&quot;Dereplicates a fasta file by grouping identical reads together under one representative sequence.</span>
 <span class="sd">        The number of replicant sequences each representative represents is given by a replicant count at the end of</span>
 <span class="sd">        the sequence name in output fasta file.  If a .groups file is provided, then replicant counts will take into</span>
 <span class="sd">        account previous dereplication counts (e.g. a replicant sequence that represents 3 sequences will add 3 to its</span>
@@ -77,14 +77,13 @@
 
 <span class="sd">        :param input_f: Filepath to the file or folder of files to dereplicate.</span>
 <span class="sd">        :param outdir: Filepath to the output directory.</span>
-<span class="sd">        :param groupsfile: A groups file to use as a reference for dereplication counting.  If no groups file is</span>
-<span class="sd">                            provided, input sequences are conidered singletons (regardless of their dereplication</span>
-<span class="sd">                            count).</span>
+<span class="sd">        :param groupsfile: A groups file to use as a reference for replicant counting.  If no groups file is</span>
+<span class="sd">                            provided, input sequences are conidered singletons (regardless of their name-annotated</span>
+<span class="sd">                            dereplication count).</span>
 <span class="sd">        :param processes: The number of processes to use to dereplicate the fileset.</span>
 <span class="sd">        :param stripcounts: If True, strips the trailing dereplication counts from a file before dereplication.</span>
 <span class="sd">        :param extraargstring: Advanced program parameter string.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">makeDirOrdie</span><span class="p">(</span><span class="n">outdir</span><span class="p">)</span>
         <span class="n">inputs</span> <span class="o">=</span> <span class="n">getInputFiles</span><span class="p">(</span><span class="n">input_f</span><span class="p">)</span>
         <span class="n">pool</span> <span class="o">=</span> <span class="n">init_pool</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="n">processes</span><span class="p">))</span>
         <span class="c1"># REMOVES COUNTS FROM SEQUENCE NAMES IN ORDER TO CLUSTER PROPERLY</span>
@@ -100,9 +99,9 @@
             <span class="c1"># Grab the cleaned files as input for the next step</span>
             <span class="n">inputs</span> <span class="o">=</span> <span class="n">getInputFiles</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="s2">&quot;*_uncount.fasta&quot;</span><span class="p">)</span>
 
-        <span class="c1"># DEREPLICATE ONE MORE TIME</span>
-        <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;Dereplicating before clustering...&quot;</span><span class="p">)</span>
+        <span class="c1"># DEREPLICATE</span>
         <span class="n">debugPrintInputInfo</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="s2">&quot;dereplicated&quot;</span><span class="p">)</span>
+        <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;Dereplicating...&quot;</span><span class="p">)</span>
         <span class="n">parallel</span><span class="p">(</span><span class="n">runProgramRunnerInstance</span><span class="p">,</span> <span class="p">[</span><span class="n">ProgramRunner</span><span class="p">(</span><span class="n">ProgramRunnerCommands</span><span class="o">.</span><span class="n">DEREP_VSEARCH</span><span class="p">,</span>
                                                           <span class="p">[</span><span class="n">processes</span><span class="p">,</span> <span class="n">input_</span><span class="p">,</span>
                                                            <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_derep.fasta&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">strip_ixes</span><span class="p">(</span><span class="n">input_</span><span class="p">)),</span>

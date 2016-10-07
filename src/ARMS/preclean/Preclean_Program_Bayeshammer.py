@@ -24,8 +24,6 @@ class Preclean_Program_Bayeshammer(ChewbaccaProgram):
         :param processes: The maximum number of processes to use.
         :param extraargstring: Advanced program parameter string.
         """
-
-        makeDirOrdie(outdir)
         # Collect input files, and validate that they match
         inputs = validate_paired_fastq_reads(input_f, input_r)
         pool = init_pool(min(len(inputs), processes))

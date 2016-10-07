@@ -1,10 +1,9 @@
 from classes.ChewbaccaProgram import ChewbaccaProgram
 from classes.ProgramRunner import *
-
 from classes.Helpers import *
 
 
-class Align_Program_Macse(ChewbaccaProgram):
+class Clean_Deep_Program_Macse(ChewbaccaProgram):
     """Uses Macse's enrichAlignment program to align a set of sequences."""
     name = "macse"
 
@@ -27,7 +26,7 @@ class Align_Program_Macse(ChewbaccaProgram):
         #                                    \"%s\" -seq_lr \"%s\" -maxFS_inSeq 0  -maxSTOP_inSeq 0  -maxINS_inSeq 0 \
         #                                    -maxDEL_inSeq 3 -gc_def 5 -fs_lr -10 -stop_lr -10 -out_NT \"%s\"_NT \
         #                                    -out_AA \"%s\"_AA -seqToAdd_logFile \"%s\"_log.csv",
-        makeDirOrdie(outdir)
+
         inputs = getInputFiles(input_f)
         pool = init_pool(min(len(inputs), processes))
         printVerbose("Aligning reads using MACSE")

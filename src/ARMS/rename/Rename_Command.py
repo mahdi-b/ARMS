@@ -20,8 +20,12 @@ class Rename_Command(ChewbaccaCommand):
     **Notes**:
         * In order for the .samples file to correctly list the sample name of the sequences in a file, this command \
             should be run immediately after the Demux Command.
+        * The *--clip* parameter tells Chewbacca that trailing _<file_ID#> (from the demultiplexing command) should not
+            be considered part of the sample name.  By default this is set to True, and should be fine.  If you notice
+            parts of your sample names getting clipped off in your .samples file, you should explicitly set this
+            parameter to False.
         * Each input file will have a corresponding .samples, .mapping, and _renamed file.
-        * The .samples file is needed by downstream Chewbacca processes, (Building the OTU Table).
+        * The .samples file is needed by downstream Chewbacca processes (Building the OTU Table).
         * The .mapping file is purely for user convenience and record-keeping.
 
     **Example**:

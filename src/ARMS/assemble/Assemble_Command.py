@@ -15,11 +15,11 @@ class Assemble_Command(ChewbaccaCommand):
 
         _R1/_R2
 
-        **Input**:
+        **Inputs**:
             * Left Reads File(s)
             * Right Reads File(s)
 
-        **Output**:
+        **Outputs**:
             * Assembled Reads Files
 
         **Notes**:

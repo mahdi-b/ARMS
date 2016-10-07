@@ -11,7 +11,7 @@ class Demux_Command(ChewbaccaCommand):
 
     **Inputs**:
         * One or more fasta/fastq files to demux.
-        * A single :ref:`.barcodes file`
+        * A single :ref:`.barcodes file`: A two-column, tab-delimited file mapping barcode sequences and sample names.
 
     **Outputs**:
         * <sample_name>_<file_id#>_ demux.<ext> file(s) - <fasta/fastq> files, containing all the sequences from file \

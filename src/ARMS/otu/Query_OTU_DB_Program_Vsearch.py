@@ -30,7 +30,7 @@ class Query_OTU_DB_Program_Vsearch(ChewbaccaProgram):
         :param processes: The number of processes to use in the identification process.
         :param extraargstring: Advanced program parameter string.
         """
-        makeDirOrdie(outdir)
+        # blast6 output format http://www.drive5.com/usearch/manual/blast6out.html
         aln_user_string = "--userfields query+target+id+alnlen+qcov"
         # coi_fasta = os.path.expanduser("~/ARMS/refs/COI.fasta")
         # ncbi_db_string = os.path.expanduser("~/ARMS/refs/ncbi.db")
@@ -52,12 +52,12 @@ class Query_OTU_DB_Program_Vsearch(ChewbaccaProgram):
         # parseVSearchOutputAgainstNCBI(vsearch_out, ncbi_db, min_coverage, min_similarity)> parsed_nt.out
         parallel(runPythonInstance,
                  [(parseVSearchOutputAgainstNCBI, "%s/%s.out" % (outdir, strip_ixes(query)), ncbi_db_string,
-                   "%s/%s_result.out" % (outdir, strip_ixes(query)), simmilarity, coverage)
+                   "%s/%s.tax" % (outdir, strip_ixes(query)), simmilarity, coverage)
                   for query in query_fastas], pool)
         printVerbose("Done processing.")
 
         # Gather and move auxillary files
-        aux_files = getInputFiles(outdir, "*", "*_result.out", ignore_empty_files=False)
+        aux_files = getInputFiles(outdir, "*", "*.tax", ignore_empty_files=False)
         bulk_move_to_dir(aux_files, makeAuxDir(outdir))
 
         cleanup_pool(pool)

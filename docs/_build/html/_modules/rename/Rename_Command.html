@@ -66,8 +66,12 @@
 <span class="sd">    **Notes**:</span>
 <span class="sd">        * In order for the .samples file to correctly list the sample name of the sequences in a file, this command \</span>
 <span class="sd">            should be run immediately after the Demux Command.</span>
+<span class="sd">        * The *--clip* parameter tells Chewbacca that trailing _&lt;file_ID#&gt; (from the demultiplexing command) should not</span>
+<span class="sd">            be considered part of the sample name.  By default this is set to True, and should be fine.  If you notice</span>
+<span class="sd">            parts of your sample names getting clipped off in your .samples file, you should explicitly set this</span>
+<span class="sd">            parameter to False.</span>
 <span class="sd">        * Each input file will have a corresponding .samples, .mapping, and _renamed file.</span>
-<span class="sd">        * The .samples file is needed by downstream Chewbacca processes, (Building the OTU Table).</span>
+<span class="sd">        * The .samples file is needed by downstream Chewbacca processes (Building the OTU Table).</span>
 <span class="sd">        * The .mapping file is purely for user convenience and record-keeping.</span>
 
 <span class="sd">    **Example**:</span>

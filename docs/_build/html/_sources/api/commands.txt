@@ -56,14 +56,14 @@ File Cleaning
 .. autoclass:: util.Ungap_Command.Ungap_Command
    :members:
 
-Aligning Sequences
+Deep Cleaning
 ------------------
-.. autoclass:: align.Align_Command.Align_Command
+.. autoclass:: clean.Clean_Deep_Command.Clean_Deep_Command
    :members:
 
-Alignment Cleaning
+Deep Cleaning Repair
 ------------------
-.. autoclass:: align.Align_Clean_Command.Align_Clean_Command
+.. autoclass:: clean.Clean_Deep_Repair_Command.Clean_Deep_Repair_Command
    :members:
 
 Sequence Clustering
@@ -73,12 +73,12 @@ Sequence Clustering
 
 OTU Table Construction
 ----------------------
-.. autoclass:: otu.Query_OTU_DB_Command.Query_OTU_DB_Command
+.. autoclass:: otu.Build_OTU_Table_Command.Build_OTU_Table_Command
    :members:
 
 OTU Identification
 ------------------
-.. autoclass:: otu.Build_OTU_Table_Command.Build_OTU_Table_Command
+.. autoclass:: otu.Query_OTU_DB_Command.Query_OTU_DB_Command
    :members:
 
 .. autoclass:: otu.Query_OTU_Fasta_Command.Query_OTU_Fasta_Command

@@ -26,7 +26,6 @@ class Cluster_Program_Vsearch(ChewbaccaProgram):
         :param processes: The maximum number of processes to use.
         :param extraargstring: Advanced program parameter string.
         """
-        makeDirOrdie(outdir)
         # Grab the fasta file(s) to cluster
         inputs = getInputFiles(input_f)
         debugPrintInputInfo(inputs, "clustered")

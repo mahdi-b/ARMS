@@ -20,7 +20,6 @@ class Annotate_OTU_Table_Program_Chewbacca(ChewbaccaProgram):
         :param outdir: Filepath to the output directory where annotated files will be written.
         :param processes: The maximum number of processes to use.
         """
-        makeDirOrdie(outdir)
         matricies = getInputFiles(input_f)
         debugPrintInputInfo(matricies, "annotated.")
         annotations = getInputFiles(annotation)

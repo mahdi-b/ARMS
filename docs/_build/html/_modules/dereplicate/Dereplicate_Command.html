@@ -50,11 +50,84 @@
 
 
 <div class="viewcode-block" id="Dereplicate_Command"><a class="viewcode-back" href="../../api/commands.html#dereplicate.Dereplicate_Command.Dereplicate_Command">[docs]</a><span class="k">class</span> <span class="nc">Dereplicate_Command</span><span class="p">(</span><span class="n">ChewbaccaCommand</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Dereplicates a set of fasta files.  Identical or spanning (e.g. &#39;ATA&#39; spans the sequence &#39;AT&#39;) sequences are</span>
-<span class="sd">        considered replicants.  NOTE: This command only dereplicates within each fasta file (not across all files).</span>
-<span class="sd">        This means a sequence in one file will be unique within that file, but might exist in another file.</span>
-<span class="sd">        To ensure sequences are uniqe across an entire dataset, merge all fasta files into one file, then dereplicate</span>
-<span class="sd">        that fasta file.</span>
+    <span class="sd">&quot;&quot;&quot;Dereplicates a fasta file by grouping identical reads together under one representative sequence.  The</span>
+<span class="sd">    number of duplicate/replicant sequences each representative sequence represents is given by a &#39;replication count&#39; at</span>
+<span class="sd">    the end of</span>
+<span class="sd">    the sequence name in output fasta file.  If a .groups file is provided, then previous replication counts will</span>
+<span class="sd">    be take in into account (e.g. Imagine a representative sequence X that represents 3 sequences.  If X is found to be</span>
+<span class="sd">    a replicant of another sequence Y, X will add 3 to replication count of Y).  Replication counts are denoted with a</span>
+<span class="sd">    suffix of &#39;_K&#39; on the sequence name, where K is the replication count for the group that sequence represents.</span>
+
+
+<span class="sd">    **Inputs**:</span>
+<span class="sd">        * One or more fasta files to dereplicate.</span>
+<span class="sd">        * Optional: :ref:`.groups file` - A list of representative names and the names of their replicant \</span>
+<span class="sd">                                            sequences.  You likely have one of these files if you&#39;ve previously run a \</span>
+<span class="sd">                                            clustering or dereplication command.</span>
+
+<span class="sd">    **Outputs**:</span>
+<span class="sd">        * _counts.fasta file - A fasta file with unique sequences and their replication counts.</span>
+<span class="sd">        * _derep:ref:`.groups file` - A list of representative names and the names of their replicant \</span>
+<span class="sd">                                            sequences.</span>
+
+<span class="sd">    **Notes**:</span>
+<span class="sd">        * This command only dereplicates within each fasta file (not across all files). \</span>
+<span class="sd">            This means a sequence in one file will be unique within that file, but might exist in another file. \</span>
+<span class="sd">            To ensure sequences are uniqe across an entire dataset, merge all fasta files into one file, then \</span>
+<span class="sd">            dereplicate that fasta file.</span>
+
+
+<span class="sd">        * Each input file will generate a corresponding _count file.</span>
+<span class="sd">        * If an input .groups file is not provided, then each input fasta file will generate a new groups file named \</span>
+<span class="sd">            &lt;file_name&gt;_derep.groups.  If an input .groups file IS provided, then a single groups file named \</span>
+<span class="sd">            &#39;dereplicated_updated.groups&#39; will be generated.</span>
+<span class="sd">        * The output .groups file is needed by downstream Chewbacca processes (Dereplication, Clustering,\</span>
+<span class="sd">                Building the OTU Table).</span>
+<span class="sd">        * The order of sequence names in the \*_counts.fasta and .groups file is arbitrary.</span>
+
+<span class="sd">    **Example**:</span>
+
+<span class="sd">    ::</span>
+
+<span class="sd">        ./</span>
+<span class="sd">            Data.fasta</span>
+<span class="sd">                &gt;seq1</span>
+<span class="sd">                AAA</span>
+<span class="sd">                &gt;seq2</span>
+<span class="sd">                AAA</span>
+<span class="sd">                &gt;seq3</span>
+<span class="sd">                AAAG</span>
+<span class="sd">                &gt;seq4</span>
+<span class="sd">                AAAGT</span>
+<span class="sd">                &gt;seq7</span>
+<span class="sd">                AAAGT</span>
+
+<span class="sd">            test.groups</span>
+<span class="sd">                seq4	seq4 seq5 seq6</span>
+
+<span class="sd">    In the above example, test.groups indicates that seq4 is a sequence that has previously been identified as a</span>
+<span class="sd">    representative (in some earlier round of clustering or dereplication).  Note that seq4 is a representative</span>
+<span class="sd">    for a &#39;group&#39; of identical sequences and therefore listed within that group.</span>
+
+<span class="sd">    ``$ python chewbacca.py dereplicate_fasta -i Data.fasta -o rslt -g test.groups``</span>
+
+<span class="sd">    ::</span>
+
+<span class="sd">        rslt/Data_counts.fasta:</span>
+<span class="sd">            &gt;seq4_4</span>
+<span class="sd">            AAAGT</span>
+<span class="sd">            &gt;seq1_2</span>
+<span class="sd">            AAA</span>
+<span class="sd">            &gt;seq3_1</span>
+<span class="sd">            AAAG</span>
+
+<span class="sd">        rslt_groups_files/*.groups:</span>
+<span class="sd">            seq3	seq3</span>
+<span class="sd">            seq1	seq2 seq1</span>
+<span class="sd">            seq4	seq7 seq6 seq5 seq4</span>
+
+<span class="sd">    Notice that Data_counts.fasta lists the unique sequences from Data.fasta, and their replication counts.  Also</span>
+<span class="sd">    notice that seq4 had previous replication data (stored in the Data.groups file).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">supported_programs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Dereplicate_Program_Vsearch</span><span class="p">]</span>
     <span class="n">default_program</span> <span class="o">=</span> <span class="n">Dereplicate_Program_Vsearch</span>

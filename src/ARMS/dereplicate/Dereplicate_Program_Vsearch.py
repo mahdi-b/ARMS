@@ -8,7 +8,7 @@ from util.updateGroups import update_groups
 
 
 class Dereplicate_Program_Vsearch(ChewbaccaProgram):
-    """Dereplicates a fasta file by grouping identical (or spanning) reads together under one representative sequence.
+    """Dereplicates a fasta file by grouping identical reads together under one representative sequence.
         The number of replicant sequences each representative represents is given by a replicant count at the end of
         the sequence name in output fasta file.  If a .groups file is provided, then replicant counts will take into
         account previous dereplication counts (e.g. a replicant sequence that represents 3 sequences will add 3 to its
@@ -31,14 +31,13 @@ class Dereplicate_Program_Vsearch(ChewbaccaProgram):
 
         :param input_f: Filepath to the file or folder of files to dereplicate.
         :param outdir: Filepath to the output directory.
-        :param groupsfile: A groups file to use as a reference for dereplication counting.  If no groups file is
-                            provided, input sequences are conidered singletons (regardless of their dereplication
-                            count).
+        :param groupsfile: A groups file to use as a reference for replicant counting.  If no groups file is
+                            provided, input sequences are conidered singletons (regardless of their name-annotated
+                            dereplication count).
         :param processes: The number of processes to use to dereplicate the fileset.
         :param stripcounts: If True, strips the trailing dereplication counts from a file before dereplication.
         :param extraargstring: Advanced program parameter string.
         """
-        makeDirOrdie(outdir)
         inputs = getInputFiles(input_f)
         pool = init_pool(min(len(inputs), processes))
         # REMOVES COUNTS FROM SEQUENCE NAMES IN ORDER TO CLUSTER PROPERLY
@@ -54,9 +53,9 @@ class Dereplicate_Program_Vsearch(ChewbaccaProgram):
             # Grab the cleaned files as input for the next step
             inputs = getInputFiles(outdir, "*_uncount.fasta")
 
-        # DEREPLICATE ONE MORE TIME
-        printVerbose("Dereplicating before clustering...")
+        # DEREPLICATE
         debugPrintInputInfo(inputs, "dereplicated")
+        printVerbose("Dereplicating...")
         parallel(runProgramRunnerInstance, [ProgramRunner(ProgramRunnerCommands.DEREP_VSEARCH,
                                                           [processes, input_,
                                                            "%s/%s_derep.fasta" % (outdir, strip_ixes(input_)),

@@ -28,7 +28,6 @@ class Clean_Adapters_Program_Flexbar(ChewbaccaProgram):
         :param processes: The maximum number of processes to use.
         :param extraargstring: Advanced program parameter string.
         """
-        makeDirOrdie(outdir)
         inputs = getInputFiles(input_f)
         pool = init_pool(min(len(inputs), processes))
         debugPrintInputInfo(inputs, "trim adapters from")

@@ -34,7 +34,6 @@ class Demux_Program_Fastx(ChewbaccaProgram):
         :param processes: Number of processes to use to demux input fileset.
         :param extraargstring: Advanced program parameter string.
         """
-        makeDirOrdie(outdir)
         # Get input files
         files_to_split = getInputFiles(input_f)
         # Assign the files shard numbers

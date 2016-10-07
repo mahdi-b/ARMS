@@ -23,8 +23,6 @@ class Partition_Program_Chewbacca(ChewbaccaProgram):
         :param chunksize: The number of sequences per file.
         :param filetype: Either 'fasta' or 'fastq'.
         """
-        # def splitK(inputFasta, prefix, nbSeqsPerFile, filetype):
-        makeDirOrdie(outdir)
         # Gather input files
         inputs = getInputFiles(input_f)
         debugPrintInputInfo(inputs, "partitioned")

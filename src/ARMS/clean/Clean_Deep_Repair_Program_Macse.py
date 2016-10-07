@@ -1,12 +1,11 @@
-from align.align_clean import remove_refs_from_macse_out
 from classes.ChewbaccaProgram import ChewbaccaProgram
+from classes.Helpers import *
 from classes.ProgramRunner import *
+from clean.clean_deep_repair import remove_refs_from_macse_out
 from util.merge import merge_files
 
-from classes.Helpers import *
 
-
-class Align_Clean_Program_Macse(ChewbaccaProgram):
+class Clean_Deep_Repair_Program_Macse(ChewbaccaProgram):
     """Uses Macse to clean a set of alignments by removing gap characters and reference sequences from the file.
     """
     name = "macse"
@@ -29,7 +28,7 @@ class Align_Clean_Program_Macse(ChewbaccaProgram):
         """
         # "macse_format":     "java -jar " + programPaths["MACSE"] + "  -prog exportAlignment -align \"%s\" \
         #                                  -charForRemainingFS - -gc_def 5 -out_AA \"%s\" -out_NT \"%s\" -statFile \"%s\""
-        makeDirOrdie(outdir)
+
         inputs = getInputFiles(input_f)
         pool = init_pool(min(len(inputs), processes))
         printVerbose("\t %s Processing MACSE alignments")

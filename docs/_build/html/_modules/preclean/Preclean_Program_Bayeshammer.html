@@ -70,8 +70,6 @@
 <span class="sd">        :param processes: The maximum number of processes to use.</span>
 <span class="sd">        :param extraargstring: Advanced program parameter string.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">makeDirOrdie</span><span class="p">(</span><span class="n">outdir</span><span class="p">)</span>
         <span class="c1"># Collect input files, and validate that they match</span>
         <span class="n">inputs</span> <span class="o">=</span> <span class="n">validate_paired_fastq_reads</span><span class="p">(</span><span class="n">input_f</span><span class="p">,</span> <span class="n">input_r</span><span class="p">)</span>
         <span class="n">pool</span> <span class="o">=</span> <span class="n">init_pool</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="n">processes</span><span class="p">))</span>

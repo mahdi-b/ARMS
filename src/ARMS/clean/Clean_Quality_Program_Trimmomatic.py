@@ -30,7 +30,7 @@ class Clean_Quality_Program_Trimmomatic(ChewbaccaProgram):
         """
         # "trimomatic":       "java -jar ~/ARMS/programs/Trimmomatic-0.33/trimmomatic-0.33.jar SE \
         # -%phred %input %output SLIDINGWINDOW:%windowsize:%minAvgQuality MINLEN:%minLen"
-        makeDirOrdie(outdir)
+
         inputs = getInputFiles(input_f)
         debugPrintInputInfo(inputs, "clean")
         pool = init_pool(min(len(inputs), processes))

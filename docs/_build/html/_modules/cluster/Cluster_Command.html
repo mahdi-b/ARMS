@@ -52,9 +52,63 @@
 
 
 <div class="viewcode-block" id="Cluster_Command"><a class="viewcode-back" href="../../api/commands.html#cluster.Cluster_Command.Cluster_Command">[docs]</a><span class="k">class</span> <span class="nc">Cluster_Command</span><span class="p">(</span><span class="n">ChewbaccaCommand</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Clusters a set of fasta files.  Identical (or identical spanning) sequences are considered \</span>
-<span class="sd">        replicants.  (100% match).  NOTE: only Clusters within each fasta file (not across all files).  Merge \</span>
-<span class="sd">        files before hand if you want to dereplciate across multiple files.</span>
+    <span class="sd">&quot;&quot;&quot;Clusters a set of fasta files.  This command generates a fasta file of unique sequences</span>
+<span class="sd">    (each representing a cluster) and a .groups file.  This command also takes an optional .groups file containing</span>
+<span class="sd">    replication data from previous commands.  If a .groups file is supplied, only one output .groups file is generated</span>
+<span class="sd">    (regardless of the number of inputs).</span>
+
+<span class="sd">    **Inputs**:</span>
+<span class="sd">        * One or more fasta files to cluster.</span>
+<span class="sd">        * Optional: :ref:`.groups file` - A list of representative names and the names of their replicant \</span>
+<span class="sd">                                            sequences.  You likely have one of these files if you&#39;ve previously run a \</span>
+<span class="sd">                                            clustering or dereplication command.</span>
+
+<span class="sd">    **Outputs**:</span>
+<span class="sd">        * \*.fasta file - A fasta file with unique sequences and their replication counts.</span>
+<span class="sd">        * _derep:ref:`.groups file` - A list of representative names and the names of their replicant \</span>
+<span class="sd">                                            sequences.</span>
+
+<span class="sd">    **Notes**:</span>
+<span class="sd">        * The input fasta file(s) should have been dereplicated before clustering.</span>
+<span class="sd">        * For a single experiment with multiple fasta files, it is best to merge all input fasta files, dereplicate</span>
+<span class="sd">            them, then cluster the single merged and dereplicated fasta file.  This provides the best OTU groupings.</span>
+
+<span class="sd">    **Example**:</span>
+
+<span class="sd">    ::</span>
+
+<span class="sd">        ./</span>
+<span class="sd">            Data.fasta:</span>
+<span class="sd">                &gt;seq1_3</span>
+<span class="sd">                AAAAAAAAAA</span>
+<span class="sd">                &gt;seq2_1</span>
+<span class="sd">                ATAAAAAAAA</span>
+<span class="sd">                &gt;seq3_1</span>
+<span class="sd">                TTTTTTTTTT</span>
+<span class="sd">                &gt;seq4_1</span>
+<span class="sd">                TTTTTTATTT</span>
+<span class="sd">                &gt;seq5_1</span>
+<span class="sd">                TTTTTTATCT</span>
+
+
+<span class="sd">            Data.groups:</span>
+<span class="sd">                seq1	seq6 seq1 seq7</span>
+
+<span class="sd">    ``$ python chewbacca.py cluster_seqs -i Data.fasta -o rslt -g Data.groups``</span>
+
+<span class="sd">    ::</span>
+
+<span class="sd">        rslt/</span>
+<span class="sd">            Data_clustered_seeds.fasta:</span>
+<span class="sd">                &gt;seq1_4</span>
+<span class="sd">                AAAAAAAAAA</span>
+<span class="sd">                &gt;seq3_3</span>
+<span class="sd">                TTTTTTTTTT</span>
+
+<span class="sd">        rslt_groups_files/</span>
+<span class="sd">            postcluster_updated.groups:</span>
+<span class="sd">                seq3	seq3 seq5 seq4</span>
+<span class="sd">                seq1	seq2 seq1 seq7 seq6</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">supported_programs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Cluster_Program_Crop</span><span class="p">,</span>
                           <span class="n">Cluster_Program_Swarm</span><span class="p">,</span>

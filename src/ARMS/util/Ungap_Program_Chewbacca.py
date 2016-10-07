@@ -23,8 +23,6 @@ class Ungap_Program_Chewbacca(ChewbaccaProgram):
             :param file_ext: Either 'fasta' or 'fastq'.
             :param processes: The number of threads to use to ungap the input fileset.
         """
-
-        makeDirOrdie(outdir)
         inputs = getInputFiles(input_f, "*.fasta")
         debugPrintInputInfo(inputs, "ungap.")
         pool = init_pool(min(len(inputs), processes))

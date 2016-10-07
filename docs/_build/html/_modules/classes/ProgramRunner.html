@@ -45,10 +45,7 @@
             
   <h1>Source code for classes.ProgramRunner</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">ConfigParser</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">subprocess</span>
-<span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">Enum</span>
 <span class="kn">from</span> <span class="nn">classes.Helpers</span> <span class="k">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">classes</span> <span class="k">import</span> <span class="n">Validator</span>
@@ -167,7 +164,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_dry</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dry_run</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span><span class="p">(</span><span class="n">printVerbose</span><span class="o">.</span><span class="n">VERBOSE</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">printVerbose</span><span class="o">.</span><span class="n">VERBOSE</span><span class="p">:</span>
                 <span class="n">output</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">dry_validate_conditions</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span>
@@ -178,16 +175,16 @@
             <span class="c1"># call and check_call are blocking, Popen is non-blocking</span>
             <span class="k">return</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_call</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">),</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">output</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="ProgramRunner.dry_run"><a class="viewcode-back" href="../../api/core_classes.html#classes.ProgramRunner.ProgramRunner.dry_run">[docs]</a>    <span class="k">def</span> <span class="nf">dry_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dryValidate</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="ProgramRunner.dry_run"><a class="viewcode-back" href="../../api/core_classes.html#classes.ProgramRunner.ProgramRunner.dry_run">[docs]</a>    <span class="k">def</span> <span class="nf">dry_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dry_validate</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Prints the validation procedures that would be performed, and the commands that would be run in an actual</span>
 <span class="sd">            run, without actually executing them.</span>
 
 
-<span class="sd">        :param dryValidate: If True, print the validation statements that would be executed, but don&#39;t actually execute.</span>
-<span class="sd">                                If False, perform normal validation routine, exiting on invalid conditions.</span>
+<span class="sd">        :param dry_validate: If True, print the validation statements that would be executed, but don&#39;t actually \</span>
+<span class="sd">                                execute. If False, perform normal validation routine, exiting on invalid conditions.</span>
 <span class="sd">        :return: The fully-formatted command string that would be executed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">dryValidate</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">dry_validate</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">dry_validate_conditions</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">validate_conditions</span><span class="p">()</span>

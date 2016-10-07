@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>otu.Query_OTU_DB_Command &mdash; Chewbacca 0.1 documentation</title>
+    <title>clean.Clean_Deep_Command &mdash; Chewbacca 0.1 documentation</title>
     
     <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -43,60 +43,49 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <h1>Source code for otu.Query_OTU_DB_Command</h1><div class="highlight"><pre>
+  <h1>Source code for clean.Clean_Deep_Command</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">classes.ChewbaccaCommand</span> <span class="k">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">otu.Query_OTU_DB_Program_Vsearch</span> <span class="k">import</span> <span class="n">Query_OTU_DB_Program_Vsearch</span>
+<span class="kn">from</span> <span class="nn">Clean_Deep_Program_Macse</span> <span class="k">import</span> <span class="n">Clean_Deep_Program_Macse</span>
 
 
-<div class="viewcode-block" id="Query_OTU_DB_Command"><a class="viewcode-back" href="../../api/commands.html#otu.Query_OTU_DB_Command.Query_OTU_DB_Command">[docs]</a><span class="k">class</span> <span class="nc">Query_OTU_DB_Command</span><span class="p">(</span><span class="n">ChewbaccaCommand</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Aligns sequences in a fasta file against those in a reference database in order to determine OTU identity.</span>
-
+<div class="viewcode-block" id="Clean_Deep_Command"><a class="viewcode-back" href="../../api/commands.html#clean.Clean_Deep_Command.Clean_Deep_Command">[docs]</a><span class="k">class</span> <span class="nc">Clean_Deep_Command</span><span class="p">(</span><span class="n">ChewbaccaCommand</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Performs an intensive deep-cleaning of sequences to eliminate frameshifts, detect chimeras,</span>
+<span class="sd">    and determine sequence orientation.  Input files to this command should first be dereplicated.  Doing so will</span>
+<span class="sd">    reduce the total number of alignments required, and reduce computation time.</span>
 
 <span class="sd">    **Inputs**:</span>
-<span class="sd">        * One or more fasta files containing sequences to identify.</span>
-<span class="sd">        * A curated fasta file of high quality sequences and known species.</span>
-<span class="sd">        * A database containing taxonomic identifiers for sequences in the curated fasta file.</span>
+<span class="sd">        * One or more fasta/fastq files to deep clean.</span>
+<span class="sd">        * Nucleotide reference fasta.</span>
 
 <span class="sd">    **Outputs**:</span>
-<span class="sd">        * A `.tax file`- A five-column, tab-delimited output file listing the &#39;query&#39;, &#39;target&#39;, &#39;id&#39;, &#39;alnlen&#39;, and \</span>
-<span class="sd">            &#39;qcov&#39; fields from a blast6 output file. Maps input sequences to their identified Taxonomic names.</span>
+<span class="sd">        * \*_AA - Amino Acid Alignment file, including reference sequences.</span>
+<span class="sd">        * \*_log.csv - A log listing each input sequence, and deep cleaning results for each sequence.</span>
+<span class="sd">        * \*_NT -  Nucleotide Alignment file, including reference sequences.</span>
 
 <span class="sd">    **Notes**:</span>
-<span class="sd">        * The files COI.fasta and ncbi.db are included in the Chewbacca Docker distributions.</span>
+<span class="sd">        * Sequences that do not meet quality cleaning standards are dropped.</span>
+<span class="sd">        * The output files contain reference sequences, and odd alignment characters.  Both of these need to be \</span>
+<span class="sd">            removed by running the Clean_Deep_Repair Command.</span>
 
 <span class="sd">    **Example**:</span>
 
 <span class="sd">    ::</span>
 
-<span class="sd">        ~/ARMS/refs/</span>
+<span class="sd">        Data.fasta</span>
+<span class="sd">        BIOCODE.fa</span>
 
-<span class="sd">            COI.fasta # A precompiled fasta file of COI data from NCBI.</span>
-<span class="sd">                &gt;94483305</span>
-<span class="sd">                AGGACGGATCAGACGAAGAGGGGCGTTTGGTATTGGGTTATGGCAGGGGGTTTTATATTGATAATTGTTGTGATGAAATT</span>
-<span class="sd">                GATGGCCCCTAAGATAGAGGAGACACCTGCTAGGTGTAAGGAGAAGATGGTTAGGTCTACGGAGGCTCCAGGGTGGGAGT</span>
-
-<span class="sd">            ncbi.db # A precompiled database of (Taxa) for the entries in &#39;COI.fasta&#39;.</span>
-
-
-<span class="sd">        data/</span>
-<span class="sd">            Data.fasta:</span>
-<span class="sd">                &gt;seq1</span>
-<span class="sd">                GAATAGGTGTTGGTATAGAATGGGGTCTCCTCCTCCGGCGGGGTCGAAGAAGGTGGTGTTGAGGTTGCGGTCTGTTAGTAGTATAGTGATGCCAGCAG</span>
-<span class="sd">                CTAGGACTGGGAGAGATAGGAGAAGTAGGACTGCTGTGATTAGGACGGATCAGACGAAGAGGGGCGTTTGGTATTGGGTTATGGCAGGGGGTTTTATA</span>
-<span class="sd">                TTGATAATTGTTGTGAGGAAATTGATGGCCCCTAAGATAGAGGAGACACCTGCTAGGTGTAAGGAGAAGATGGTTAGGTCTACGGAGGCTCCAGGGTG</span>
-<span class="sd">                GGAGTAGTTCCCTGCTAA</span>
-
-<span class="sd">    ``$ python chewbacca.py query_db -i Data.fasta -o out/ -r ~/ARMS/refs/COI.fasta -d ~/ARMS/refs/ncbi.db``</span>
+<span class="sd">    ``$ python chewbacca.py macseAlign -i Data.fasta -o rslt -d BIOCODE.fa``</span>
 
 <span class="sd">    ::</span>
 
-<span class="sd">        rslt/</span>
-<span class="sd">            Data_result.out</span>
-<span class="sd">                seq1	94483305	99.4	173	55.4    Chordata:Mammalia:Primates:Hominidae:Homo:Homo sapiens</span>
+<span class="sd">        rslt/Data_AA</span>
+<span class="sd">        rslt/Data_NT</span>
+<span class="sd">        rslt/Data_log.csv</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">supported_programs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Query_OTU_DB_Program_Vsearch</span><span class="p">]</span>
-    <span class="n">default_program</span> <span class="o">=</span> <span class="n">Query_OTU_DB_Program_Vsearch</span>
-    <span class="n">command_name</span> <span class="o">=</span> <span class="s2">&quot;Query OTU Identity&quot;</span></div>
+    <span class="n">supported_programs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Clean_Deep_Program_Macse</span><span class="p">]</span>
+    <span class="n">default_program</span> <span class="o">=</span> <span class="n">Clean_Deep_Program_Macse</span>
+    <span class="n">command_name</span> <span class="o">=</span> <span class="s2">&quot;Clean_Deep&quot;</span></div>
 </pre></div>
 
           </div>

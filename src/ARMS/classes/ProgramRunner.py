@@ -1,8 +1,5 @@
 import ConfigParser
-import logging
-import os
 import subprocess
-import sys
 from enum import Enum
 from classes.Helpers import *
 from classes import Validator
@@ -121,7 +118,7 @@ class ProgramRunner(object):
         if self.run_dry:
             return self.dry_run()
         else:
-            if(printVerbose.VERBOSE):
+            if printVerbose.VERBOSE:
                 output = sys.stdout
                 self.dry_validate_conditions()
             else:
@@ -132,16 +129,16 @@ class ProgramRunner(object):
             # call and check_call are blocking, Popen is non-blocking
             return subprocess.check_call(os.path.expanduser(self.command), shell=True, stdout=output)
 
-    def dry_run(self, dryValidate=True):
+    def dry_run(self, dry_validate=True):
         """Prints the validation procedures that would be performed, and the commands that would be run in an actual
             run, without actually executing them.
 
 
-        :param dryValidate: If True, print the validation statements that would be executed, but don't actually execute.
-                                If False, perform normal validation routine, exiting on invalid conditions.
+        :param dry_validate: If True, print the validation statements that would be executed, but don't actually \
+                                execute. If False, perform normal validation routine, exiting on invalid conditions.
         :return: The fully-formatted command string that would be executed.
         """
-        if dryValidate:
+        if dry_validate:
             self.dry_validate_conditions()
         else:
             self.validate_conditions()

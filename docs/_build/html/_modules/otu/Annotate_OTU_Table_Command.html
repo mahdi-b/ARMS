@@ -50,7 +50,44 @@
 
 
 <div class="viewcode-block" id="Annotate_OTU_Table_Command"><a class="viewcode-back" href="../../api/commands.html#otu.Annotate_OTU_Table_Command.Annotate_OTU_Table_Command">[docs]</a><span class="k">class</span> <span class="nc">Annotate_OTU_Table_Command</span><span class="p">(</span><span class="n">ChewbaccaCommand</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Annotates an OTU table with Taxonomic names by replacing sequence names in the OTU table with their identified</span>
+<span class="sd">    taxonomies.</span>
 
+<span class="sd">   **Inputs**:</span>
+<span class="sd">        * An :ref:`OTU table` to annotate.</span>
+<span class="sd">        * One or more :ref:`.tax` to read annotations from.</span>
+
+<span class="sd">    **Outputs**:</span>
+<span class="sd">        * An OTU table with sequence names replaced by taxonomic names in the input .tax file.</span>
+
+<span class="sd">    **Notes**:</span>
+<span class="sd">        * The input annotation file(s) should list only one identification per sequence name.  If you find more than \</span>
+<span class="sd">            one taxonomic identity for a sequence, choose only one to include in the input .tax file(s).</span>
+
+<span class="sd">    **Example**:</span>
+
+<span class="sd">    ::</span>
+
+<span class="sd">        ./</span>
+<span class="sd">            matrix.txt</span>
+<span class="sd">                OTU	Sample1	Sample2	Sample3	Sample4</span>
+<span class="sd">                seq3	1	2	0	0</span>
+<span class="sd">                seq1	2	1	1	0</span>
+
+<span class="sd">            data.tax:</span>
+<span class="sd">                seq1	94483305	99.4	173	55.4    Chordata:Mammalia:Primates:Hominidae:Homo:Homo sapiens</span>
+
+<span class="sd">    ``$ python chewbacca.py annotate_matrix -i matrix.txt -a data.tax -o rslt``</span>
+
+<span class="sd">    ::</span>
+
+<span class="sd">        rslt/</span>
+<span class="sd">            matrix.txt</span>
+<span class="sd">                OTU	Sample1	Sample2	Sample3	Sample4</span>
+<span class="sd">                seq3	1	2	0	0</span>
+<span class="sd">                Chordata:Mammalia:Primates:Hominidae:Homo:Homo sapiens	2	1	1	0</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">supported_programs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Annotate_OTU_Table_Program_Chewbacca</span><span class="p">]</span>
     <span class="n">default_program</span> <span class="o">=</span> <span class="n">Annotate_OTU_Table_Program_Chewbacca</span>
     <span class="n">command_name</span> <span class="o">=</span> <span class="s2">&quot;Annotate OTU Table&quot;</span></div>

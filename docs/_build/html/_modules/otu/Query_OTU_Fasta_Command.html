@@ -45,12 +45,59 @@
             
   <h1>Source code for otu.Query_OTU_Fasta_Command</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">classes.ChewbaccaCommand</span> <span class="k">import</span> <span class="o">*</span>
-
 <span class="kn">from</span> <span class="nn">Query_OTU_Fasta_Program_Vsearch</span> <span class="k">import</span> <span class="n">Query_OTU_Fasta_Program_Vsearch</span>
 
 
 <div class="viewcode-block" id="Query_OTU_Fasta_Command"><a class="viewcode-back" href="../../api/commands.html#otu.Query_OTU_Fasta_Command.Query_OTU_Fasta_Command">[docs]</a><span class="k">class</span> <span class="nc">Query_OTU_Fasta_Command</span><span class="p">(</span><span class="n">ChewbaccaCommand</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Aligns sequences in a fasta file against those in a reference fasta in order to determine OTU identity.</span>
 
+<span class="sd">    **Inputs**:</span>
+<span class="sd">        * One or more fasta files containing sequences to identify.</span>
+<span class="sd">        * A curated fasta file of high quality sequences and known species.</span>
+<span class="sd">        * A two-column, tab-delimited text file mapping sequence names in the curated fasta file to taxonomic \</span>
+<span class="sd">            identifiers.</span>
+
+<span class="sd">    **Outputs**:</span>
+<span class="sd">        * A `.tax file`- A five-column, tab-delimited output file listing the *&#39;query&#39;, &#39;target&#39;, &#39;id&#39;, &#39;alnlen&#39;*, and \</span>
+<span class="sd">            *&#39;qcov&#39;* fields from a blast6 output file. Maps input sequences to their identified Taxonomic names.</span>
+
+<span class="sd">    **Notes**:</span>
+<span class="sd">        * The files &#39;bold.fna&#39; and &#39;seq_lin.mapping&#39; are included in the Chewbacca Docker distributions.</span>
+
+<span class="sd">    **Example**:</span>
+
+<span class="sd">    ::</span>
+
+<span class="sd">        ~/ARMS/data/</span>
+<span class="sd">            bold.fna # A precompiled fasta file of data from BOLD.</span>
+<span class="sd">                &gt;GBMAA1117-14</span>
+<span class="sd">                GGGCTTTTGCGGGTATGATAGGAACAGCATTTAGTATGCTTATTAGGTTAGAACTATCTTCCCCAGGGTCTATGTTAGGAGATGATCATTTATATAAT</span>
+<span class="sd">                GTTATAGTAACAGCTCATGCATTTGTAATGATATTTTTTTTAGTTATGCCAGTAATGATTGGGGGTTTTGGTAATTGGTTAGTACCTTTATATATTGG</span>
+<span class="sd">                TGCCCCGGATATGGCTTTTCCTAGATTAAATAATATTAGTTTTTGGTTATTACCTCCGGCGCTTACTTTATTATTAGGTTCGGCTTTTGTAGAACAAG</span>
+<span class="sd">                GGGCTGGGACAGGTTGGACAGTTTATCCGCCTTTATTTAGTATTCAAACTCATTCTGGGGGGTCTGTGGATATGGTAATATTTAGTTTACATTTAGCT</span>
+<span class="sd">                GGAATATCTTCTATATTAGGGGCTATGAATTTTATAACAACAATCTTTAATATGAGGTCTCCGGGAGTAACTATGGATAGAATGCCTTTATTTGTTTG</span>
+<span class="sd">                ATCTGTTTTAGTAACTGCTTTTTTATTATTATTATCATTGCCAGTATTAGCTGGTGCCATAACAAGTCTTTTAACCGATCGAGATTTTAATACTACAT</span>
+<span class="sd">                TT</span>
+
+<span class="sd">            seq_lin.mapping # A precompiled two-column tab file of (Taxa) for the entries in &#39;bold.fna&#39;.</span>
+<span class="sd">                GBMAA1117-14	Animalia;Porifera;Demospongiae;Haplosclerida;Phloeodictyidae;;Calyx;Calyx podatypa</span>
+
+<span class="sd">        ./</span>
+<span class="sd">            Data.fasta:</span>
+<span class="sd">                &gt;seq1</span>
+<span class="sd">                ACTATCAGGCATTCAAGCCCATTCAGGGGGAGCAGTAGATATGGCTATATTTAGTCTACATCTAGCTGGTGTATCCTCTATTTTAAGTTCTATAAACT</span>
+<span class="sd">                TTATAACTACTATAATTAATATGAGGGTTCCTGGGATGAGTATGCATAGATTACCTCTATTCGTATGGTCTGTATTAGTTACTACAATATTATTGTTG</span>
+<span class="sd">                TTATCTTTACCAGTATTAGCTGGTGGAATTACAATGTTATTGACAGATAGAAATTTTAATACAACATTCTTTGACCCTGCGGGAGGAGGAGATCCTAT</span>
+<span class="sd">                TTTATTCCAGCACTTATTT</span>
+
+<span class="sd">    ``$ python chewbacca.py query_fasta -i Data.fasta -o rslt -r ~/ARMS/data/bold.fna -x ~/ARMS/data/seq_lin.mapping``</span>
+
+<span class="sd">    ::</span>
+
+<span class="sd">        rslt/</span>
+<span class="sd">                Data_result.out</span>
+<span class="sd">                    seq1	GBMAA1117-14	90.6	265	84.7 Animalia;Porifera;Demospongiae;Haplosclerida;Phloeodictyidae;;Calyx;Calyx podatypa</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">supported_programs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Query_OTU_Fasta_Program_Vsearch</span><span class="p">]</span>
     <span class="n">default_program</span> <span class="o">=</span> <span class="n">Query_OTU_Fasta_Program_Vsearch</span>
     <span class="n">command_name</span> <span class="o">=</span> <span class="s2">&quot;Query OTU Identity&quot;</span>

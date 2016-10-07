@@ -21,7 +21,6 @@ class Build_OTU_Table_Program_Chewbacca(ChewbaccaProgram):
         :param barcodes_file: A .barcodes file listing all sample names.
         :param extraargstring: Advanced program parameter string.
         """
-        makeDirOrdie(outdir)
         groups = getInputFiles(groups_file)
         debugPrintInputInfo(groups, "read.")
 

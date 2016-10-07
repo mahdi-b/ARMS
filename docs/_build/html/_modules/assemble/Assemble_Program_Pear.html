@@ -85,7 +85,6 @@
 <span class="sd">        :param pearthreads: The number of threads per process to use.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># &quot;~/programs/pear-0.9.4-bin-64/pear-0.9.4-64 -f %s -r %s -o %s -j %s -m %d&quot;</span>
-        <span class="n">makeDirOrdie</span><span class="p">(</span><span class="n">outdir</span><span class="p">)</span>
         <span class="n">inputs</span> <span class="o">=</span> <span class="n">validate_paired_fastq_reads</span><span class="p">(</span><span class="n">input_f</span><span class="p">,</span> <span class="n">input_r</span><span class="p">)</span>
         <span class="n">pool</span> <span class="o">=</span> <span class="n">init_pool</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="n">processes</span><span class="p">))</span>
         <span class="n">printVerbose</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Assembling reads with pear&quot;</span><span class="p">)</span>

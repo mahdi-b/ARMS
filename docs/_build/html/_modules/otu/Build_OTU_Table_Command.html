@@ -49,7 +49,57 @@
 
 
 <div class="viewcode-block" id="Build_OTU_Table_Command"><a class="viewcode-back" href="../../api/commands.html#otu.Build_OTU_Table_Command.Build_OTU_Table_Command">[docs]</a><span class="k">class</span> <span class="nc">Build_OTU_Table_Command</span><span class="p">(</span><span class="n">ChewbaccaCommand</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Builds an OTU table using a .groups, .samples, and .barcodes file.  The OTU table shows OTU (group) abundance by</span>
+<span class="sd">    sample.</span>
 
+<span class="sd">    **Inputs**:</span>
+<span class="sd">        * One or more :ref:`.samples file` - A two-column, tab-delimited mapping between sequence names and \</span>
+<span class="sd">                            their sample.</span>
+<span class="sd">        * One or more :ref:`.barcodes file` - A two-column, tab-delimited file mapping sample names and barcode \</span>
+<span class="sd">                            sequences.</span>
+<span class="sd">        * one or more :ref:`.groups file`- A list of representative names and the names of their replicant \</span>
+<span class="sd">                                            sequences.</span>
+
+<span class="sd">    **Outputs**:</span>
+<span class="sd">        * matrix.txt - A tab-delimited table mapping OTUs (groups) to their abundance in each sample.</span>
+
+<span class="sd">    **Notes**:</span>
+<span class="sd">        * A sequence name may not appear in more than one group file (or group for that matter!).</span>
+
+<span class="sd">    **Example**:</span>
+
+<span class="sd">    ::</span>
+
+<span class="sd">        ./</span>
+<span class="sd">            test.barcodes</span>
+<span class="sd">                Sample1	aaaaaa</span>
+<span class="sd">                Sample2	aaaaat</span>
+<span class="sd">                Sample3	aaaaac</span>
+<span class="sd">                Sample4	aaaaag</span>
+
+<span class="sd">            test.groups</span>
+<span class="sd">                seq3	seq3 seq5 seq4</span>
+<span class="sd">                seq1	seq2 seq1 seq7 seq6</span>
+
+<span class="sd">            test.samples</span>
+<span class="sd">                seq1	Sample1</span>
+<span class="sd">                seq2	Sample1</span>
+<span class="sd">                seq3	Sample1</span>
+<span class="sd">                seq4	Sample2</span>
+<span class="sd">                seq5	Sample2</span>
+<span class="sd">                seq6	Sample2</span>
+<span class="sd">                seq7	Sample3</span>
+
+<span class="sd">    ``$ python chewbacca.py build_matrix -b test.barcodes -g  test.groups -s test.samples -o rslt/``</span>
+
+<span class="sd">    ::</span>
+
+<span class="sd">        rslt/</span>
+<span class="sd">            matrix.txt</span>
+<span class="sd">                OTU	Sample1	Sample2	Sample3	Sample4</span>
+<span class="sd">                seq3	1	2	0	0</span>
+<span class="sd">                seq1	2	1	1	0</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">supported_programs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Build_OTU_Table_Program_Chewbacca</span><span class="p">]</span>
     <span class="n">default_program</span> <span class="o">=</span> <span class="n">Build_OTU_Table_Program_Chewbacca</span>
     <span class="n">command_name</span> <span class="o">=</span> <span class="s2">&quot;Build OTU Table&quot;</span></div>

@@ -9,7 +9,6 @@ Welcome to Chewbacca's documentation!
 Contents:
 
 .. toctree::
-   :maxdepth: 2
 
    intro
    file_types/file_types

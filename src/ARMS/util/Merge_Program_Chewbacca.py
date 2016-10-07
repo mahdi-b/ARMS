@@ -25,7 +25,6 @@ class Merge_Program_Chewbacca(ChewbaccaProgram):
         :param output_fileext: The file extension of the output file.
         :param aux_params: A dictionary of program-specific named-parameters.
         """
-        makeDirOrdie(outdir)
         inputs = getInputFiles(input_f)
         debugPrintInputInfo(inputs, "merged")
         printVerbose("Merging files.")

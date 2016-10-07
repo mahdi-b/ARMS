@@ -13,7 +13,6 @@ class Convert_Fastq_Fasta_Program_Chewbacca(ChewbaccaProgram):
         self.convert_chewbacca(args.input_f, args.outdir, args.processes)
 
     def convert_chewbacca(self, input_f, outdir, proceses):
-        makeDirOrdie(outdir)
         inputs = getInputFiles(input_f)
         debugPrintInputInfo(inputs, "convert to fasta.")
         printVerbose("Converting to fasta...")

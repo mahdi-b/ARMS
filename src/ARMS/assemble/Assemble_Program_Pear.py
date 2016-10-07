@@ -39,7 +39,6 @@ class Assemble_Program_Pear(ChewbaccaProgram):
         :param pearthreads: The number of threads per process to use.
         """
         # "~/programs/pear-0.9.4-bin-64/pear-0.9.4-64 -f %s -r %s -o %s -j %s -m %d"
-        makeDirOrdie(outdir)
         inputs = validate_paired_fastq_reads(input_f, input_r)
         pool = init_pool(min(len(inputs), processes))
         printVerbose("\tAssembling reads with pear")

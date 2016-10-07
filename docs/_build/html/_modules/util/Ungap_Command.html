@@ -50,6 +50,30 @@
 
 <div class="viewcode-block" id="Ungap_Command"><a class="viewcode-back" href="../../api/commands.html#util.Ungap_Command.Ungap_Command">[docs]</a><span class="k">class</span> <span class="nc">Ungap_Command</span><span class="p">(</span><span class="n">ChewbaccaCommand</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Removes target characters from a fasta/fastq file.  Useful for removing gap characters from sequence alignments.</span>
+
+<span class="sd">    **Inputs**:</span>
+<span class="sd">        * One or more fasta/fastq files to clean.</span>
+<span class="sd">        * A string of gap characters to remove.</span>
+
+<span class="sd">    **Outputs**:</span>
+<span class="sd">        * \*_cleaned.&lt;ext&gt; file - A &lt;fasta/fastq&gt; file with gap characters removed from its sequences.</span>
+
+<span class="sd">    **Example**:</span>
+
+<span class="sd">    ::</span>
+
+<span class="sd">        Data.fasta:</span>
+<span class="sd">            &gt;seq1</span>
+<span class="sd">            AAAAA.A*A-A</span>
+
+<span class="sd">    ``$ python chewbacca.py ungap_fasta -i Data.fasta -o rslt -f fasta -g &quot;.*-&quot;``</span>
+
+<span class="sd">    ::</span>
+
+<span class="sd">        rslt/Data.fasta:</span>
+<span class="sd">            &gt;seq1</span>
+<span class="sd">            AAAAAAAA</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">supported_programs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Ungap_Program_Chewbacca</span><span class="p">]</span>
     <span class="n">default_program</span> <span class="o">=</span> <span class="n">Ungap_Program_Chewbacca</span>

@@ -48,7 +48,6 @@ class Cluster_Program_Crop(ChewbaccaProgram):
         :param extraargstring: Advanced program parameter string.
         """
 
-        makeDirOrdie(outdir)
         # Grab the fasta file(s) to cluster
         inputs = getInputFiles(input_f)
         debugPrintInputInfo(inputs, "clustered")

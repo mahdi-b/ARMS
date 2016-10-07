@@ -1,10 +1,11 @@
 import argparse
 import signal
-from classes.Helpers import *
-from align.Align_Clean_Command import Align_Clean_Command
-from align.Align_Command import Align_Command
+
+from clean.Clean_Deep_Repair_Command import Clean_Deep_Repair_Command
 from assemble.Assemble_Command import Assemble_Command
+from classes.Helpers import *
 from clean.Clean_Adapters_Command import Clean_Adapters_Command
+from clean.Clean_Deep_Command import Clean_Deep_Command
 from clean.Clean_Quality_Command import Clean_Quality_Command
 from cluster.Cluster_Command import Cluster_Command
 from demux.Demux_Command import Demux_Command
@@ -21,6 +22,7 @@ from util.Partition_Command import Partition_Command
 from util.Ungap_Command import Ungap_Command
 from viz.Visualize_OTU_Heatmap_Command import Visualize_OTU_Heatmap_Command
 from viz.Visualize_OTU_Sample_Composition_Command import Visualize_OTU_Sample_Composition_Command
+
 # Program Version
 version = "0.01"
 # Time format for printing
@@ -244,7 +246,7 @@ def main(argv):
     parser_align.add_argument('-d', '--db', required=True, help="Database against which to align and filter reads")
     parser_align.add_argument('-p', '--program', required=False, default="macse", help="Indicates which \
                             program to use.  Choices are: 'macse'.  Default: 'macse'.")
-    parser_align.set_defaults(command=Align_Command)
+    parser_align.set_defaults(command=Clean_Deep_Command)
 
     # =====================================
     # == Clean Aligned Reads with MACSE  ==
@@ -260,7 +262,7 @@ def main(argv):
                             reads")
     parser_macse_clean.add_argument('-p', '--program', required=False, default="macse", help="Indicates which \
                              program to use.  Choices are: 'macse'.  Default: 'macse'.")
-    parser_macse_clean.set_defaults(command=Align_Clean_Command)
+    parser_macse_clean.set_defaults(command=Clean_Deep_Repair_Command)
 
     # ============================================
     # ==  Cluster using CROP, SWARM, OR VSEARCH ==
@@ -470,8 +472,8 @@ def main(argv):
     print("\t\t")
     dryRun = args.dry_run
     signal.signal(signal.SIGTSTP, signal.SIG_IGN)
-    cmd = args.command
-    cmd(args).execute_command()
+    makeDirOrdie(args.outdir)
+    args.command(args).execute_command()
 
 
 if __name__ == "__main__":

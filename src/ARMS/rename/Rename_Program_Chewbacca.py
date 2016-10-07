@@ -21,8 +21,6 @@ class Rename_Program_Chewbacca(ChewbaccaProgram):
         :param clip: If True, remove dereplication counts from sequence names before renaming.
         :param processes: The maximum number of processes to use.
         """
-        # Make the output directory, or abort if it already exists
-        makeDirOrdie(outdir)
 
         # Gather input files
         inputs = getInputFiles(input_f)
