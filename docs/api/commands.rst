@@ -1,5 +1,9 @@
-Commands
-========
+
+.. _`commands`:
+
+Available Commands
+==================
+Below is a list of the available Chewbacca commands.  
 
 .. _`preclean`:
 

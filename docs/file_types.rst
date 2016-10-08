@@ -1,3 +1,6 @@
+
+.. _`file_types`:
+
 File Types
 ==========
 Chewbacca uses several filetypes throughout its functions.

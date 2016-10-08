@@ -30,18 +30,18 @@ class Demux_Command(ChewbaccaCommand):
 
         data/
             Data1.fasta:
-                @M03292:26:000000000-AH6AG:1:1101:22127:1254
+                @Seq4
                 AGACGCAAAAAA
-                @M03292:26:000000000-AH6AG:1:1101:22127:1255
+                @Seq5
                 AGTGTAAAAAAT
 
 
             Data2.fasta:
-                @M03292:26:000000000-AH6AG:1:1101:22127:1256
+                @Seq6
                 AGACGCAAAAAC
-                @M03292:26:000000000-AH6AG:1:1101:22127:1257
+                @Seq7
                 AGTGTAAAAAAG
-                @M03292:26:000000000-AH6AG:1:1101:22127:1258
+                @Seq8
                 CGTGTAAAAAAG
         ./
             Data.barcodes:
@@ -58,24 +58,24 @@ class Demux_Command(ChewbaccaCommand):
 
         rslt/
             SampleA_0_demux.fastq:
-                @M03292:26:000000000-AH6AG:1:1101:22127:1254
+                @Seq4
                 AGACGCAAAAAA
 
             SampleB_0_demux.fastq:
-                @M03292:26:000000000-AH6AG:1:1101:22127:1255
+                @Seq5
                 AGTGTAAAAAAT
 
             SampleA_1_demux.fastq:
-                @M03292:26:000000000-AH6AG:1:1101:22127:1256
+                @Seq6
                 AGACGCAAAAAC
 
             SampleB_1_demux.fastq:
-                @M03292:26:000000000-AH6AG:1:1101:22127:1257
+                @Seq7
                 AGTGTAAAAAAG
 
         rslt_aux/
             unmatched_0_demux.fastq:
-                @M03292:26:000000000-AH6AG:1:1101:22127:1258
+                @Seq8
                 CGTGTAAAAAAG
     """
     supported_programs = [Demux_Program_Fastx]

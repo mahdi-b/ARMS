@@ -45,8 +45,9 @@ def main(argv):
     parser.add_argument('-t', '--processes', type=int, default=1, help="The maximum number of processes to spawn.")
     parser.add_argument('--dry_run', default=False)
     parser.add_argument('--debugtest', default=False)
-    parser.add_argument('-y', '--extraargstring', default="", required=False, help="Auxillary command line arguments \
-                            to append to the end of the command.")
+    parser.add_argument('-y', '--extraargstring', default="", required=False, help="Auxillary parameters you wish to \
+                            pass to the called program (such as options chewbacca doesn't support).  USE AT YOUR OWN \
+                            RISK.")
 
     subparsers = parser.add_subparsers(dest='action', help='Available commands')
 
