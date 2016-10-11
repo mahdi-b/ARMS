@@ -1,4 +1,4 @@
-from classes.ChewbaccaCommand import *
+from classes.ChewbaccaCommand import ChewbaccaCommand
 from otu.Build_OTU_Table_Program_Chewbacca import Build_OTU_Table_Program_Chewbacca
 
 

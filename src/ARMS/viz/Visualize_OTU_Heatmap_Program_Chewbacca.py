@@ -2,9 +2,9 @@ import matplotlib
 matplotlib.use('Agg')
 import numpy as np
 from classes.ChewbaccaProgram import ChewbaccaProgram
-from classes.Helpers import *
+from classes.Helpers import printVerbose, makeDirOrdie, getInputFiles, strip_ixes
 from matplotlib import pyplot as plt
-from Visualize_Helpers import *
+from Visualize_Helpers import subset_dataframe
 
 class Visualize_OTU_Heatmap_Program_Chewbacca(ChewbaccaProgram):
     name = "chewbacca"

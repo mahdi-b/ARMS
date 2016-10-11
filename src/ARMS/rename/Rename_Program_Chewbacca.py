@@ -1,8 +1,10 @@
 import os
-from classes.ChewbaccaProgram import *
-from classes.ProgramRunner import *
-from classes.Helpers import *
+from classes.ChewbaccaProgram import ChewbaccaProgram
+from classes.PythonRunner import PythonRunner
+from classes.Helpers import getInputFiles, debugPrintInputInfo, init_pool, run_parallel, printVerbose, strip_ixes, \
+    cleanup_pool, bulk_move_to_dir, makeAuxDir, makeDirOrdie, clip_count
 from Bio import SeqIO
+
 
 class Rename_Program_Chewbacca(ChewbaccaProgram):
     name = "chewbacca"
@@ -27,11 +29,12 @@ class Rename_Program_Chewbacca(ChewbaccaProgram):
         debugPrintInputInfo(inputs, "rename")
         pool = init_pool(min(len(inputs), processes))
         printVerbose("Renaming sequences...")
-        # Run serialRename in parallel
-        parallel(runPythonInstance,
-                 [(serialRename,
-                   input_, "%s/%s_renamed%s" % (outdir, strip_ixes(input_), os.path.splitext(input_)[1]),
-                   filetype, clip) for input_ in inputs], pool)
+        # Run serialRename in run_parallel
+        run_parallel([PythonRunner(serialRename,
+                                   [input_,
+                                    "%s/%s_renamed%s" % (outdir, strip_ixes(input_), os.path.splitext(input_)[1]),
+                                    filetype, clip], {"exists": [input_]})
+                      for input_ in inputs], pool)
         printVerbose("Done renaming sequences...")
 
         samples_dir = makeDirOrdie("%s_samples" % outdir)
@@ -51,14 +54,15 @@ def serialRename(input_file, output_fasta_filepath, file_type, clip=True):
         Also writes a groups file, linking each sequence to its parent sample.
         e.g. The sequences in SiteX_SampleA.fasta are renamed:
                 SiteX_SampleA_0, SiteX_SampleA_1, SiteX_SampleA_2, etc.
-    :param input_file:      Input fasta or fastq file.
+    :param input_file: Input fasta or fastq file.
     :param output_fasta_filepath:     Filepath for the output .samples file.
-    :param file_type:       "fasta" or "fastq"
+    :param file_type: "fasta" or "fastq"
+    :param clip: True if filenames contain file_ID#s.  Will clip the IDs before renaming to get proper sequence names.
     """
 
     samples_file = "%s/%s_renamed.samples" % (os.path.dirname(output_fasta_filepath), strip_ixes(input_file))
     name_map_file = "%s/%s_renamed.mapping" % (os.path.dirname(output_fasta_filepath), strip_ixes(input_file))
-    seqPrefix = strip_ixes(input_file)
+    seq_prefix = strip_ixes(input_file)
     i = 0
 
     with open(output_fasta_filepath, 'w') as output:
@@ -82,11 +86,13 @@ def serialRename(input_file, output_fasta_filepath, file_type, clip=True):
 
                     # Store the old_name new_name mapping
                     old_id = s.id
-                    s.id = "%s_ID%s" % (seqPrefix, i)
+                    s.id = "%s_ID%s" % (seq_prefix, i)
                     name_map.append("%s\t%s\n" % (old_id, s.id))
 
                     # Store the sequence-sample map
-                    samples_map.append("%s\t%s\n" % (s.id, clip_count(seqPrefix, '_')))
+                    if clip:
+                        seq_prefix = clip_count(seq_prefix, '_')
+                    samples_map.append("%s\t%s\n" % (s.id, seq_prefix))
 
                     # Store the renamed sequence
                     s.description = ""

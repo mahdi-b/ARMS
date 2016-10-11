@@ -1,5 +1,4 @@
-from classes.ChewbaccaCommand import *
-
+from classes.ChewbaccaCommand import ChewbaccaCommand
 from Dereplicate_Program_Vsearch import Dereplicate_Program_Vsearch
 
 

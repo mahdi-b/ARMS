@@ -5,7 +5,7 @@ from Bio.SeqRecord import SeqRecord
 from itertools import product
 
 from nose.tools import *
-from src.ARMS.Helpers import makeDirOrdie
+from classes.Helpers import makeDirOrdie
 
 from diffFasta import diff
 

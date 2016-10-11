@@ -1,9 +1,7 @@
 import StringIO
 import shutil
-from multiprocessing import Pool
-
 from nose.tools import *
-from src.ARMS.Helpers import *
+from classes.Helpers import *
 
 
 class AttributeObject(object):
@@ -60,7 +58,7 @@ def test_runPythonInstance():
 
 
 def test_parallel():
-    # NOTE: tests for correctness, not parallel execution!!!
+    # NOTE: tests for correctness, not run_parallel execution!!!
     vals = [True, False, 3.1415, "test_files"]
     rslts = parallel(runPythonInstance, [(mirror, val) for val in vals], Pool(4))
     print rslts
@@ -120,7 +118,7 @@ def test_enumerateDir():
             ('*a*',["a.txt", "aa.fasta", "b.fasta", "ba.txt"]),
             ('*', files),
             ('', [])]
-    rslts = [enumerateDir(test_dir,item[0]) for item in data]
+    rslts = [enumerate_dir(test_dir, item[0]) for item in data]
     solution_list = [item[1] for item in data]
 
     for rslt, solution in zip(rslts, solution_list):

@@ -1,4 +1,4 @@
-from classes.ChewbaccaCommand import *
+from classes.ChewbaccaCommand import ChewbaccaCommand
 from otu.Query_OTU_DB_Program_Vsearch import Query_OTU_DB_Program_Vsearch
 
 

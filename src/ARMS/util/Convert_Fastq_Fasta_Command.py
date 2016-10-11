@@ -1,4 +1,4 @@
-from classes.ChewbaccaCommand import *
+from classes.ChewbaccaCommand import ChewbaccaCommand
 from util.Convert_Fastq_Fasta_Program_Chewbacca import Convert_Fastq_Fasta_Program_Chewbacca
 
 

@@ -48,7 +48,7 @@ Yes!  Chewbacca comes with a 'default' set of steps that will take in raw reads 
 
 **What makes Chewbacca Different?**
 
-1. Chewbacca is a toolkit designed with parallel processing in mind.  Chewbacca's operations are as parallel as possible.
+1. Chewbacca is a toolkit designed with run_parallel processing in mind.  Chewbacca's operations are as run_parallel as possible.
 2. Chewbacca is modular.  Different research requires different analytical pipelines. Chewbacca's subprograms are each designed to tackle one small problem.  Odds are good that you'll find some parts of the toolkit useful.
 3. Chewbacca remembers.  Did you mess up in one of your steps?  Chewbacca saves the output of each step to a directory, meaning you don't have to start from scratch if you change part of your pipeline.
 

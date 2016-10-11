@@ -1,4 +1,4 @@
-from classes.ChewbaccaCommand import *
+from classes.ChewbaccaCommand import ChewbaccaCommand
 from util.Ungap_Program_Chewbacca import Ungap_Program_Chewbacca
 
 

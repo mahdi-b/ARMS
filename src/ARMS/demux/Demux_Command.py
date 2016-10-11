@@ -1,4 +1,4 @@
-from classes.ChewbaccaCommand import *
+from classes.ChewbaccaCommand import ChewbaccaCommand
 
 from Demux_Program_Fastx import Demux_Program_Fastx
 

@@ -1,4 +1,4 @@
-from classes.ChewbaccaCommand import *
+from classes.ChewbaccaCommand import ChewbaccaCommand
 from viz.Visualize_OTU_Heatmap_Program_Chewbacca import Visualize_OTU_Heatmap_Program_Chewbacca
 
 

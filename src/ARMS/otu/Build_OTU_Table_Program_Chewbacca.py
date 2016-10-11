@@ -1,7 +1,6 @@
-from classes.ChewbaccaProgram import *
-from classes.ProgramRunner import *
+from classes.ChewbaccaProgram import ChewbaccaProgram
 from build_OTU_table import buildOTUtable
-from classes.Helpers import *
+from classes.Helpers import getInputFiles, debugPrintInputInfo, printVerbose
 
 
 class Build_OTU_Table_Program_Chewbacca(ChewbaccaProgram):

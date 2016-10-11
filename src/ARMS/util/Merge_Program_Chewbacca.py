@@ -1,8 +1,6 @@
-from classes.ChewbaccaProgram import *
-from classes.ProgramRunner import *
+from classes.ChewbaccaProgram import ChewbaccaProgram
+from classes.Helpers import getInputFiles, debugPrintInputInfo, printVerbose
 from util.merge import merge_files
-
-from classes.Helpers import *
 
 
 class Merge_Program_Chewbacca(ChewbaccaProgram):
@@ -31,4 +29,4 @@ class Merge_Program_Chewbacca(ChewbaccaProgram):
         output_file = "%s/%s_MERGED.%s" % (outdir, output_filename, output_fileext)
         merge_files(inputs, output_file)
         printVerbose("Done merging.")
-        logging.debug("Merged %d files into %s" % (len(inputs), output_file))
+        printVerbose("Merged %d files into %s" % (len(inputs), output_file))

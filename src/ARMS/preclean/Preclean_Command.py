@@ -1,5 +1,4 @@
-from classes.ChewbaccaCommand import *
-
+from classes.ChewbaccaCommand import ChewbaccaCommand
 from Preclean_Program_Bayeshammer import Preclean_Program_Bayeshammer
 
 

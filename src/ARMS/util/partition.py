@@ -1,6 +1,6 @@
 import sys
 from Bio import SeqIO
-from classes.Helpers import *
+from classes.Helpers import printVerbose
 
 def splitK(inputFasta, prefix, nbSeqsPerFile, filetype):
     mySeqs = SeqIO.parse(inputFasta, filetype)

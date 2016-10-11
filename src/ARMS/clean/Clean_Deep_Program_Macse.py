@@ -1,17 +1,14 @@
 from classes.ChewbaccaProgram import ChewbaccaProgram
-from classes.ProgramRunner import *
-from classes.Helpers import *
-
+from classes.Helpers import getInputFiles, init_pool, printVerbose, run_parallel, getFileName, cleanup_pool
+from classes.ProgramRunner import ProgramRunner,ProgramRunnerCommands
 
 class Clean_Deep_Program_Macse(ChewbaccaProgram):
     """Uses Macse's enrichAlignment program to align a set of sequences."""
     name = "macse"
 
-
     def execute_program(self):
         args = self.args
         self.align_macse(args.input_f, args.db, args.outdir, args.processes, args.extraargstring)
-
 
     def align_macse(self, input_f, db, outdir, processes, extraargstring):
         """Aligns sequences by iteratively adding them to a known good alignment.
@@ -31,10 +28,9 @@ class Clean_Deep_Program_Macse(ChewbaccaProgram):
         pool = init_pool(min(len(inputs), processes))
         printVerbose("Aligning reads using MACSE")
         inputs = getInputFiles(input_f)
-        parallel(runProgramRunnerInstance, [ProgramRunner(ProgramRunnerCommands.MACSE_ALIGN,
-                                                          [db, db, input] +
-                                                          ["%s/%s" % (outdir, getFileName(input))] * 3,
-                                                          {"exists": [input, db]}, extraargstring)
-                                            for input in inputs], pool)
+        run_parallel([ProgramRunner(ProgramRunnerCommands.MACSE_ALIGN,
+                                    [db, db, input] + ["%s/%s" % (outdir, getFileName(input))] * 3,
+                                    {"exists": [input, db]}, extraargstring)
+                      for input in inputs], pool)
         printVerbose("Done with MACSE alignment.")
         cleanup_pool(pool)

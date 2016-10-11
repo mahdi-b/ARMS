@@ -1,5 +1,4 @@
-from classes.ChewbaccaCommand import *
-
+from classes.ChewbaccaCommand import ChewbaccaCommand
 from Assemble_Program_Pear import Assemble_Program_Pear
 
 

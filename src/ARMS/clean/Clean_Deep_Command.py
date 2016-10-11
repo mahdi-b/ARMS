@@ -1,4 +1,4 @@
-from classes.ChewbaccaCommand import *
+from classes.ChewbaccaCommand import ChewbaccaCommand
 from Clean_Deep_Program_Macse import Clean_Deep_Program_Macse
 
 

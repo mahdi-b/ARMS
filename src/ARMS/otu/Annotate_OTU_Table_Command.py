@@ -1,4 +1,4 @@
-from classes.ChewbaccaCommand import *
+from classes.ChewbaccaCommand import ChewbaccaCommand
 
 from Annotate_OTU_Table_Program_Chewbacca import Annotate_OTU_Table_Program_Chewbacca
 

@@ -1,4 +1,4 @@
-from classes.ChewbaccaCommand import *
+from classes.ChewbaccaCommand import ChewbaccaCommand
 from Clean_Adapters_Program_Flexbar import Clean_Adapters_Program_Flexbar
 
 
@@ -56,7 +56,6 @@ class Clean_Adapters_Command(ChewbaccaCommand):
                     @Data_ID#1
                     ATCGATCGATCG
         """
-
 
     supported_programs = [Clean_Adapters_Program_Flexbar]
     default_program = Clean_Adapters_Program_Flexbar

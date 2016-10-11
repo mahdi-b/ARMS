@@ -1,7 +1,5 @@
-from classes.ProgramRunner import *
-
-from classes.Helpers import *
-
+from classes.Helpers import run_parallel, printVerbose, strip_ixes
+from classes.ProgramRunner import ProgramRunner, ProgramRunnerCommands
 
 def query_vsearch(inputs, outdir, processes, aln_user_string, extraargstring, pool):
     """Runs a VSEARCH alignment on pairs of query/reference sequences.
@@ -16,8 +14,7 @@ def query_vsearch(inputs, outdir, processes, aln_user_string, extraargstring, po
     printVerbose("Aligning against reference sequences...")
     #     # vsearch --usearch_global %s seeds.pick.fasta  --db ../data/BiocodePASSED_SAP.txt --id 0.9 \
     # --userfields query+target+id+alnlen+qcov --userout %sout --alnout %s alnout.txt
-    parallel(runProgramRunnerInstance,
-             [ProgramRunner(ProgramRunnerCommands.ALIGN_VSEARCH,
+    run_parallel([ProgramRunner(ProgramRunnerCommands.ALIGN_VSEARCH,
                             [processes, query_fasta, ref_fasta, "%s/%s.out" % (outdir, strip_ixes(query_fasta)),
                              "%s/%s.alnout" % (outdir, strip_ixes(query_fasta)), aln_user_string],
                             {"exists": [query_fasta, ref_fasta], "positive": [processes]},

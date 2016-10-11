@@ -1,7 +1,9 @@
-from itertools import product
-from classes.ChewbaccaProgram import *
 from annotate_OTU_table import annotateOTUtable
-from classes.Helpers import *
+from classes.ChewbaccaProgram import ChewbaccaProgram
+from classes.Helpers import getInputFiles, debugPrintInputInfo, init_pool, run_parallel, printVerbose, copy_file, \
+    cleanup_pool
+from classes.PythonRunner import PythonRunner
+from itertools import product
 
 
 class Annotate_OTU_Table_Program_Chewbacca(ChewbaccaProgram):
@@ -27,16 +29,17 @@ class Annotate_OTU_Table_Program_Chewbacca(ChewbaccaProgram):
             pool = init_pool(min(len(matricies), processes))
             print "**WARNING**: Annotation File is empty.  Skipping annotation and copying old OTU tables to output \
                     directory.\n"
-            parallel(runPythonInstance,[(copy_file, matrix, outdir) for matrix in matricies], pool)
+            run_parallel([PythonRunner(copy_file, [matrix, outdir],
+                                       {"exists": [matrix]}) for matrix in matricies], pool)
         else:
             pool = init_pool(min(len(matricies) * len(annotations), processes))
             debugPrintInputInfo(annotations, "parsed.")
             inputs = product(matricies, annotations)
 
-
             printVerbose("Annotating matrix...")
-            parallel(runPythonInstance, [(annotateOTUtable, matrix, annotation, "%s/%s.txt" % (outdir, "matrix"))
-                                         for matrix, annotation in inputs], pool)
+            run_parallel([PythonRunner(annotateOTUtable, [matrix, annotation, "%s/%s.txt" % (outdir, "matrix")],
+                                       {"exists": [matrix, annotation]})
+                          for matrix, annotation in inputs], pool)
             printVerbose("Done Annotating.")
 
         cleanup_pool(pool)

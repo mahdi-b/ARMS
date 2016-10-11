@@ -1,8 +1,11 @@
 import ConfigParser
+import logging
+import os
 import subprocess
+import sys
 from enum import Enum
-from classes.Helpers import *
-from classes import Validator
+from classes.Helpers import printVerbose, debugPrint
+from classes.ValidRunner import ValidRunner
 
 class ProgramRunnerPrograms(Enum):
     """An Enum class listing all known external programs used by chewbacca."""
@@ -35,23 +38,21 @@ class ProgramRunnerCommands(Enum):
     MACSE_FORMAT = "MACSE_FORMAT"
 
 
-class ProgramRunner(object):
+class ProgramRunner(ValidRunner):
     """A class to interact with external command line programs.  The class contains a \
     dictionary of formatted command strings for external programs.  The class supports validation, sanitization, and \
     debugging of user-supplied parameters.
 
     Attributes:
-        DEFAULT_CONFIG_FILEPATH:     The filepath to a config file containing user-specified overrides (such as file \
-                                        paths to exectuables.
-
-        program_paths:               Specifies the default location of executables used in the commandTemplates \
-                                        dictionary.
-
-        commandTemplates:            A dictionary mapping chewbacca commands to un-paramaterized command line strings. \
-                                        Used as templates for commands.
+        self.DEFAULT_CONFIG_FILEPATH:     The filepath to a config file containing user-specified overrides (such as \
+                                            file paths to exectuables.
+        self.program_paths:               Specifies the default location of executables used in the commandTemplates \
+                                            dictionary.
+        self.commandTemplates:            A dictionary mapping chewbacca commands to un-paramaterized command line \
+                                            strings.  Used as templates for commands.
     """
     DEFAULT_CONFIG_FILEPATH = "chewbacca.cfg"
-    run_dry = False
+
     # Actual commands
     commandTemplates = {}
 
@@ -69,14 +70,14 @@ class ProgramRunner(object):
         ProgramRunnerPrograms.JAVA: os.path.expanduser("java -jar")
     }
 
-    def __init__(self, program, params, conditions=None, custom_arg_string=""):
+    def __init__(self, program_, params, conditions_=None, custom_arg_string=""):
         """Initalizes a ProgramRunner object.  Reads chewbacca.cfg and loads configuration settings, builds the command
         string, and configures stdIO pipes.
 
-        :param program:     A chewbacca command (as a string).  Used as a key to fetch the command string from
+        :param program_:     A ProgramRunnerCommand.  Used as a key to fetch the command string from
                                 ProgramRunner.commandTemplates.
         :param params:      A list of parameters for the chosen chewbacca command.
-        :param conditions:  A dictionary mapping <Validator>.function names to a list of parameters.  The dictionary
+        :param conditions_:  A dictionary mapping <Validator>.function names to a list of parameters.  The dictionary
                                 key/function name is called on each parameter in the corresponding list of parameters.
                                 All parameters must satisfy their <Validator>.function in order for the specified
                                 program to execute.
@@ -84,31 +85,14 @@ class ProgramRunner(object):
                                 This string will be appended to the end of the normal commandline arguments.
         :return             A list of output files to be moved to outdir.
         """
-        if conditions is None:
+        if conditions_ is None:
             conditions = {}
         ProgramRunner.__load_configs__(self)
         ProgramRunner.__initalize_commands__(self)
-        self.program = program
-        self.command = "%s %s" % (self.commandTemplates[program] % tuple(params), custom_arg_string)
-        self.conditions = conditions
+        self.program = program_
+        self.command = "%s %s" % (self.commandTemplates[program_] % tuple(params), custom_arg_string)
+        self.conditions = conditions_
         self.extra_args = custom_arg_string
-        if not printVerbose.VERBOSE:
-            self.stdout = open(os.devnull, 'w')
-
-    def validate_conditions(self):
-        """Validates this program's conditions for execution.
-
-        :return:            True if validation is successful, and raising an exception in <Validator.function> if not.
-        """
-        for condition in self.conditions.items():
-            getattr(Validator, condition[0])(condition[1])
-        return True
-
-    def dry_validate_conditions(self):
-        """Prints validation procedures without actually executing them.
-        """
-        for condition in self.conditions.items():
-            print "\t\tvalidating that %s, %s" % (str(condition[1]), condition[0])
 
     def run(self):
         """Validates conditions (or prints them for a verbose/dry run) and then executes the command.
@@ -128,21 +112,6 @@ class ProgramRunner(object):
             debugPrint("Running " + self.command)
             # call and check_call are blocking, Popen is non-blocking
             return subprocess.check_call(os.path.expanduser(self.command), shell=True, stdout=output)
-
-    def dry_run(self, dry_validate=True):
-        """Prints the validation procedures that would be performed, and the commands that would be run in an actual
-            run, without actually executing them.
-
-
-        :param dry_validate: If True, print the validation statements that would be executed, but don't actually \
-                                execute. If False, perform normal validation routine, exiting on invalid conditions.
-        :return: The fully-formatted command string that would be executed.
-        """
-        if dry_validate:
-            self.dry_validate_conditions()
-        else:
-            self.validate_conditions()
-        return self.command
 
     def __load_configs__(self):
         """Loads configuration settings from the chewbacca configuration file (located in

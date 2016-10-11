@@ -1,10 +1,10 @@
-from classes.ChewbaccaCommand import *
+from classes.ChewbaccaCommand import ChewbaccaCommand
 
 from Merge_Program_Chewbacca import Merge_Program_Chewbacca
 
 
 class Merge_Command(ChewbaccaCommand):
-    """Concatenates multiple files into a single file.  Useful for combining the results of a parallel operation, or \
+    """Concatenates multiple files into a single file.  Useful for combining the results of a run_parallel operation, or \
         when preparing for cross-sample derepication.
 
     **Inputs**:

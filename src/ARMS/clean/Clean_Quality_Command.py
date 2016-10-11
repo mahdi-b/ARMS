@@ -1,5 +1,4 @@
-from classes.ChewbaccaCommand import *
-
+from classes.ChewbaccaCommand import ChewbaccaCommand
 from Clean_Quality_Program_Trimmomatic import Clean_Quality_Program_Trimmomatic
 
 

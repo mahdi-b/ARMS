@@ -1,6 +1,8 @@
-from classes.ChewbaccaProgram import *
-from classes.Helpers import *
-from classes.ProgramRunner import *
+from classes.ChewbaccaProgram import ChewbaccaProgram
+from classes.Helpers import getInputFiles, debugPrintInputInfo, init_pool, run_parallel, printVerbose, strip_ixes, \
+    makeAuxDir, bulk_move_to_dir, cleanup_pool, makeDirOrdie
+from classes.ProgramRunner import ProgramRunner, ProgramRunnerCommands
+from classes.PythonRunner import PythonRunner
 from parse.parseUCtoGroups import parseUCtoGroups
 from rename.renameWithReplicantCounts import renameWithReplicantCounts
 from rename.renameWithoutCount import removeCountsFromFastFile
@@ -45,9 +47,10 @@ class Dereplicate_Program_Vsearch(ChewbaccaProgram):
         if stripcounts:
             printVerbose("Removing counts from sequence names...")
             debugPrintInputInfo(inputs, "renamed")
-            parallel(runPythonInstance, [(removeCountsFromFastFile, input_,
-                                          "%s/%s_uncount.fasta" % (outdir, strip_ixes(input_)), 'fasta')
-                                         for input_ in inputs], pool)
+            run_parallel([PythonRunner(removeCountsFromFastFile,
+                                       [input_, "%s/%s_uncount.fasta" % (outdir, strip_ixes(input_)), 'fasta'],
+                                       {"exists": input_})
+                          for input_ in inputs], pool)
             printVerbose("Done removing counts.")
 
             # Grab the cleaned files as input for the next step
@@ -56,13 +59,13 @@ class Dereplicate_Program_Vsearch(ChewbaccaProgram):
         # DEREPLICATE
         debugPrintInputInfo(inputs, "dereplicated")
         printVerbose("Dereplicating...")
-        parallel(runProgramRunnerInstance, [ProgramRunner(ProgramRunnerCommands.DEREP_VSEARCH,
-                                                          [processes, input_,
-                                                           "%s/%s_derep.fasta" % (outdir, strip_ixes(input_)),
-                                                           "%s/%s_uc.out" % (outdir, strip_ixes(input_))],
-                                                          {"exists": [input_], "positive": [processes]},
-                                                          extraargstring)
-                                            for input_ in inputs], pool)
+        run_parallel([ProgramRunner(ProgramRunnerCommands.DEREP_VSEARCH,
+                                    [processes, input_,
+                                     "%s/%s_derep.fasta" % (outdir, strip_ixes(input_)),
+                                     "%s/%s_uc.out" % (outdir, strip_ixes(input_))],
+                                    {"exists": [input_], "positive": [processes]},
+                                    extraargstring)
+                      for input_ in inputs], pool)
         printVerbose("Done dereplicating")
 
         # LOG DEREPLICATED SEQUENCES INTO A .GROUPS FILE
@@ -71,9 +74,9 @@ class Dereplicate_Program_Vsearch(ChewbaccaProgram):
         input_ucs = getInputFiles(outdir, "*_uc.out")
         printVerbose("Generating a groups file from dereplication.")
         debugPrintInputInfo(inputs, "parsed (into agroups file)")
-        parallel(runPythonInstance,
-                 [(parseUCtoGroups, input_, "%s/%s_derep.groups" % (outdir, strip_ixes(input_)))
-                  for input_ in input_ucs], pool)
+        run_parallel([PythonRunner(parseUCtoGroups, [input_, "%s/%s_derep.groups" % (outdir, strip_ixes(input_))],
+                                   {"exists": [input_]})
+                      for input_ in input_ucs], pool)
 
         most_recent_groups_files = getInputFiles(outdir, "*_derep.groups", ignore_empty_files=False)
 
@@ -84,10 +87,10 @@ class Dereplicate_Program_Vsearch(ChewbaccaProgram):
             derep_groups_files = getInputFiles(outdir, "*_derep.groups")
 
             printVerbose("Updating .groups files with dereplicated data")
-            logging.debug("%d Reference (old)groups files to be read:" % len(old_groups_files))
-            logging.debug(str(old_groups_files))
-            logging.debug("%d Dereplicated (new)groups files to be read:" % len(derep_groups_files))
-            logging.debug(str(derep_groups_files))
+            printVerbose("%d Reference (old)groups files to be read:" % len(old_groups_files))
+            printVerbose(str(old_groups_files))
+            printVerbose("%d Dereplicated (new)groups files to be read:" % len(derep_groups_files))
+            printVerbose(str(derep_groups_files))
 
             update_groups(old_groups_files, derep_groups_files, outdir, "dereplicated")
             most_recent_groups_files = getInputFiles(outdir, "dereplicated*", ignore_empty_files=False)
@@ -102,10 +105,10 @@ class Dereplicate_Program_Vsearch(ChewbaccaProgram):
         # python renameWithReplicantCounts.py
         #               8_macse_out/MACSEOUT_MERGED.fasta uc_parsed.out dereplicated_renamed.fasta
         printVerbose("Adding dereplication data to unique fasta")
-        parallel(runPythonInstance,
-                 [(renameWithReplicantCounts, fasta, groups,
-                   "%s/%s_counts.fasta" % (outdir, strip_ixes(fasta)), 'fasta')
-                  for fasta, groups in fasta_groups_pairs], pool)
+        run_parallel([PythonRunner(renameWithReplicantCounts,
+                                   [fasta, groups, "%s/%s_counts.fasta" % (outdir, strip_ixes(fasta)), 'fasta'],
+                                   {"exists": [fasta, groups]})
+                      for fasta, groups in fasta_groups_pairs], pool)
         printVerbose("Done adding data")
 
         aux_dir = makeAuxDir(outdir)

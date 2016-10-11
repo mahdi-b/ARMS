@@ -70,6 +70,7 @@ Adding New Programs:
 
 2. Add a parser for your command.
 	Add a subparser to the argparse object, and fill in the variables and help messages you'll expose to users.
+		NOTE: Make sure you include a -p 'program' flag for your parser if you have more than one program for that command
 3. Create a Command class.
 	Copy one of the other Command classes and rename it with your new command!
 4. Create a Program class

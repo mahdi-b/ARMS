@@ -1,9 +1,10 @@
-from classes.ChewbaccaProgram import *
+from classes.ChewbaccaProgram import ChewbaccaProgram
+from classes.Helpers import getInputFiles, debugPrintInputInfo, init_pool, run_parallel, printVerbose, strip_ixes, \
+    makeAuxDir, bulk_move_to_dir, cleanup_pool, makeDirOrdie
 from classes.ProgramRunner import ProgramRunner, ProgramRunnerCommands
+from classes.PythonRunner import PythonRunner
 from parse.parseUCtoGroups import parseUCtoGroups
 from rename.renameWithoutCount import removeCountsFromGroupsFile
-
-from classes.Helpers import *
 from Cluster_Helpers import handle_groups_file_update
 
 
@@ -12,7 +13,8 @@ class Cluster_Program_Vsearch(ChewbaccaProgram):
 
     def execute_program(self):
         args = self.args
-        self.cluster_vsearch(args.input_f, args.outdir, args.groupsfile, args.processes, args.idpct, args.extraargstring)
+        self.cluster_vsearch(args.input_f, args.outdir, args.groupsfile, args.processes, args.idpct,
+                             args.extraargstring)
 
     def cluster_vsearch(self, input_f, outdir, groupsfile, processes, idpct, extraargstring):
         """Clusters sequences using SWARM.
@@ -33,19 +35,18 @@ class Cluster_Program_Vsearch(ChewbaccaProgram):
 
         # RUN CLUSTERING
         # " --cluster_size %s -id %f --centroids %s  --uc %s",
-        parallel(runProgramRunnerInstance,
-                 [ProgramRunner(ProgramRunnerCommands.CLUSTER_VSEARCH,
-                                [input_, float(idpct), "%s/%s_seeds.fasta" % (outdir, strip_ixes(input_)),
-                                 "%s/%s_clustered_uc" % (outdir, strip_ixes(input_))],
-                                {"exists": [input_]}, extraargstring) for input_ in inputs], pool)
+        run_parallel([ProgramRunner(ProgramRunnerCommands.CLUSTER_VSEARCH,
+                                    [input_, float(idpct), "%s/%s_seeds.fasta" % (outdir, strip_ixes(input_)),
+                                     "%s/%s_clustered_uc" % (outdir, strip_ixes(input_))],
+                                    {"exists": [input_]}, extraargstring) for input_ in inputs], pool)
 
         # PARSE UC FILE TO GROUPS FILE
         printVerbose("Parsing the clustered uc files to groups files")
         clustered_uc_files = getInputFiles(outdir, "*_clustered_uc")
         debugPrintInputInfo(clustered_uc_files, "parsed to groups")
-        parallel(runPythonInstance,
-                 [(parseUCtoGroups, input_, "%s/%s.groups" % (outdir, strip_ixes(input_)))
-                  for input_ in clustered_uc_files], pool)
+        run_parallel([PythonRunner(parseUCtoGroups, [input_, "%s/%s.groups" % (outdir, strip_ixes(input_))],
+                                   {"exists": [input_]})
+                      for input_ in clustered_uc_files], pool)
 
         # REMOVE COUNTS FROM CLUSTERING GROUPS FILE
         printVerbose("Cleaning the .groups file from clustering")
@@ -53,9 +54,10 @@ class Cluster_Program_Vsearch(ChewbaccaProgram):
         clustered_groups_files = getInputFiles(outdir, "*_clustered.groups")
         # Remove counts from the clustering groups files
         debugPrintInputInfo(clustered_groups_files, "cleaned")
-        parallel(runPythonInstance,
-                 [(removeCountsFromGroupsFile, input_, "%s/%s_uncount.groups" % (outdir, strip_ixes(input_)))
-                  for input_ in clustered_groups_files], pool)
+        run_parallel([PythonRunner(removeCountsFromGroupsFile,
+                                   [input_, "%s/%s_uncount.groups" % (outdir, strip_ixes(input_))],
+                                   {"exists": [input_]})
+                      for input_ in clustered_groups_files], pool)
         printVerbose("Done cleaning groups files.")
 
         # Collect the groups file from clustering with counts removed

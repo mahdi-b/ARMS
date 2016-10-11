@@ -1,7 +1,7 @@
-from classes.ChewbaccaProgram import *
-from classes.ProgramRunner import *
-
-from classes.Helpers import *
+from classes.ChewbaccaProgram import ChewbaccaProgram
+from classes.Helpers import getInputFiles, debugPrintInputInfo, init_pool, run_parallel, printVerbose, strip_ixes, \
+    cleanup_pool, bulk_move_to_dir, makeAuxDir, validate_paired_fastq_reads, move
+from classes.ProgramRunner import ProgramRunner, ProgramRunnerCommands
 
 
 class Preclean_Program_Bayeshammer(ChewbaccaProgram):
@@ -30,12 +30,11 @@ class Preclean_Program_Bayeshammer(ChewbaccaProgram):
         printVerbose("\tPrecleaning %s reads with Spades-Baye's Hammer..." % len(inputs))
         debugPrintInputInfo(inputs, "preclean/fix.")
 
-        parallel(runProgramRunnerInstance,
-                 [ProgramRunner(ProgramRunnerCommands.PRECLEAN_SPADES,
-                                [forwards, reverse, outdir, bayesthreads],
-                                {"exists": [forwards, reverse], "positive": [bayesthreads]},
-                                extraargstring)
-                  for forwards, reverse in inputs], pool)
+        run_parallel([ProgramRunner(ProgramRunnerCommands.PRECLEAN_SPADES,
+                                    [forwards, reverse, outdir, bayesthreads],
+                                    {"exists": [forwards, reverse], "positive": [bayesthreads]},
+                                    extraargstring)
+                      for forwards, reverse in inputs], pool)
         printVerbose("Done cleaning reads.")
 
         # Grab all the auxillary files (everything not containing ".assembled."
@@ -58,6 +57,6 @@ class Preclean_Program_Bayeshammer(ChewbaccaProgram):
         # Rename output files
         output_files = getInputFiles(outdir, "*")
         for out_file in output_files:
-            move(out_file,"%s/%s_corrected.fastq" % (outdir, strip_ixes(out_file)))
+            move(out_file, "%s/%s_corrected.fastq" % (outdir, strip_ixes(out_file)))
 
         cleanup_pool(pool)

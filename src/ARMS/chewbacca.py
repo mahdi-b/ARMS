@@ -1,9 +1,10 @@
 import argparse
 import signal
+import sys
 
-from clean.Clean_Deep_Repair_Command import Clean_Deep_Repair_Command
 from assemble.Assemble_Command import Assemble_Command
-from classes.Helpers import *
+from classes.Helpers import makeDirOrdie, logging, printVerbose
+from clean.Clean_Deep_Repair_Command import Clean_Deep_Repair_Command
 from clean.Clean_Adapters_Command import Clean_Adapters_Command
 from clean.Clean_Deep_Command import Clean_Deep_Command
 from clean.Clean_Quality_Command import Clean_Quality_Command
@@ -41,7 +42,7 @@ def main(argv):
     """
     parser = argparse.ArgumentParser(description="arms description", epilog="arms long description")
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + version)
-    parser.add_argument("--verbose", help="Increase output verbosity")
+    parser.add_argument("--verbose", dest='verbose', action='store_true', help="Increase output verbosity")
     parser.add_argument('-t', '--processes', type=int, default=1, help="The maximum number of processes to spawn.")
     parser.add_argument('--dry_run', default=False)
     parser.add_argument('--debugtest', default=False)
@@ -456,6 +457,30 @@ def main(argv):
     group.add_argument('-k', '--count', help="Positive integer x indicating that x OTU names (sorted highest \
                             abundance) should be included in the graph.", type=int)
     parser_viz_otu_heatmap.set_defaults(command=Visualize_OTU_Heatmap_Command)
+
+    #=============================================================================================
+    # TEST
+    from classes.ChewbaccaCommand import ChewbaccaCommand
+    from classes.ChewbaccaProgram import ChewbaccaProgram
+    from classes.ProgramRunner import ProgramRunner, ProgramRunnerCommands
+
+    class Test_Program_Chewbacca(ChewbaccaProgram):
+        name = "test"
+        def execute_program(self):
+            args = self.args
+            p = ProgramRunner(ProgramRunnerCommands.TEST_ECHO, [args.input_f])
+            p.run()
+
+    class Test_Command(ChewbaccaCommand):
+        default_program = Test_Program_Chewbacca
+        supported_programs = [Test_Program_Chewbacca]
+        command_name = "Test"
+
+    test_parser = subparsers.add_parser('test', description="test.")
+    test_parser.add_argument('-i', '--input_f', required=True, help="File")
+    test_parser.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
+    test_parser.set_defaults(command=Test_Command)
+    # =============================================================================================
 
     # =======================================
     # == Parse args and call default func  ==

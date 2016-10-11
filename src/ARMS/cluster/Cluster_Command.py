@@ -1,5 +1,4 @@
-from classes.ChewbaccaCommand import *
-
+from classes.ChewbaccaCommand import ChewbaccaCommand
 from Cluster_Program_Crop import Cluster_Program_Crop
 from Cluster_Program_Swarm import Cluster_Program_Swarm
 from Cluster_Program_Vsearch import Cluster_Program_Vsearch

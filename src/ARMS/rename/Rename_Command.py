@@ -1,5 +1,4 @@
-from classes.ChewbaccaCommand import *
-
+from classes.ChewbaccaCommand import ChewbaccaCommand
 from Rename_Program_Chewbacca import Rename_Program_Chewbacca
 
 

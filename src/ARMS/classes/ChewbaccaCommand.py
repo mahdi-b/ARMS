@@ -26,6 +26,8 @@ class ChewbaccaCommand:
             if prog.name == program:
                 print "Executing command %s with program %s." % (self.command_name, prog.name)
                 return prog(self.args)
+        print "Command %s has no program '%s'.  Using default program %s." % (self.command_name, program,
+                                                                              self.default_program.name)
         return self.default_program(self.args)
 
     def execute_command(self):
@@ -33,4 +35,6 @@ class ChewbaccaCommand:
 
         :return: Results of execution.
         """
-        return self.get_program(self.args.program).execute_program()
+        program_name = getattr(self.args, 'program', "")
+
+        return self.get_program(program_name).execute_program()
