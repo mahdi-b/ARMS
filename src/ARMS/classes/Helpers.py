@@ -108,7 +108,7 @@ def kill_pool_and_die(pool):
     pool.join()
     # New line for cursor
     print "\n"
-    sys.exit()
+    #sys.exit()
 
 
 def cleanup_pool(pool):
@@ -118,8 +118,9 @@ def cleanup_pool(pool):
     """
     pool.close()
     pool.join()
+    pool.terminate()
     print "\n"
-    sys.exit()
+    #sys.exit()
 
 
 def strip_ixes(path):

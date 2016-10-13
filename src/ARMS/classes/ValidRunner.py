@@ -14,17 +14,12 @@ class ValidRunner(object):
 
 
     def dry_run(self, dry_validate=True):
-        """Prints the validation procedures that would be performed, and the commands that would be run in an actual
-            run, without actually executing them.
+        """Prints the commands that would be run in an actual run, without actually executing them.
 
         :param dry_validate: If True, print the validation statements that would be executed, but don't actually \
                                 execute. If False, perform normal validation routine, exiting on invalid conditions.
         :return: The fully-formatted command string that would be executed.
         """
-        if dry_validate:
-            self.dry_validate_conditions()
-        else:
-            self.validate_conditions()
         return self.command
 
 

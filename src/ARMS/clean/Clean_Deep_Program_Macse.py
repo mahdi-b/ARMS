@@ -29,8 +29,8 @@ class Clean_Deep_Program_Macse(ChewbaccaProgram):
         printVerbose("Aligning reads using MACSE")
         inputs = getInputFiles(input_f)
         run_parallel([ProgramRunner(ProgramRunnerCommands.MACSE_ALIGN,
-                                    [db, db, input] + ["%s/%s" % (outdir, getFileName(input))] * 3,
-                                    {"exists": [input, db]}, extraargstring)
-                      for input in inputs], pool)
+                                    [db, db, input_] + ["%s/%s" % (outdir, getFileName(input_))] * 3,
+                                    {"exists": [input_, db]}, extraargstring)
+                      for input_ in inputs], pool)
         printVerbose("Done with MACSE alignment.")
         cleanup_pool(pool)

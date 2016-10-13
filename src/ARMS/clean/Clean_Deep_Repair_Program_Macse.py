@@ -39,10 +39,7 @@ class Clean_Deep_Repair_Program_Macse(ChewbaccaProgram):
                                      "%s/%s_NT_macse.fasta" % (outdir, getFileName(sample)),
                                      "%s/%s_macse.csv" % (outdir, getFileName(sample))],
 
-                                    {"exists": ["%s/%s_NT" % (input_f, getFileName(sample)),
-                                     "%s/%s_AA_macse.fasta" % (outdir, getFileName(sample)),
-                                     "%s/%s_NT_macse.fasta" % (outdir, getFileName(sample)),
-                                     "%s/%s_macse.csv" % (outdir, getFileName(sample))]}, extraargstring)
+                                    {"exists": ["%s/%s_NT" % (input_f, getFileName(sample))]}, extraargstring)
                       for sample in samples_list], pool)
         printVerbose("\tCleaning MACSE alignments")
 

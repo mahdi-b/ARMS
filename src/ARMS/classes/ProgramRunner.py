@@ -70,7 +70,7 @@ class ProgramRunner(ValidRunner):
         ProgramRunnerPrograms.JAVA: os.path.expanduser("java -jar")
     }
 
-    def __init__(self, program_, params, conditions_=None, custom_arg_string=""):
+    def __init__(self, program_, params, conditions_={}, custom_arg_string="", dryrun=False):
         """Initalizes a ProgramRunner object.  Reads chewbacca.cfg and loads configuration settings, builds the command
         string, and configures stdIO pipes.
 
@@ -93,6 +93,7 @@ class ProgramRunner(ValidRunner):
         self.command = "%s %s" % (self.commandTemplates[program_] % tuple(params), custom_arg_string)
         self.conditions = conditions_
         self.extra_args = custom_arg_string
+        self.run_dry = dryrun
 
     def run(self):
         """Validates conditions (or prints them for a verbose/dry run) and then executes the command.
@@ -167,7 +168,7 @@ class ProgramRunner(ValidRunner):
                                                     --fasta_width 0 --output %s -uc %s",
             ProgramRunnerCommands.ALIGN_VSEARCH: self.program_paths[ProgramRunnerPrograms.VSEARCH] +
                                                     " --threads %d --usearch_global %s --db %s --id 0.9 --userfields \
-                                                    query+target+id+alnlen+qcov --userout %s --alnout %s %s",
+                                                    query+target+id+alnlen+qcov+qstrand --userout %s --alnout %s %s",
             ProgramRunnerCommands.PRECLEAN_SPADES: "python " + self.program_paths[ProgramRunnerPrograms.SPADES] +
                                                     " --only-error-correction --disable-gzip-output -1 %s -2 %s -o %s \
                                                     -t %d",

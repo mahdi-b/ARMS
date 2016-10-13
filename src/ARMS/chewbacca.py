@@ -42,9 +42,10 @@ def main(argv):
     """
     parser = argparse.ArgumentParser(description="arms description", epilog="arms long description")
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + version)
-    parser.add_argument("--verbose", dest='verbose', action='store_true', help="Increase output verbosity")
+    parser.add_argument("--verbose", dest='verbose', default=False, action='store_true', help="Increase output verbosity")
     parser.add_argument('-t', '--processes', type=int, default=1, help="The maximum number of processes to spawn.")
-    parser.add_argument('--dry_run', default=False)
+    parser.add_argument('--dryrun', dest='dryrrun', default=False, action='store_true', help="Return command line \
+                           commands without validation or execution.")
     parser.add_argument('--debugtest', default=False)
     parser.add_argument('-y', '--extraargstring', default="", required=False, help="Auxillary parameters you wish to \
                             pass to the called program (such as options chewbacca doesn't support).  USE AT YOUR OWN \
@@ -496,7 +497,6 @@ def main(argv):
     printVerbose.VERBOSE = (args.verbose is not None)
     logging.debug("Initial ARGS are: %s", args)
     print("\t\t")
-    dryRun = args.dry_run
     signal.signal(signal.SIGTSTP, signal.SIG_IGN)
     makeDirOrdie(args.outdir)
     args.command(args).execute_command()
