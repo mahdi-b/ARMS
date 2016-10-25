@@ -1,4 +1,4 @@
-import oper*ator
+import operator
 import sys
 from Bio import SeqIO
 

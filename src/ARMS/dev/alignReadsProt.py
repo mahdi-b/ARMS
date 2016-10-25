@@ -1,11 +1,12 @@
 import sys
+from Bio import SeqIO
 from Bio import pairwise2
 from Bio.SubsMat import MatrixInfo as matlist
 from collections import defaultdict
 from itertools import product
 from operator import itemgetter
 
-from computeDist import *
+from computeDist import computeDist_outterGapConserved
 
 # Variables should be local not global..
 # indel penalty.
@@ -22,8 +23,8 @@ matrix = matlist.blosum62
 # We assume that the "*" in a the query is an error of tanslation
 # that would have been conserved amino acid otherwise 
 allAAs = set([x[0] for x in matrix.keys()])
-matrix.update(dict([((x, "*"), matrix[(x,x)]) for x in allAAs]))
-matrix.update(dict([(("*", "*"), matrix[(x,x)]) for x in allAAs]))
+matrix.update(dict([((x, "*"), matrix[(x, x)]) for x in allAAs]))
+matrix.update(dict([(("*", "*"), matrix[(x, x)]) for x in allAAs]))
 
 
 def make_freq_dict(mhap_hits, ref, ref_index, nuc_prt_names_map):
@@ -46,6 +47,7 @@ def make_freq_dict(mhap_hits, ref, ref_index, nuc_prt_names_map):
         else:
             table_counts[match_table] = 1
     return table_counts
+
 
 def guess_table_by_freq(mhap_out_hits, ref, ref_index, nuc_prt_names_map, query_seq):
     """Given a list of mhap_output hits for a query sequence, and the query SeqRecord, guess the table number for that
@@ -88,13 +90,11 @@ def guess_table_by_best_hit(mhap_out_hits, ref, ref_index, nuc_prt_names_map, qu
     return ([int(match_table)], table_counts)
 
 
-
-
 def mapAllHits(hitsFile):
     hits = {}
     for line in open(hitsFile):
         data = line.split()
-        id = data [0]
+        id = data[0]
         item = (data[1], float(data[3]))
         # if match in dict: append
         if id in hits.keys():
@@ -112,13 +112,13 @@ def findBestHits(hitsFile):
     :param hitsFile: A MHAP out put file
     :return: A dictionary containing the ID of the best match for each sequence in the MHAP result file.
     """
-    bestHits=defaultdict(lambda: [0,0])
+    bestHits = defaultdict(lambda: [0, 0])
     # make sure file exists
     for line in open(hitsFile):
         data = line.split()
         # if current data[3]
         if bestHits[data[0]][1] < float(data[3]):
-            bestHits[data[0]] = ( data[1], float(data[3]))
+            bestHits[data[0]] = (data[1], float(data[3]))
     return bestHits
 
 
@@ -129,8 +129,9 @@ def returnRefById(seqId, refsPositionsInFile, refs):
     :param refs: The SeqIO.index object of the reference database
     :return: The SeqRecord corresponding to that entry
     """
-    refId  = refsPositionsInFile[int(seqId)-1]
+    refId = refsPositionsInFile[int(seqId) - 1]
     return refs[refId]
+
 
 def returnQueryById(queryId, queries, orientation=0):
     """Returns the correctly oriented SeqRecord corresponding to the sequence named in the query fasta.
@@ -141,7 +142,7 @@ def returnQueryById(queryId, queries, orientation=0):
     """
     # queryId is the true reference sequence
     if orientation == 1:
-        return  queries[queryId].reverse_complement()
+        return queries[queryId].reverse_complement()
     else:
         return queries[queryId]
 
@@ -160,9 +161,8 @@ def globallyAlign(seq1, seq2, matrix=matrix, gap_open=gap_open, gap_extend=gap_e
     # get the aligned sequence
     ali = pairwise2.align.globalds(seq1, seq2, matrix, gap_open, gap_extend)[0]
     # TODO add sim score here as was computed by Greg
-    sim = (sum([1 for x in range(len(ali[0])) if ali[0][x] == ali[1][x] ]) * 1.0) / len(ali[0])
+    sim = (sum([1 for x in range(len(ali[0])) if ali[0][x] == ali[1][x]]) * 1.0) / len(ali[0])
     return (ali, sim)
-
 
 
 def run(nuc_ref_file, query_file, mhap_out_file, nuc_to_prot_file, prot_ref_file, heuristic_option):
@@ -191,7 +191,7 @@ def run(nuc_ref_file, query_file, mhap_out_file, nuc_to_prot_file, prot_ref_file
     h_name = "d"
     if heuristic_option > 0:
         h_name = "h"
-    out = open("%s_%s.tab"% (h_name, mhap_out_file), 'w')
+    out = open("%s_%s.tab" % (h_name, mhap_out_file), 'w')
     alignment = ""
     allHits = mapAllHits(mhap_out_file)
     nuc_to_prot_map = parseNames(nuc_to_prot_file)
@@ -210,12 +210,13 @@ def run(nuc_ref_file, query_file, mhap_out_file, nuc_to_prot_file, prot_ref_file
         all_hits_table_freqs = {}
         candidate_tables = [5, 9, 6]
         if heuristic_option == 1:
-            candidate_tables, all_hits_table_freqs = guess_table_by_freq(allHits, nuc_refs, nuc_refs_index, nuc_to_prot_map,
+            candidate_tables, all_hits_table_freqs = guess_table_by_freq(allHits, nuc_refs, nuc_refs_index,
+                                                                         nuc_to_prot_map,
                                                                          query_object)
         if heuristic_option == 2:
             candidate_tables, all_hits_table_freqs = guess_table_by_best_hit(allHits, nuc_refs, nuc_refs_index,
-                                                                         nuc_to_prot_map,
-                                                                         query_object)
+                                                                             nuc_to_prot_map,
+                                                                             query_object)
         print "Candidate tables: %s" % str(candidate_tables)
         found_good_translation = False
         query_seq_translation = ""
@@ -254,21 +255,22 @@ def run(nuc_ref_file, query_file, mhap_out_file, nuc_to_prot_file, prot_ref_file
         # Welp, we tried.
         else:
             status_code = 0
-            #print the ref table
+            # print the ref table
             print "Error no translation found for sequence %s" % query_object.id
             print "Actual table was: %d" % correct_table
             # name match_code actual_table used_table orf match%
-        #out_tab_line = "%s\t%d\t%d\t%d\t%d\t%f\n" % (queryId, status_code, correct_table, used_table, orf, simmilarity)
+        # out_tab_line = "%s\t%d\t%d\t%d\t%d\t%f\n" % (queryId, status_code, correct_table, used_table, orf, simmilarity)
         topHits = allHits[queryId]
         topHits.sort(key=lambda x: x[1], reverse=True)
-        named_hits =[]
+        named_hits = []
         for hit in topHits[:5]:
             num_matched_kmers = hit[1]
             nuc_name = returnRefById(hit[0], nuc_refs_index, nuc_refs).id
             prot_name = nuc_to_prot_map[nuc_name]
             named_hits.append((prot_name, num_matched_kmers))
         count_dict = sorted(all_hits_table_freqs.items(), key=itemgetter(1), reverse=True)
-        out_tab_line = "%s\t%d\t%s\t%s\t%d\t%s\n" % (queryId, correct_table, str(count_dict), str(named_hits), status_code, alignment)
+        out_tab_line = "%s\t%d\t%s\t%s\t%d\t%s\n" % (
+        queryId, correct_table, str(count_dict), str(named_hits), status_code, alignment)
         out.write(out_tab_line)
 
 
@@ -277,7 +279,4 @@ if __name__ == "__main__":
         print "Usage: nuc_ref_fasta  query_fasta  mhap_out_file nuc_to_prot_file  prot_ref_fasta  heuristic_T_F"
     else:
         run(*sys.argv[1:7])
-    #bestHits = findBestHits("%s%s" % (data_dir, "/data/test2"))
-
-
-
+        # bestHits = findBestHits("%s%s" % (data_dir, "/data/test2"))

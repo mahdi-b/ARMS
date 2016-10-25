@@ -91,8 +91,10 @@ def serialRename(input_file, output_fasta_filepath, file_type, clip=True):
 
                     # Store the sequence-sample map
                     if clip:
-                        seq_prefix = clip_count(seq_prefix, '_')
-                    samples_map.append("%s\t%s\n" % (s.id, seq_prefix))
+                        sample_name = clip_count(seq_prefix)
+                    else:
+                        sample_name = seq_prefix
+                    samples_map.append("%s\t%s\n" % (s.id, sample_name))
 
                     # Store the renamed sequence
                     s.description = ""

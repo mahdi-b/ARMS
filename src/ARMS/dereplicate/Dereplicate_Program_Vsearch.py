@@ -73,7 +73,7 @@ class Dereplicate_Program_Vsearch(ChewbaccaProgram):
         # python parseUCtoGroups.py uc.out uc_parsed.out
         input_ucs = getInputFiles(outdir, "*_uc.out")
         printVerbose("Generating a groups file from dereplication.")
-        debugPrintInputInfo(inputs, "parsed (into agroups file)")
+        debugPrintInputInfo(inputs, "parsed (into a .groups file)")
         run_parallel([PythonRunner(parseUCtoGroups, [input_, "%s/%s_derep.groups" % (outdir, strip_ixes(input_))],
                                    {"exists": [input_]})
                       for input_ in input_ucs], pool)
@@ -87,9 +87,9 @@ class Dereplicate_Program_Vsearch(ChewbaccaProgram):
             derep_groups_files = getInputFiles(outdir, "*_derep.groups")
 
             printVerbose("Updating .groups files with dereplicated data")
-            printVerbose("%d Reference (old)groups files to be read:" % len(old_groups_files))
+            printVerbose("%d Reference (old) groups files to be read:" % len(old_groups_files))
             printVerbose(str(old_groups_files))
-            printVerbose("%d Dereplicated (new)groups files to be read:" % len(derep_groups_files))
+            printVerbose("%d Dereplicated (new) groups files to be read:" % len(derep_groups_files))
             printVerbose(str(derep_groups_files))
 
             update_groups(old_groups_files, derep_groups_files, outdir, "dereplicated")

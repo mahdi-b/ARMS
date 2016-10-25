@@ -21,3 +21,4 @@ def query_vsearch(inputs, outdir, processes, aln_user_string, extraargstring, po
                             extraargstring)
               for query_fasta, ref_fasta in inputs], pool)
     printVerbose("Done aligning.")
+    return

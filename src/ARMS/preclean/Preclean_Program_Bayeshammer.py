@@ -22,6 +22,7 @@ class Preclean_Program_Bayeshammer(ChewbaccaProgram):
         :param outdir: Filepath to output directory.
         :param bayesthreads: The number of threads per process to use.
         :param processes: The maximum number of processes to use.
+        :param kmerlen: The kmer length to use.  Default: 16.
         :param extraargstring: Advanced program parameter string.
         """
         # Collect input files, and validate that they match
