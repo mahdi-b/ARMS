@@ -3,7 +3,7 @@ from classes.Helpers import init_pool, strip_ixes, printVerbose
 from classes.ProgramRunner import ProgramRunner, ProgramRunnerCommands
 from collections import defaultdict
 from itertools import product
-from dev.nast import nast_regap, locate_insertions, insert_gaps_ref, insert_gaps_query, delete_gaps, resolve_priority
+from dev.nast import nast_regap, locate_insertions, insert_gaps, delete_gaps, resolve_priority
 from dev.utils import globalProtAlign
 """
 How to get an MSA for all new seqs against the old seqs?
@@ -194,23 +194,26 @@ def make_msa(input_fna, ref_fna, ref_faa_msa, name_map, outdir):
         #       * the formatted reference is at least as long (likely shorter) than the reference MSA
         # we need to store the deltas between the reference MSA and our formatted reference (to apply to the DB later)
 
+        # compute the deltas
         cumulative_insertions, local_insertions = locate_insertions(msa_template_ref, nast_ref, nast_query, cumulative_insertions, priority)
-
-
+        # replace each queries deltas with '#' so we know to replace them later
+        nast_query = delete_gaps(local_insertions, nast_query)
+        priority +=1
         nast_refs.append(nast_ref)
         nast_queries.append(nast_query)
         msa_templates.append(msa_template_ref)
         pairwise_queries.append(pairwise_query)
-    print cumulative_insertions
+
     cumulative_insertions = resolve_priority(cumulative_insertions)
     print cumulative_insertions
 
-    tmp = ' ' *500
+    tmp = (' '*4 + "*" + ' ' * 4 + "!") *50
     #tmp = ' ' * (max(cumulative_insertions.keys())+1)
-    print insert_gaps_ref(cumulative_insertions, tmp, '@', True)
+    print insert_gaps(cumulative_insertions, tmp, '@', True)
     for i in range(3):
-        print insert_gaps_ref(cumulative_insertions, msa_templates[i], '@')
-        print insert_gaps_query(cumulative_insertions, nast_queries[i], '@')
+        print insert_gaps(cumulative_insertions, msa_templates[i], '@')
+        print insert_gaps(cumulative_insertions, nast_queries[i], '@')
+        #print nast_queries[i]
         print "\n"
     """
     for ref in nast_refs:

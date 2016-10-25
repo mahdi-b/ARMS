@@ -1,9 +1,6 @@
 from collections import defaultdict
 import operator
 
-
-#TODO: account for inserting into dictionary earlier than othe rpositions
-# Todo account for inserting into the same space (append instead of overwrite)
 def locate_insertions(ref_msa_template, nast_ref, nast_query, global_insertion_locations=defaultdict(list), priority=0):
     # NOTE: nast_ref is longer than ref_msa_template.  OR ELSE
     local_insertions = defaultdict(list)
@@ -19,21 +16,21 @@ def locate_insertions(ref_msa_template, nast_ref, nast_query, global_insertion_l
     template_cursor = 0
     nast_cursor = 0
     template_insertions = 0
-
+    order = .001
     while template_cursor < len(ref_msa_template):
         a = ref_msa_template[template_cursor]
         b = nast_ref[nast_cursor]
         if a != b:
             #print "%d,%d: %s != %s" % (template_cursor, nast_cursor, a ,b)
             loc = template_cursor #+ template_insertions
-            global_insertion_locations[loc].append((1, nast_query[nast_cursor], priority))
-            local_insertions[loc].append((1, nast_query[nast_cursor], priority))
+            global_insertion_locations[loc].append((loc, nast_query[nast_cursor], priority+order))
+            local_insertions[loc].append((loc, nast_query[nast_cursor], priority+order))
             template_insertions += 1
             nast_cursor += 1
         else:
             template_cursor += 1
             nast_cursor += 1
-
+        order += .001
     if template_insertions + len(ref_msa_template) != len(nast_ref):
         print "ERROR: NOT ALL GAPS FOUND!"
         exit()
@@ -42,78 +39,81 @@ def locate_insertions(ref_msa_template, nast_ref, nast_query, global_insertion_l
 
 
 def resolve_priority(insertions):
+    for loc in insertions.keys():
+        data = insertions[loc]
+        prioritized = sorted(data, key=lambda x: x[2])
+        print prioritized
+        insertions[loc] = prioritized
+    return insertions
+
+
+def delete_gaps(priority_list, sequence):
+    temp = list(sequence)
+    insertions_so_far = 0
+    for key in sorted(priority_list.keys()):
+        pos = key + insertions_so_far
+        temp[pos:pos + len(priority_list[key])]= list("".join(temp[pos:pos+len(priority_list[key])]).lower())
+        insertions_so_far += len(priority_list[key])
+    return "".join(temp)
+
+
+def insert_gaps(priority_list, sequence, gap_char='-', gap_letter=False):
+    temp = list(sequence+"-"*100)
+    insertions_so_far = 0
+    for key in sorted(priority_list.keys()):
+        rep_offset = 0
+        pos = key + insertions_so_far
+        for (loc, char, priority) in priority_list[key]:
+            #print "Looking for %s at %d, found %s" % (char, loc + rep_offset + insertions_so_far, temp[loc + rep_offset + insertions_so_far])
+
+            if gap_letter:
+                temp[pos + rep_offset] = char
+                rep_offset += 1
+
+            elif temp[pos + rep_offset] == char.lower():
+                temp[pos+rep_offset] = char
+                rep_offset += 1
+            else:
+                temp.insert(pos+ rep_offset, gap_char)
+            insertions_so_far += 1
+
+    return "".join(temp)
+"""
+def resolve_priority(insertions):
     # {164: [(1, 'V', 0)],
     rslt = []
     ins = sorted(insertions.items(), key=lambda x: x[0])
     for loc, todo in ins:
         for count, char, priority in todo:
-            rslt.append((loc,count, char))
+            rslt.append((loc, count, char))
     return rslt
 
 
-
-def delete_gaps(gap_locs, sequence):
+def delete_gaps(priority_list, sequence):
     temp = list(sequence)
-    gaps = sorted(gap_locs.items(), key=lambda x: x[0], reverse=True)
-    for loc, (count, char) in gaps:
-        temp.pop(loc)
+    for loc, dat in priority_list.items():
+        insertions_so_far = 0
+        for (count, char, priority) in dat:
+            temp[loc + insertions_so_far] = temp[loc + insertions_so_far].lower()
+            insertions_so_far += 1
     return "".join(temp)
 
-
-def insert_gaps_ref(priority_list, sequence, gap_char='-', gap_letter=False):
-    temp = list(sequence)
-    insertions_so_far = 0
-    for (loc, count, char) in priority_list:
-        if gap_letter: gap_char = char
-        temp.insert(loc + insertions_so_far, gap_char)
-        insertions_so_far += count
-    return "".join(temp)
-
-
-def insert_gaps_query(priority_list, sequence, gap_char='-', gap_letter=False):
+def insert_gaps(priority_list, sequence, gap_char='-', gap_letter=False):
     temp = list(sequence)
     insertions_so_far = 0
     for (loc, count, char) in priority_list:
-
-        if temp[loc + insertions_so_far] != char :
-            if gap_letter: gap_char = char
-            temp.insert(loc + insertions_so_far, gap_char)
-        insertions_so_far += count
-    return "".join(temp)
-"""
-def insert_gaps(gap_locs, sequence, gap_char='-', gap_letter=False):
-
-
-    temp = list(sequence)
-    insertions_so_far = 0
-    gaps = sorted(gap_locs.items(), key=lambda x: x[2]*100 + x[1])
-    print gaps
-    for loc, inserts in gaps:
-        "======================================"
-        for (count, char) in inserts:
-            if temp[loc+insertions_so_far] != char :
-                if gap_letter: gap_char = char
-                temp.insert(loc, gap_char)
-            insertions_so_far += count
-        "====================================="
-    return "".join(temp)
-"""
-
-def to_cig(seq):
-    last_char = seq[0]
-    count = 1
-    out = ""
-    for char in seq[1:]:
-        if char != last_char:
-            out+="%d%s" % (count, last_char)
-            last_char = char
-            count = 1
+        #TODO this needs to increase pos as long as w'ere at the same index
+        pos = loc + insertions_so_far
+        print "checking pos=%d for %s, found %s" %(pos, char, temp[pos])
+        if temp[pos] == '#':
+            temp[pos] = char
+            insertions_so_far -= 1
         else:
-            count += 1
-    out+="%d%s" % (count, last_char)
-    return out
-
-
+            if gap_letter: gap_char = char
+            temp.insert(pos, gap_char)
+        insertions_so_far += 1
+    return "".join(temp)
+"""
 
 def nast_regap(ref_msa_template, pairwise_ref, pairwise_query):
     """Taken from mothur's nast.cpp"""
