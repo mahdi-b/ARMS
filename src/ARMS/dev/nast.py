@@ -1,7 +1,10 @@
 from collections import defaultdict
-import operator
+from classes.Helpers import init_pool, strip_ixes, printVerbose
+from classes.ProgramRunner import ProgramRunner, ProgramRunnerCommands
+from Bio import SeqIO
+from itertools import product
 
-def locate_insertions(ref_msa_template, nast_ref, nast_query, global_insertion_locations=defaultdict(list), priority=0):
+def locate_deltas(ref_msa_template, nast_ref, nast_query, global_insertion_locations=defaultdict(list), priority=0):
     # NOTE: nast_ref is longer than ref_msa_template.  OR ELSE
     local_insertions = defaultdict(list)
     if len(ref_msa_template) == len(nast_ref):
@@ -11,25 +14,18 @@ def locate_insertions(ref_msa_template, nast_ref, nast_query, global_insertion_l
         print "ERROR: NAST SHORTER THAN REF MSA"
         exit()
 
-    #print "template:\t%s\n" % ref_msa_template
-    #print "nast_regapped:\t%s\n" % nast_ref
     template_cursor = 0
     nast_cursor = 0
     template_insertions = 0
-    order = .001
+    order = 0
     while template_cursor < len(ref_msa_template):
-        a = ref_msa_template[template_cursor]
-        b = nast_ref[nast_cursor]
-        if a != b:
-            #print "%d,%d: %s != %s" % (template_cursor, nast_cursor, a ,b)
-            loc = template_cursor #+ template_insertions
-            global_insertion_locations[loc].append((loc, nast_query[nast_cursor], priority+order))
-            local_insertions[loc].append((loc, nast_query[nast_cursor], priority+order))
+        if ref_msa_template[template_cursor] != nast_ref[nast_cursor]:
+            global_insertion_locations[template_cursor].append((template_cursor, nast_query[nast_cursor], priority+order))
+            local_insertions[template_cursor].append((template_cursor, nast_query[nast_cursor], priority+order))
             template_insertions += 1
-            nast_cursor += 1
         else:
             template_cursor += 1
-            nast_cursor += 1
+        nast_cursor += 1
         order += .001
     if template_insertions + len(ref_msa_template) != len(nast_ref):
         print "ERROR: NOT ALL GAPS FOUND!"
@@ -38,82 +34,141 @@ def locate_insertions(ref_msa_template, nast_ref, nast_query, global_insertion_l
     return global_insertion_locations, local_insertions
 
 
-def resolve_priority(insertions):
+def resolve_deltas(insertions):
     for loc in insertions.keys():
-        data = insertions[loc]
-        prioritized = sorted(data, key=lambda x: x[2])
-        print prioritized
-        insertions[loc] = prioritized
+        delta = sorted(insertions[loc], key=lambda x: x[2])
+        insertions[loc] = delta
     return insertions
 
 
-def delete_gaps(priority_list, sequence):
+def mask_deltas(delta_dict, sequence):
     temp = list(sequence)
     insertions_so_far = 0
-    for key in sorted(priority_list.keys()):
+    for key in sorted(delta_dict.keys()):
+        num_inserts_here = len(delta_dict[key])
         pos = key + insertions_so_far
-        temp[pos:pos + len(priority_list[key])]= list("".join(temp[pos:pos+len(priority_list[key])]).lower())
-        insertions_so_far += len(priority_list[key])
+        temp[pos:pos + num_inserts_here]= list("".join(temp[pos:pos+num_inserts_here]).lower())
+        insertions_so_far += num_inserts_here
     return "".join(temp)
 
 
-def insert_gaps(priority_list, sequence, gap_char='-', gap_letter=False):
-    temp = list(sequence+"-"*100)
+def apply_deltas(delta_dict, sequence, gap_char='-', gap_letter=False):
+
+    temp = list(sequence)
     insertions_so_far = 0
-    for key in sorted(priority_list.keys()):
+    for key in sorted(delta_dict.keys()):
         rep_offset = 0
         pos = key + insertions_so_far
-        for (loc, char, priority) in priority_list[key]:
-            #print "Looking for %s at %d, found %s" % (char, loc + rep_offset + insertions_so_far, temp[loc + rep_offset + insertions_so_far])
-
+        for (loc, char, priority) in delta_dict[key]:
+            # Option for making the ruler
             if gap_letter:
                 temp[pos + rep_offset] = char
                 rep_offset += 1
-
+            # If we find a delta we contributed, just change it
             elif temp[pos + rep_offset] == char.lower():
                 temp[pos+rep_offset] = char
                 rep_offset += 1
+            # Insert someone else's delta
+            else: temp.insert(pos+ rep_offset, gap_char)
+            # always jump a head, even if we didn't actually insert.
+            # Because all sequences should line up to the same indexes at the end, they should all line up at any given point.
+            # so we increment this to keep every cursor at the identical index at each iteration.
+            insertions_so_far += 1
+
+    return "".join(temp)
+
+
+def get_best_hits_from_vsearch(input_fna, ref_fna, outdir):
+
+    def best_hits_from_vsearch(v_search_output):
+        best_hits = {}
+        for line in open(v_search_output, 'r'):
+            data = line.split("\t")
+            query_name = data[0].rstrip()
+            if best_hits.has_key(query_name):
+                if float(best_hits[query_name][2].rstrip()) < float(data[2].rstrip()):
+                    best_hits[query_name] = data
             else:
-                temp.insert(pos+ rep_offset, gap_char)
-            insertions_so_far += 1
-
-    return "".join(temp)
-"""
-def resolve_priority(insertions):
-    # {164: [(1, 'V', 0)],
-    rslt = []
-    ins = sorted(insertions.items(), key=lambda x: x[0])
-    for loc, todo in ins:
-        for count, char, priority in todo:
-            rslt.append((loc, count, char))
-    return rslt
+                best_hits[query_name] = data
+        return best_hits
 
 
-def delete_gaps(priority_list, sequence):
-    temp = list(sequence)
-    for loc, dat in priority_list.items():
-        insertions_so_far = 0
-        for (count, char, priority) in dat:
-            temp[loc + insertions_so_far] = temp[loc + insertions_so_far].lower()
-            insertions_so_far += 1
-    return "".join(temp)
+    threads = 1
+    pool = init_pool(threads)
+    #printVerbose.VERBOSE = True
+    print "calling vsearch"
+    processes=1
+    aln_user_string=""
+    extraargstring=""
 
-def insert_gaps(priority_list, sequence, gap_char='-', gap_letter=False):
-    temp = list(sequence)
-    insertions_so_far = 0
-    for (loc, count, char) in priority_list:
-        #TODO this needs to increase pos as long as w'ere at the same index
-        pos = loc + insertions_so_far
-        print "checking pos=%d for %s, found %s" %(pos, char, temp[pos])
-        if temp[pos] == '#':
-            temp[pos] = char
-            insertions_so_far -= 1
+
+    printVerbose("Aligning against reference sequences...")
+    #     # vsearch --usearch_global %s seeds.pick.fasta  --db ../data/BiocodePASSED_SAP.txt --id 0.9 \
+    # --userfields query+target+id+alnlen+qcov --userout %sout --alnout %s alnout.txt
+    ProgramRunner(ProgramRunnerCommands.ALIGN_VSEARCH,
+                            [processes, input_fna, ref_fna, "%s/%s.out" % (outdir, strip_ixes(input_fna)),
+                             "%s/%s.alnout" % (outdir, strip_ixes(input_fna)), aln_user_string],
+                            {"exists": [input_fna, ref_fna], "positive": [processes]},
+                            extraargstring).run()
+
+
+    print "cleaning up."
+    vsearch_output = "%s/%s.out" % (outdir, strip_ixes(input_fna))
+
+    # Choose the best hit
+    return best_hits_from_vsearch(vsearch_output)
+
+
+def make_faa_gc_lookup(name_map):
+    lookup = {}
+    fna_faa ={}
+    for line in open(name_map,'r'):
+        data = line.split("\t")
+        lookup[data[0].rstrip()]  = int(data[1].rstrip().split('_')[-1])
+        fna_faa[data[0].rstrip()] = data[1].rstrip()
+    return lookup, fna_faa
+
+
+def translate(record, is_fwd_read, gc):
+    possible_translations = []
+    for orf, table in product(range(3), [gc]):
+        translation = ""
+        if is_fwd_read:
+            translation = str(record[orf:].seq.translate(table=table))
+
         else:
-            if gap_letter: gap_char = char
-            temp.insert(pos, gap_char)
-        insertions_so_far += 1
-    return "".join(temp)
-"""
+            translation = str(record[orf:].reverse_complement().seq.translate(table=table))
+        # If no stop codons, we're done
+        if str(translation).count("*") == 0:
+            possible_translations.append(translation)
+    return possible_translations
+
+
+def translate_to_prot(input_fna, best_hits, gc_lookup_map):
+    """Returns dict of non-stopping translations for sequences in best_hits by name.
+
+    :param input_fna:
+    :param best_hits:
+    :param name_map:
+    :return:
+    """
+    translations = {}
+
+    # grab all input seqs as a dict
+    input_seqs = SeqIO.to_dict(SeqIO.parse(open(input_fna, "r"), "fasta"))
+
+    for key in best_hits.keys():
+        # BALI4606_0_ID5_656	BMOO-17606	98.1	311	100.0
+        data = best_hits[key]
+        query_name = data[0].rstrip()
+        ref_hit_name = data[1].rstrip()
+        is_fwd_read = data[-1].rstrip() == "+"
+        gc = gc_lookup_map[ref_hit_name]
+        myseq = input_seqs[query_name]
+        possible_translations = translate(myseq, is_fwd_read, gc)
+        translations[query_name] = possible_translations
+    return translations
+
 
 def nast_regap(ref_msa_template, pairwise_ref, pairwise_query):
     """Taken from mothur's nast.cpp"""
@@ -212,11 +267,8 @@ def nast_regap(ref_msa_template, pairwise_ref, pairwise_query):
             pairwiseAlignIndex += 1
             fullAlignIndex += 1
 
-    trailing_dashes = ['-'] * (fullAlignLength - len(candAln))
     trailing_dashes = tempAln[fullAlignIndex:]
     candAln += trailing_dashes
     newTemplateAlign += trailing_dashes
-    #newTemplateAlign += tempAln[i]
 
-    candAln = "".join(candAln).upper()  # everything is upper case
-    return candAln, "".join(newTemplateAlign).upper()
+    return "".join(candAln).upper(), "".join(newTemplateAlign).upper()
