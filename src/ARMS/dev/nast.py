@@ -4,11 +4,11 @@ from classes.ProgramRunner import ProgramRunner, ProgramRunnerCommands
 from Bio import SeqIO
 from itertools import product
 
-def locate_deltas(ref_msa_template, nast_ref, nast_query, global_insertion_locations=defaultdict(list), priority=0):
+def locate_deltas(ref_msa_template, nast_ref, nast_query, priority=0):
     # NOTE: nast_ref is longer than ref_msa_template.  OR ELSE
     local_insertions = defaultdict(list)
     if len(ref_msa_template) == len(nast_ref):
-        return global_insertion_locations, local_insertions
+        return local_insertions, 0
 
     if len(ref_msa_template) > len(nast_ref):
         print "ERROR: NAST SHORTER THAN REF MSA"
@@ -17,31 +17,36 @@ def locate_deltas(ref_msa_template, nast_ref, nast_query, global_insertion_locat
     template_cursor = 0
     nast_cursor = 0
     template_insertions = 0
-    order = 0
     while template_cursor < len(ref_msa_template):
         if ref_msa_template[template_cursor] != nast_ref[nast_cursor]:
-            global_insertion_locations[template_cursor].append((template_cursor, nast_query[nast_cursor], priority+order))
-            local_insertions[template_cursor].append((template_cursor, nast_query[nast_cursor], priority+order))
+            local_insertions[template_cursor].append(nast_query[nast_cursor])
             template_insertions += 1
         else:
             template_cursor += 1
         nast_cursor += 1
-        order += .001
     if template_insertions + len(ref_msa_template) != len(nast_ref):
         print "ERROR: NOT ALL GAPS FOUND!"
         exit()
+    # collapse the character insertion lists at each location (key) into a single string for insertion
+    for key in local_insertions.keys():
+        chars = "".join(local_insertions[key])
+        local_insertions[key] = chars
 
-    return global_insertion_locations, local_insertions
+    return local_insertions, template_insertions
 
 
-def resolve_deltas(insertions):
-    for loc in insertions.keys():
-        delta = sorted(insertions[loc], key=lambda x: x[2])
-        insertions[loc] = delta
-    return insertions
+def update_global_deltas(local_deltas, global_deltas):
+    for key in local_deltas.keys():
+        global_deltas[key].add(local_deltas[key])
 
 
 def mask_deltas(delta_dict, sequence):
+    """
+
+    :param delta_dict: A dictionary of strings indexed by position.
+    :param sequence:
+    :return:
+    """
     temp = list(sequence)
     insertions_so_far = 0
     for key in sorted(delta_dict.keys()):
@@ -57,23 +62,34 @@ def apply_deltas(delta_dict, sequence, gap_char='-', gap_letter=False):
     temp = list(sequence)
     insertions_so_far = 0
     for key in sorted(delta_dict.keys()):
-        rep_offset = 0
         pos = key + insertions_so_far
-        for (loc, char, priority) in delta_dict[key]:
+        max_char_len = max([len(s) for s in delta_dict[key]])
+        gap_template = gap_char * max_char_len
+        found = False
+        possible_insertions = sorted(delta_dict[key], reverse=True)
+        for chars in possible_insertions:
+            length = len(chars)
+            template = list(chars)
+            template[-1:-1] = ([gap_char] * (max_char_len - length))
             # Option for making the ruler
+            # print "Looking at %s, looking for %s @ %s" % ("".join(temp[pos:pos + length ]), chars.lower(), pos)
             if gap_letter:
-                temp[pos + rep_offset] = char
-                rep_offset += 1
-            # If we find a delta we contributed, just change it
-            elif temp[pos + rep_offset] == char.lower():
-                temp[pos+rep_offset] = char
-                rep_offset += 1
-            # Insert someone else's delta
-            else: temp.insert(pos+ rep_offset, gap_char)
-            # always jump a head, even if we didn't actually insert.
-            # Because all sequences should line up to the same indexes at the end, they should all line up at any given point.
-            # so we increment this to keep every cursor at the identical index at each iteration.
-            insertions_so_far += 1
+                temp[pos:pos + max_char_len] = list(possible_insertions[0])
+                found = True
+            # If we find a delta this sequence contributed, just replace it (no insertion)
+            elif "".join(temp[pos:pos + length ]) == chars.lower():
+                temp[pos:pos + length ] = list(chars)
+                temp[pos+length:pos+length] = [gap_char] * (max_char_len - length)
+                found = True
+                break
+            else: pass
+        if not found:
+            temp[pos:pos] = gap_template
+        insertions_so_far += max_char_len
+        # always jump a head, even if we didn't actually insert.
+        # Because all sequences should line up to the same indexes at the end, they should all line up at any given point.
+        # so we increment this to keep every cursor at the identical index at each iteration.
+
 
     return "".join(temp)
 
@@ -91,7 +107,6 @@ def get_best_hits_from_vsearch(input_fna, ref_fna, outdir):
             else:
                 best_hits[query_name] = data
         return best_hits
-
 
     threads = 1
     pool = init_pool(threads)
@@ -173,7 +188,6 @@ def translate_to_prot(input_fna, best_hits, gc_lookup_map):
 def nast_regap(ref_msa_template, pairwise_ref, pairwise_query):
     """Taken from mothur's nast.cpp"""
     pairwiseLength = len(pairwise_query)
-    fullAlignLength = len(ref_msa_template)
     candPair = list(pairwise_query)
     tempPair = list(pairwise_ref)
     tempAln = list(ref_msa_template)
@@ -189,7 +203,6 @@ def nast_regap(ref_msa_template, pairwise_ref, pairwise_query):
         newTemplateAlign += tempAln[fullAlignIndex]
         fullAlignIndex += 1
 
-    lastLoop = ""
     while (pairwiseAlignIndex < pairwiseLength):
         if tempPair[pairwiseAlignIndex].isalpha() and tempAln[fullAlignIndex].isalpha() and candPair[
             pairwiseAlignIndex].isalpha():
