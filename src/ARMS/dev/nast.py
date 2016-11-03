@@ -3,6 +3,8 @@ from classes.Helpers import init_pool, strip_ixes, printVerbose
 from classes.ProgramRunner import ProgramRunner, ProgramRunnerCommands
 from Bio import SeqIO
 from itertools import product
+import subprocess
+import select
 
 def locate_deltas(ref_msa_template, nast_ref, nast_query, priority=0):
     # NOTE: nast_ref is longer than ref_msa_template.  OR ELSE
@@ -34,7 +36,6 @@ def locate_deltas(ref_msa_template, nast_ref, nast_query, priority=0):
 
     return local_insertions, template_insertions
 
-
 def update_global_deltas(local_deltas, global_deltas):
     for key in local_deltas.keys():
         global_deltas[key].add(local_deltas[key])
@@ -49,12 +50,40 @@ def mask_deltas(delta_dict, sequence):
     """
     temp = list(sequence)
     insertions_so_far = 0
-    for key in sorted(delta_dict.keys()):
+    keys = sorted(delta_dict.keys())
+    for key in keys:
         num_inserts_here = len(delta_dict[key])
         pos = key + insertions_so_far
         temp[pos:pos + num_inserts_here]= list("".join(temp[pos:pos+num_inserts_here]).lower())
         insertions_so_far += num_inserts_here
     return "".join(temp)
+
+
+def revise_deltas(delta_dict, queries):
+    print delta_dict
+    keys = delta_dict.keys()
+    lens = [max(map(len, delta_dict[key])) for key in keys]
+    points = [(x,x+y) for x,y in zip(keys,lens)]
+    points.sort(key=lambda x:x[0])
+    start = points[0][0]
+    end = points[0][1]
+    s=start
+    e=end
+    segments = []
+
+    for (x,y) in points:
+        if x<= e:
+            if y > e:
+                e = y
+        # new segment
+        if x > e:
+            segments.append((s,e))
+            s=x
+            e=y
+    segments.append((s,e))
+    s = set(["\t".join([seq[start:end] for (start, end) in segments]) for seq in queries])
+    print "\n".join(s)
+    return segments
 
 
 def apply_deltas(delta_dict, sequence, gap_char='-', gap_letter=False):
@@ -90,8 +119,94 @@ def apply_deltas(delta_dict, sequence, gap_char='-', gap_letter=False):
         # Because all sequences should line up to the same indexes at the end, they should all line up at any given point.
         # so we increment this to keep every cursor at the identical index at each iteration.
 
-
     return "".join(temp)
+
+
+def get_segments(cumulative_insertions, ruler):
+    """Returns effective final gappings as segments."""
+    gap_template = apply_deltas(cumulative_insertions, ruler, '@')
+    gap_segments = []
+    last_char = ''
+    start = -1
+    end = -1
+    for i in range(len(gap_template)):
+        if gap_template[i] == '@':
+            if last_char == '@':
+                end = i
+            else:
+                start = i
+                end = i
+        else:
+            if last_char == '@':
+                gap_segments.append((start, end))
+        last_char = gap_template[i]
+    return gap_segments
+
+
+def get_realign_segments(deltas):
+    keys = sorted(deltas.keys())
+    lens = dict((key, max(map(len,deltas[key]))) for key in keys)
+    print lens
+    segments = [(x,x+lens[x]) for x in keys]
+    print segments
+    # if track
+    start = 0
+    end = 0
+    rslt = []
+    for (x,y) in segments:
+        if x > end:
+            rslt.append((start,end))
+            start, end = x, y
+        else:
+            end = y
+    rslt.append((start,end))
+    print rslt
+
+
+def wait_for_file(filename):
+    i=0
+    while  True:
+        try:
+            print "%d waiting for %s\n" % (i,filename)
+            i+=1
+            open(filename, 'r')
+            return
+        except OSError:
+            print "notyet"
+
+def muscle_realign(infile, outfile):
+    select.select([open(infile)],[],[])
+    cmd = "muscle -in %s -out %s" % (infile, outfile)
+    subprocess.check_call(cmd, shell=True)
+    select.select([open(outfile)],[],[])
+    return [sequence.seq for sequence in SeqIO.parse(open(outfile, 'r'), 'fasta')]
+
+
+def realign(seqs, start, end, outfilename):
+    old_vals = map(str.lower, list(set([seq[start:end] for seq in seqs])))
+    gaps = '-'*(end-start)
+    try:
+        old_vals.remove(gaps)
+    except:
+        pass
+    print old_vals
+    with open(outfilename, 'w') as output:
+        out = ""
+        for i in range(len(old_vals)):
+            out += ">s%d\n%s\n" % (i, old_vals[i])
+            i += 1
+            if i % 5000 == 0:
+                output.write(out)
+                out = []
+        output.write(out)
+    rslt_name = "%s.mus.aln" % outfilename
+    new_vals = muscle_realign(outfilename, rslt_name)
+    print new_vals
+    val_map = dict((str(key), val) for key, val in zip(old_vals, new_vals))
+    val_map[gaps] = gaps
+    print val_map.keys()
+    return val_map
+
 
 
 def get_best_hits_from_vsearch(input_fna, ref_fna, outdir):
