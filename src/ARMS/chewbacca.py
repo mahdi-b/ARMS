@@ -292,7 +292,7 @@ def main(argv):
                             parameter specifies the number of iterations of MCMC. Default value is 2000. Increase this \
                             value to enhance accuracy (recommended value is at least 10*block size).")
     parser_cluster.add_argument('-c', '--clustpct', required=False, default="g", help="CROP only: The minimum \
-                            similarity threshold for clustering.  Either 'g' for 95% or 's' for 97%.  Default: 'g'.")
+                            similarity threshold for clustering.  Either 'g' for 95%% or 's' for 97%%.  Default: 'g'.")
     parser_cluster.add_argument('-m', '--maxsm', required=False, type=int, default=20, help="CROP only: This parameter \
                             specifies the maximum number of 'split and merge' process to run. Default value is 20, \
                             which is also the maximum allowed.")
@@ -305,7 +305,7 @@ def main(argv):
                             believe your data is not too diverse to be handled, then r=0 will be the best choice. \
                             Default: 2.")
     # Vsearch options
-    parser_cluster.add_argument('-v', '--idpct', required=False, type=float, default=.95, help="VSEARCH only: % match \
+    parser_cluster.add_argument('-v', '--idpct', required=False, type=float, default=.95, help="VSEARCH only: %% match \
                             required for clustering.  Real number in the range (0,1]. Default: 0.95")
     parser_cluster.set_defaults(command=Cluster_Command)
 
@@ -323,12 +323,12 @@ def main(argv):
     parser_query_fasta.add_argument('-x', '--taxinfo', required=True, help="Filepath to a two-column, tab-delimited \
                             file mapping a sequence's fasta id (in the referencefasta file) to a taxonomic \
                             identification.")
-    parser_query_fasta.add_argument('-s', '--simmilarity', required=False, default=97, type=int, help="Minimum %  \
+    parser_query_fasta.add_argument('-s', '--simmilarity', required=False, default=97, type=int, help="Minimum %%  \
                             simmilarity (integer between 0 and 100) between query and reference sequences required for \
                             positive identification. Default: 97")
     parser_query_fasta.add_argument('-p', '--program', required=False, default="vsearch", help="Indicates which \
                             program to use.  Choices are: 'vsearch'.  Default: 'vsearch'.")
-    parser_query_fasta.add_argument('-c', '--coverage', required=False, default=85, type=int, help="Minimum % coverage \
+    parser_query_fasta.add_argument('-c', '--coverage', required=False, default=85, type=int, help="Minimum %% coverage \
                             (integer between 0 and 100) required query and reference sequences required for positive \
                             identification. Default: 85")
     parser_query_fasta.add_argument('-j', '--threads', required=False, type=int, default=2,
@@ -349,10 +349,10 @@ def main(argv):
                             to use as a reference.")
     parser_query_db.add_argument('-d', '--db', required=True, help="Filepath to the curated fasta file \
                             to use as a reference.")
-    parser_query_db.add_argument('-s', '--simmilarity', required=False, default=97, type=int, help="Minimum %  \
+    parser_query_db.add_argument('-s', '--simmilarity', required=False, default=97, type=int, help="Minimum %%  \
                                 simmilarity (integer between 0 and 100) between query and reference sequences \
                                 required for positive identification. Default: 97")
-    parser_query_db.add_argument('-c', '--coverage', required=False, default=85, type=int, help="Minimum % coverage \
+    parser_query_db.add_argument('-c', '--coverage', required=False, default=85, type=int, help="Minimum %% coverage \
                                 (integer between 0 and 100) required query and reference sequences required for \
                                 positive identification. Default: 85")
     parser_query_db.add_argument('-j', '--threads', required=False, type=int, default=2,
@@ -421,7 +421,7 @@ def main(argv):
     parser_viz_otu_comp.add_argument('-p', '--program', required=False, default="chewbacca", help="Indicates which \
                             program to use.  Choices are: 'chewbacca'.  Default: 'chewbacca'.")
     group = parser_viz_otu_comp.add_mutually_exclusive_group(required=False)
-    group.add_argument('-m', '--pct', help="Real number x in the range (0,1] indicating that the top x% of OTU names \
+    group.add_argument('-m', '--pct', help="Real number x in the range (0,1] indicating that the top x%% of OTU names \
                            (sorted by abundance) should be included in the graph.", type=float)
     group.add_argument('-n', '--names', help="Filepath to a list of OTU names to include.  File should be formatted as \
                             a series of lines where each line contains just an OTU name.")
@@ -446,7 +446,7 @@ def main(argv):
     parser_viz_otu_heatmap.add_argument('-p', '--program', required=False, default="chewbacca", help="Indicates which \
                             program to use.  Choices are: 'chewbacca'.  Default: 'chewbacca'.")
     group = parser_viz_otu_heatmap.add_mutually_exclusive_group(required=False)
-    group.add_argument('-m', '--pct', help="Real number x in the range (0,1] indicating that the top x% of OTU names \
+    group.add_argument('-m', '--pct', help="Real number x in the range (0,1] indicating that the top x%% of OTU names \
                            (sorted by abundance) should be included in the graph.", type=float)
     group.add_argument('-n', '--names', help="Filepath to a list of OTU names to include.  File should be formatted as \
                             a series of lines where each line contains just an OTU name.")
