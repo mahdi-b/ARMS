@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #=================================================================================================
 # Step 0: clean spades
 #=================================================================================================
@@ -26,12 +27,12 @@ python ~/ARMS/src/ARMS/chewbacca.py -t 2 trim_adapters  -i 2b_renamed -o 3_trim_
 #=================================================================================================
 python ~/ARMS/src/ARMS/chewbacca.py -t 2 clean_seqs -i 3_trim_ab -o 4a_cleaned -m 200 -w 5 -q 25
 python ~/ARMS/src/ARMS/chewbacca.py -t 2 convert_fastq_to_fasta -i 4a_cleaned -o 4b_fasta
+python ~/ARMS/src/ARMS/chewbacca.py -t 2 ungap_fasta -i 4b_fasta -o 4c_ungap -f fasta -g .-
+python ~/ARMS/src/ARMS/chewbacca.py -t 2 merge_files -i 4c_ungap -o 4d_merged -f fasta -n BALI
 
 #=================================================================================================
 # Step 5: Dereplicate the data set
 #=================================================================================================
-python ~/ARMS/src/ARMS/chewbacca.py -t 2 ungap_fasta -i 4b_fasta -o 4c_ungap -f fasta -g .-
-python ~/ARMS/src/ARMS/chewbacca.py -t 2 merge_files -i 4c_ungap -o 4d_merged -f fasta -n BALI
 python ~/ARMS/src/ARMS/chewbacca.py -t 2 dereplicate_fasta -i 4d_merged -o 5_derep
 
 ##=================================================================================================

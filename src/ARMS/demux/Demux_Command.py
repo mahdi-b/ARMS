@@ -1,6 +1,6 @@
 from classes.ChewbaccaCommand import ChewbaccaCommand
-
-from Demux_Barcode_Program_Fastx import Demux_Program_Fastx
+from Demux_Program_Chewbacca import Demux_Program_Chewbacca
+from Demux_Program_Fastx import Demux_Program_Fastx
 
 
 class Demux_Command(ChewbaccaCommand):
@@ -78,6 +78,6 @@ class Demux_Command(ChewbaccaCommand):
                 @Seq8
                 CGTGTAAAAAAG
     """
-    supported_programs = [Demux_Program_Fastx]
+    supported_programs = [Demux_Program_Fastx, Demux_Program_Chewbacca]
     default_program = Demux_Program_Fastx
     command_name = "Demux"

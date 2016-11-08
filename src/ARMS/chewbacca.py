@@ -9,7 +9,7 @@ from clean.Clean_Adapters_Command import Clean_Adapters_Command
 from clean.Clean_Deep_Command import Clean_Deep_Command
 from clean.Clean_Quality_Command import Clean_Quality_Command
 from cluster.Cluster_Command import Cluster_Command
-from demux.Demux_Barcode_Command import Demux_Command
+from demux.Demux_Command import Demux_Command
 from dereplicate.Dereplicate_Command import Dereplicate_Command
 from otu.Annotate_OTU_Table_Command import Annotate_OTU_Table_Command
 from otu.Build_OTU_Table_Command import Build_OTU_Table_Command
@@ -501,7 +501,7 @@ def main(argv):
     printVerbose.VERBOSE = (args.verbose is not None)
     logging.debug("Initial ARGS are: %s", args)
     print("\t\t")
-    #signal.signal(signal.SIGTSTP, signal.SIG_IGN)
+    signal.signal(signal.SIGTSTP, signal.SIG_IGN)
     makeDirOrdie(args.outdir)
     args.command(args).execute_command()
 
