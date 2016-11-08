@@ -1,10 +1,10 @@
 import matplotlib.pyplot as plt
 from Bio import SeqIO
 from multiprocessing import Pool
-
-from makeBadSeqs import *
-from utils import *
-
+from Bio.Seq import Seq
+from makeBadSeqs import  isIndel, getIndelPosition, compute_gap_score, globalProtAlign
+from utils import coinflip, insert_frame_shift_at, delete_frame_shift_at
+import sys
 
 # name match_code actual_table used_table orf match%
 

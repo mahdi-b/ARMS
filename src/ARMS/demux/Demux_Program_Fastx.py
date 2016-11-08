@@ -1,7 +1,7 @@
-from classes.ChewbaccaProgram import *
-from classes.ProgramRunner import *
-
-from classes.Helpers import *
+from classes.ChewbaccaProgram import ChewbaccaProgram
+from classes.Helpers import getInputFiles, debugPrintInputInfo, init_pool, run_parallel, printVerbose, \
+    makeAuxDir, bulk_move_to_dir, cleanup_pool
+from classes.ProgramRunner import ProgramRunner, ProgramRunnerCommands
 
 
 class Demux_Program_Fastx(ChewbaccaProgram):
@@ -34,7 +34,6 @@ class Demux_Program_Fastx(ChewbaccaProgram):
         :param processes: Number of processes to use to demux input fileset.
         :param extraargstring: Advanced program parameter string.
         """
-        makeDirOrdie(outdir)
         # Get input files
         files_to_split = getInputFiles(input_f)
         # Assign the files shard numbers
@@ -44,11 +43,10 @@ class Demux_Program_Fastx(ChewbaccaProgram):
         pool = init_pool(min(len(file_id_pairs), processes))
 
         printVerbose("Demuxing sequences...")
-        parallel(runProgramRunnerInstance,
-                 [ProgramRunner(ProgramRunnerCommands.DEMUX_FASTX,
-                                [input_, barcodes, "%s/" % outdir, "_%d_splitOut.fastq" % id_],
-                                {"exists": [input_, barcodes]}, extraargstring)
-                  for input_, id_ in file_id_pairs], pool)
+        run_parallel([ProgramRunner(ProgramRunnerCommands.DEMUX_FASTX,
+                                    [input_, barcodes, "%s/" % outdir, "_%d_demux.fastq" % id_],
+                                    {"exists": [input_, barcodes]}, extraargstring)
+                      for input_, id_ in file_id_pairs], pool)
         printVerbose("Demuxed sequences.")
 
         # Grab all the auxillary files

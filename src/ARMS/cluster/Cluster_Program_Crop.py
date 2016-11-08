@@ -1,6 +1,8 @@
-from classes.ChewbaccaProgram import *
+from classes.ChewbaccaProgram import ChewbaccaProgram
 from classes.ProgramRunner import ProgramRunner, ProgramRunnerCommands
-from classes.Helpers import *
+from classes.PythonRunner import PythonRunner
+from classes.Helpers import getInputFiles, debugPrintInputInfo, init_pool, cleanup_pool, bulk_move_to_dir, makeAuxDir, \
+                                run_parallel, printVerbose, getDirName, clip_count, strip_ixes, makeDirOrdie
 from Cluster_Helpers import handle_groups_file_update
 
 
@@ -48,7 +50,6 @@ class Cluster_Program_Crop(ChewbaccaProgram):
         :param extraargstring: Advanced program parameter string.
         """
 
-        makeDirOrdie(outdir)
         # Grab the fasta file(s) to cluster
         inputs = getInputFiles(input_f)
         debugPrintInputInfo(inputs, "clustered")
@@ -56,19 +57,19 @@ class Cluster_Program_Crop(ChewbaccaProgram):
 
         # RUN CLUSTERING
         # crop -i %s -o %s -z %s -c %s -e %s -m %s%s
-        parallel(runProgramRunnerInstance,
-                 [ProgramRunner(ProgramRunnerCommands.CLUSTER_CROP,
-                                [input_, "%s/%s" % (outdir, strip_ixes(input_)), blocksize, clustpct,
-                                    maxmcmc, maxsm, rare, blockcount],
-                                {"exists": [input_]}, extraargstring) for input_ in inputs], pool)
+        run_parallel([ProgramRunner(ProgramRunnerCommands.CLUSTER_CROP,
+                                    [input_, "%s/%s" % (outdir, strip_ixes(input_)), blocksize, clustpct,
+                                        maxmcmc, maxsm, rare, blockcount],
+                                    {"exists": [input_]}, extraargstring) for input_ in inputs], pool)
 
         # CLEAN THE OUTPUT GROUPS FILE
         printVerbose("Parsing the groups file from clustering")
         clustered_groups_files = getInputFiles(outdir, "*.cluster.list")
         debugPrintInputInfo(clustered_groups_files, "converted to groups files")
-        parallel(runPythonInstance,
-                 [(parseCROPoutToGroups, input_, "%s/%s_uncount.groups" % (outdir, strip_ixes(input_)))
-                  for input_ in clustered_groups_files], pool)
+        run_parallel([PythonRunner(self.parseCROPoutToGroups, [input_,
+                                   "%s/%s_uncount.groups" % (outdir, strip_ixes(input_))],
+                                   {"exists": [input_]})
+                      for input_ in clustered_groups_files], pool)
         printVerbose("Done parsing groups file.")
 
         # Collect the groups file from clustering with counts removed
@@ -100,7 +101,7 @@ class Cluster_Program_Crop(ChewbaccaProgram):
         cleanup_pool(pool)
 
 
-    def parseCROPoutToGroups(crop_out_file, output_groups_file):
+    def parseCROPoutToGroups(self, crop_out_file, output_groups_file):
         """Parses a CROP output file to a groups file.  Crop files are pretty close to the groups format, we just need to
             replace commas with spaces, and clip the counts from child names.
             e.g.

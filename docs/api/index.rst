@@ -1,11 +1,8 @@
+.. _`API`:
+
 API
 ===
-
-Core Classes
-------------
-core_classes
-
-Commands
---------
-commands
+.. toctree::
+   core_classes
+   commands
 

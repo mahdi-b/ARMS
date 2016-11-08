@@ -1,5 +1,4 @@
-from classes.ProgramRunner import *
-from classes.Helpers import *
+from classes.Helpers import clip_count, printVerbose
 
 
 def buildLine(row_name_str, child_list):

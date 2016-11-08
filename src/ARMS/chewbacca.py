@@ -1,10 +1,12 @@
 import argparse
 import signal
-from classes.Helpers import *
-from align.Align_Clean_Command import Align_Clean_Command
-from align.Align_Command import Align_Command
+import sys
+
 from assemble.Assemble_Command import Assemble_Command
+from classes.Helpers import makeDirOrdie, logging, printVerbose
+from clean.Clean_Deep_Repair_Command import Clean_Deep_Repair_Command
 from clean.Clean_Adapters_Command import Clean_Adapters_Command
+from clean.Clean_Deep_Command import Clean_Deep_Command
 from clean.Clean_Quality_Command import Clean_Quality_Command
 from cluster.Cluster_Command import Cluster_Command
 from demux.Demux_Command import Demux_Command
@@ -21,6 +23,7 @@ from util.Partition_Command import Partition_Command
 from util.Ungap_Command import Ungap_Command
 from viz.Visualize_OTU_Heatmap_Command import Visualize_OTU_Heatmap_Command
 from viz.Visualize_OTU_Sample_Composition_Command import Visualize_OTU_Sample_Composition_Command
+
 # Program Version
 version = "0.01"
 # Time format for printing
@@ -39,12 +42,14 @@ def main(argv):
     """
     parser = argparse.ArgumentParser(description="arms description", epilog="arms long description")
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + version)
-    parser.add_argument("--verbose", help="Increase output verbosity")
+    parser.add_argument("--verbose", dest='verbose', help="Increase output verbosity")
     parser.add_argument('-t', '--processes', type=int, default=1, help="The maximum number of processes to spawn.")
-    parser.add_argument('--dry_run', default=False)
+    parser.add_argument('--dryrun', dest='dryrrun', default=False, action='store_true', help="Return command line \
+                           commands without validation or execution.")
     parser.add_argument('--debugtest', default=False)
-    parser.add_argument('-y', '--extraargstring', default="", required=False, help="Auxillary command line arguments \
-                            to append to the end of the command.")
+    parser.add_argument('-y', '--extraargstring', default="", required=False, help="Auxillary parameters you wish to \
+                            pass to the called program (such as options chewbacca doesn't support).  USE AT YOUR OWN \
+                            RISK.")
 
     subparsers = parser.add_subparsers(dest='action', help='Available commands')
 
@@ -64,6 +69,7 @@ def main(argv):
                             program to use.  Choices are: 'bayeshammer'.  Default: 'bayeshammer'.")
     parser_preclean.add_argument('-j', '--bayesthreads', type=int, required=False, default=1, help="The number of \
                             threads to use per process (default is 1")
+
     parser_preclean.set_defaults(command=Preclean_Command)
 
     # =================================
@@ -244,7 +250,7 @@ def main(argv):
     parser_align.add_argument('-d', '--db', required=True, help="Database against which to align and filter reads")
     parser_align.add_argument('-p', '--program', required=False, default="macse", help="Indicates which \
                             program to use.  Choices are: 'macse'.  Default: 'macse'.")
-    parser_align.set_defaults(command=Align_Command)
+    parser_align.set_defaults(command=Clean_Deep_Command)
 
     # =====================================
     # == Clean Aligned Reads with MACSE  ==
@@ -260,7 +266,7 @@ def main(argv):
                             reads")
     parser_macse_clean.add_argument('-p', '--program', required=False, default="macse", help="Indicates which \
                              program to use.  Choices are: 'macse'.  Default: 'macse'.")
-    parser_macse_clean.set_defaults(command=Align_Clean_Command)
+    parser_macse_clean.set_defaults(command=Clean_Deep_Repair_Command)
 
     # ============================================
     # ==  Cluster using CROP, SWARM, OR VSEARCH ==
@@ -454,12 +460,39 @@ def main(argv):
                             abundance) should be included in the graph.", type=int)
     parser_viz_otu_heatmap.set_defaults(command=Visualize_OTU_Heatmap_Command)
 
+    #=============================================================================================
+    """
+    # TEST
+    from classes.ChewbaccaCommand import ChewbaccaCommand
+    from classes.ChewbaccaProgram import ChewbaccaProgram
+    from classes.ProgramRunner import ProgramRunner, ProgramRunnerCommands
+
+    class Test_Program_Chewbacca(ChewbaccaProgram):
+        name = "test"
+        def execute_program(self):
+            args = self.args
+            p = ProgramRunner(ProgramRunnerCommands.TEST_ECHO, [args.input_f])
+            p.run()
+
+    class Test_Command(ChewbaccaCommand):
+        default_program = Test_Program_Chewbacca
+        supported_programs = [Test_Program_Chewbacca]
+        command_name = "Test"
+
+    test_parser = subparsers.add_parser('test', description="test.")
+    test_parser.add_argument('-i', '--input_f', required=True, help="File")
+    test_parser.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
+    test_parser.set_defaults(command=Test_Command)
+    """
+    # =============================================================================================
+
     # =======================================
     # == Parse args and call default func  ==
     # =======================================
     args, unknown = parser.parse_known_args()
     if unknown:
         print "\nIgnoring unknown args: " + ', '.join(['%s'] * len(unknown)) % tuple(unknown)
+
     if args.verbose:
         logging.basicConfig(format=FORMAT, level=logging.DEBUG, datefmt=DATEFMT)
     else:
@@ -468,10 +501,9 @@ def main(argv):
     printVerbose.VERBOSE = (args.verbose is not None)
     logging.debug("Initial ARGS are: %s", args)
     print("\t\t")
-    dryRun = args.dry_run
     signal.signal(signal.SIGTSTP, signal.SIG_IGN)
-    cmd = args.command
-    cmd(args).execute_command()
+    makeDirOrdie(args.outdir)
+    args.command(args).execute_command()
 
 
 if __name__ == "__main__":

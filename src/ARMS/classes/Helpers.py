@@ -4,8 +4,8 @@ import os
 import sys
 import traceback
 from multiprocessing import Pool
-import classes.Validator
 from shutil import copy2
+
 
 class printVerbose(object):
     """A class to toggle verbose printing."""
@@ -13,7 +13,7 @@ class printVerbose(object):
     # If True, verbose printing is enabled
     VERBOSE = False
 
-    def __init__(self, msg,out=sys.stdout):
+    def __init__(self, msg, out=sys.stdout):
         """Prints the msg to console if printVerbose.VERBOSE is True.
         :param msg: The thing to print.
         :param out: Where to write the verbose message.  Default sys.stdout
@@ -21,56 +21,26 @@ class printVerbose(object):
         if printVerbose.VERBOSE:
             out.write("\n%s\n" % msg)
 
-def helpValidate(conditions):
-    """Validates all conditions using a Validator object, returning True if successful and raising an exception
-        if not.
 
-    :param conditions: A dictionary mapping <Validator>.function names to a list of parameters.  The dictionary
-                            key/function name is called on each parameter in the corresponding list of parameters.
-                            All parameters must satisfy their <Validator>.function in order for the specified
-                            program to execute.
-    :return: True if validation is successful, and raising an exception in <Validator.function> if not.
+def start_runner(runner_instance):
+    """Runs an instance of a ValidRunner.  Calls run() for a ValidRunner object.'
+        :param runner_instance A fully initalized ValidRunner to run.
     """
-
-    for condition in conditions.iteritems():
-        getattr(classes.Validator, condition[0])(condition[1])
-    return True
+    return runner_instance.run()
 
 
-def runProgramRunnerInstance(my_instance):
-    """Runs an instance of a ProgramRunner.  Calls ProgramRunner.run() for a ProgramRunner object.'
-        :param my_instance A fully initalized ProgramRunner object to run.
-    """
-    # logging.info(myInstance.dry_run())
-    return my_instance.run()
-
-
-def runPythonInstance(params):
-    """Wraps a multi-parameter, local, python method, so that it can be run as a multiprocessing.Pool job.
-
-    :param params:  A tuple, where the first item is a function, and the remainder is a set of parameters
-    :return:        The output of params[0](*params[1:]
-    """
-    printVerbose(str(params))
-    func = params[0]
-    args = params[1:]
-    printVerbose("Running: %s" % str(params))
-    return func(*args)
-
-
-def parallel(function, data, pool):
-    """Executes jobs in parallel.
-    :param function:    The function to call.  Generally runInstance() for ProgramRunner objects, or a local python
-                            function.
-    :param data: A list of arguments to run the function over.
+def run_parallel(runnables, pool):
+    """Executes a ValidRunner in parallel.
+    :param runnables: A list of ValidRunner instances.
     :param pool: An initalized multiprocessing.Pool object.
     :return: A list of results.
     """
     try:
-        return pool.map_async(function, data).get(999999999)
+        return pool.map_async(start_runner, runnables).get(999999999)
 
     except KeyboardInterrupt:
         kill_pool_and_die(pool)
+
 
     except  Exception as e:
         exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -142,7 +112,7 @@ def kill_pool_and_die(pool):
     pool.join()
     # New line for cursor
     print "\n"
-    sys.exit()
+    #sys.exit()
 
 
 def cleanup_pool(pool):
@@ -152,8 +122,9 @@ def cleanup_pool(pool):
     """
     pool.close()
     pool.join()
+    pool.terminate()
     print "\n"
-    sys.exit()
+    #sys.exit()
 
 
 def strip_ixes(path):
@@ -166,8 +137,8 @@ def strip_ixes(path):
     # name = re.sub(r'_splitOut_\d+', '', file_name)
     # name = re.sub(r'_part_\d+', '', name)
     name = file_name
-    ixes=[ "_renamed", "_debarcoded", ".assembled", ".discarded", ".unassembled", "_cleaned", "_derepCount","_derep",
-           "_uc", "_splitOut", ".denovo.uchime", "_derepCount", "_uncount", "_counts", "_seeds"]
+    ixes = ["_renamed", "_debarcoded", ".assembled", ".discarded", ".unassembled", "_cleaned", "_derepCount", "_derep",
+            "_uc", "_demux", ".denovo.uchime", "_derepCount", "_uncount", "_counts", "_seeds", ".00.0_0.cor"]
     for ix in ixes:
         name = name.replace(ix, "")
     return name
@@ -187,7 +158,7 @@ def clip_count(sequence_name, delim='_'):
     return delim.join(sequence_name.split(delim)[:-1])
 
 
-def enumerateDir(dir_, pattern="*"):
+def enumerate_dir(dir_, pattern="*"):
     """Returns all the files in a directory, optionally requiring a pattern match.
 
     :param dir_: The directory to look in for files.
@@ -220,12 +191,12 @@ def getInputFiles(path, match_pattern="*", mismatch_pattern="", critical=True, i
     if os.path.isfile(path):
         rslt = [path]
     elif os.path.isdir(path):
-        patternMatch = enumerateDir(path, match_pattern)
+        pattern_match = enumerate_dir(path, match_pattern)
         if mismatch_pattern:
-            negative_match = enumerateDir(path, mismatch_pattern)
-            rslt = list(set(patternMatch) - set(negative_match))
+            negative_match = enumerate_dir(path, mismatch_pattern)
+            rslt = list(set(pattern_match) - set(negative_match))
         else:
-            rslt = patternMatch
+            rslt = pattern_match
 
     else:
         logging.error("Found no  matching inputs matching %s at %s" % (match_pattern, path))
@@ -288,6 +259,7 @@ def move(origin, destination):
     :param destination: File path to the file's new destination.  e.g. "dirB/a.txt"
     """
     os.rename(origin, destination)
+
 
 def debugPrint(message):
     """Logs debug messages.
@@ -353,13 +325,13 @@ def validate_paired_fastq_reads(input_f, input_r):
     return zip(set(forwards_reads), set(reverse_reads))
 
 
-def one_to_one_or_one_to_many(n,m):
+def one_to_one_or_one_to_many(n, m):
     k = len(n)
-    if k ==1 or k ==len(m):
+    if k == 1 or k == len(m):
         return True
     return False
 
 
-def fittosize(n,m):
-    if len(n)<len(m):
-        return n*len(m), m
+def fittosize(n, m):
+    if len(n) < len(m):
+        return n * len(m), m

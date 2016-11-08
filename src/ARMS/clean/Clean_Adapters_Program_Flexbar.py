@@ -1,7 +1,7 @@
-from classes.ChewbaccaProgram import *
-from classes.ProgramRunner import *
-
-from classes.Helpers import *
+from classes.ChewbaccaProgram import ChewbaccaProgram
+from classes.ProgramRunner import ProgramRunner, ProgramRunnerCommands
+from classes.Helpers import getInputFiles, init_pool, debugPrintInputInfo, printVerbose, run_parallel, strip_ixes, \
+                                bulk_move_to_dir, cleanup_pool, makeAuxDir
 
 
 class Clean_Adapters_Program_Flexbar(ChewbaccaProgram):
@@ -28,7 +28,6 @@ class Clean_Adapters_Program_Flexbar(ChewbaccaProgram):
         :param processes: The maximum number of processes to use.
         :param extraargstring: Advanced program parameter string.
         """
-        makeDirOrdie(outdir)
         inputs = getInputFiles(input_f)
         pool = init_pool(min(len(inputs), processes))
         debugPrintInputInfo(inputs, "trim adapters from")
@@ -37,29 +36,24 @@ class Clean_Adapters_Program_Flexbar(ChewbaccaProgram):
         temp_file_name_template = "%s/temp_%s"
         debarcoded_file_name_template = "%s/%s_debarcoded"
         # Trim adapters from the left
-        parallel(runProgramRunnerInstance, [ProgramRunner(ProgramRunnerCommands.TRIM_FLEXBAR,
-                                                          [input_file,
-                                                           temp_file_name_template % (outdir, strip_ixes(input_file)),
-                                                           "LEFT", adapters, allowedns],
-                                                          {"exists": [input_file, adapters]}, extraargstring)
-                                            for input_file in inputs], pool)
+        run_parallel([ProgramRunner(ProgramRunnerCommands.TRIM_FLEXBAR,
+                                    [input_file, temp_file_name_template % (outdir, strip_ixes(input_file)),
+                                     "LEFT", adapters, allowedns],
+                                    {"exists": [input_file, adapters]}, extraargstring)
+                      for input_file in inputs], pool)
 
         temp_files = getInputFiles(outdir, "temp_*")
         debugPrintInputInfo(temp_files, "trim adapters from")
 
         # Trim the reverse complemented adapters from the right
-        parallel(runProgramRunnerInstance, [ProgramRunner(ProgramRunnerCommands.TRIM_FLEXBAR,
-                                                          [input_file,
-                                                           debarcoded_file_name_template % (outdir,
-                                                                                            strip_ixes(input_file)[5:]),
-                                                           "RIGHT", adaptersrc,
-                                                           allowedns],
-                                                          {"exists": [input_file, adaptersrc]}, extraargstring)
-                                            for input_file in temp_files], pool)
+        run_parallel([ProgramRunner(ProgramRunnerCommands.TRIM_FLEXBAR,
+                                    [input_file, debarcoded_file_name_template % (outdir, strip_ixes(input_file)[5:]),
+                                     "RIGHT", adaptersrc, allowedns],
+                                    {"exists": [input_file, adaptersrc]}, extraargstring)
+                      for input_file in temp_files], pool)
         printVerbose("Done Trimming sequences.")
 
         # Move temp files
-        aux_files  = getInputFiles(outdir, "temp_*", ignore_empty_files=False)
+        aux_files = getInputFiles(outdir, "temp_*", ignore_empty_files=False)
         bulk_move_to_dir(aux_files, makeAuxDir(outdir))
         cleanup_pool(pool)
-

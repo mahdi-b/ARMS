@@ -1,9 +1,11 @@
 from Bio import SeqIO
 from Bio.Alphabet import SingleLetterAlphabet
 from Bio.Seq import Seq
-from classes.ChewbaccaProgram import *
-from classes.Helpers import *
-from classes.ProgramRunner import *
+from classes.ChewbaccaProgram import ChewbaccaProgram
+from classes.Helpers import getInputFiles, debugPrintInputInfo, init_pool, run_parallel, printVerbose, strip_ixes, \
+    makeDirOrdie, bulk_move_to_dir, cleanup_pool, makeAuxDir
+from classes.ProgramRunner import ProgramRunner, ProgramRunnerCommands
+from classes.PythonRunner import PythonRunner
 from Cluster_Helpers import handle_groups_file_update
 from parse.parseUCtoGroups import parseUCtoGroups
 from rename.renameWithoutCount import removeCountsFromGroupsFile
@@ -35,27 +37,26 @@ class Cluster_Program_Swarm(ChewbaccaProgram):
         :param processes: The maximum number of processes to use.
         :param extraargstring: Advanced program parameter string.
         """
-        makeDirOrdie(outdir)
         # Grab the fasta file(s) to cluster
         inputs = getInputFiles(input_f)
         debugPrintInputInfo(inputs, "clustered")
         pool = init_pool(min(len(inputs), processes))
 
         # RUN CLUSTERING
-        parallel(runProgramRunnerInstance,
-                 [ProgramRunner(ProgramRunnerCommands.CLUSTER_SWARM,
-                                [input_, "%s/%s_clustered" % (outdir, strip_ixes(input_)),
-                                 "%s/%s_clustered_uc" % (outdir, strip_ixes(input_)),
-                                 "%s/%s_clustered_seeds" % (outdir, strip_ixes(input_))],
-                                {"exists": [input_]}, extraargstring) for input_ in inputs], pool)
+        run_parallel([ProgramRunner(ProgramRunnerCommands.CLUSTER_SWARM,
+                                    [input_, "%s/%s_clustered" % (outdir, strip_ixes(input_)),
+                                     "%s/%s_clustered_uc" % (outdir, strip_ixes(input_)),
+                                     "%s/%s_clustered_seeds" % (outdir, strip_ixes(input_))],
+                                    {"exists": [input_]}, extraargstring)
+                      for input_ in inputs], pool)
 
         # PARSE UC FILE TO GROUPS FILE
         printVerbose("Parsing the clustered uc files to groups files")
         clustered_uc_files = getInputFiles(outdir, "*_clustered_uc")
         debugPrintInputInfo(clustered_uc_files, "parsed to groups")
-        parallel(runPythonInstance,
-                 [(parseUCtoGroups, input_, "%s/%s.groups" % (outdir, strip_ixes(input_)))
-                  for input_ in clustered_uc_files], pool)
+        run_parallel([PythonRunner(parseUCtoGroups, [input_, "%s/%s.groups" % (outdir, strip_ixes(input_))],
+                                   {"exists": [input_]})
+                      for input_ in clustered_uc_files], pool)
         printVerbose("Done parsing groups files.")
 
         # REMOVE COUNTS FROM CLUSTERING GROUPS FILE
@@ -63,16 +64,17 @@ class Cluster_Program_Swarm(ChewbaccaProgram):
         # Grab the current groups file and the new clustered groups file (which needs to be cleaned)
         clustered_groups_files = getInputFiles(outdir, "*_clustered.groups")
         debugPrintInputInfo(clustered_groups_files, "cleaned")
-        parallel(runPythonInstance,
-                 [(removeCountsFromGroupsFile, input_, "%s/%s_uncount.groups" % (outdir, strip_ixes(input_)))
-                  for input_ in clustered_groups_files], pool)
+        run_parallel([PythonRunner(removeCountsFromGroupsFile,
+                                   [input_, "%s/%s_uncount.groups" % (outdir, strip_ixes(input_))],
+                                   {"exists": [input_]})
+                      for input_ in clustered_groups_files], pool)
         printVerbose("Done cleaning groups files.")
 
         printVerbose("Capitalizing sequences")
         # Convert the seeds files to uppercase (swarm writes in lowercase)
         inputs = getInputFiles(outdir, "*_seeds")
-        parallel(runPythonInstance,
-                 [(capitalizeSeqs, input_, "%s.fasta" % input_) for input_ in inputs], pool)
+        run_parallel([PythonRunner(capitalize_seqs, [input_, "%s.fasta" % input_], {"exists": [input_]})
+                      for input_ in inputs], pool)
         printVerbose("Done capitalizing sequences")
 
         # Collect the groups file from clustering with counts removed
@@ -96,24 +98,24 @@ class Cluster_Program_Swarm(ChewbaccaProgram):
         cleanup_pool(pool)
 
 
-def capitalizeSeqs(input_fasta, output_fasta):
+def capitalize_seqs(input_fasta, output_fasta):
     """Capitalizes the ATGC sequence in a fasta file and writes it to a new file.
 
     :param input_fasta: Filepath to the input fasta file to capitalize.
     :param output_fasta: Filepath to the output fasta file.
     :return: Filepath to the output fasta file.
     """
-    seqBuffer = []
+    seq_buffer = []
     i = 0
     output = open(output_fasta, 'a')
 
     for sequence in SeqIO.parse(open(input_fasta, 'rU'), "fasta"):
         sequence.seq = Seq(str(sequence.seq).upper(), SingleLetterAlphabet())
-        seqBuffer.append(sequence)
+        seq_buffer.append(sequence)
         i += 1
         if i % 5000 == 0:
-            SeqIO.write(seqBuffer, output, "fasta")
-            seqBuffer = []
-    SeqIO.write(seqBuffer, output, "fasta")
+            SeqIO.write(seq_buffer, output, "fasta")
+            seq_buffer = []
+    SeqIO.write(seq_buffer, output, "fasta")
     output.close()
     return output_fasta

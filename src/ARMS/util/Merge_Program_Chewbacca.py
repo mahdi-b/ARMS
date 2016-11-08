@@ -1,8 +1,6 @@
-from classes.ChewbaccaProgram import *
-from classes.ProgramRunner import *
+from classes.ChewbaccaProgram import ChewbaccaProgram
+from classes.Helpers import getInputFiles, debugPrintInputInfo, printVerbose
 from util.merge import merge_files
-
-from classes.Helpers import *
 
 
 class Merge_Program_Chewbacca(ChewbaccaProgram):
@@ -25,11 +23,10 @@ class Merge_Program_Chewbacca(ChewbaccaProgram):
         :param output_fileext: The file extension of the output file.
         :param aux_params: A dictionary of program-specific named-parameters.
         """
-        makeDirOrdie(outdir)
         inputs = getInputFiles(input_f)
         debugPrintInputInfo(inputs, "merged")
         printVerbose("Merging files.")
         output_file = "%s/%s_MERGED.%s" % (outdir, output_filename, output_fileext)
         merge_files(inputs, output_file)
         printVerbose("Done merging.")
-        logging.debug("Merged %d files into %s" % (len(inputs), output_file))
+        printVerbose("Merged %d files into %s" % (len(inputs), output_file))

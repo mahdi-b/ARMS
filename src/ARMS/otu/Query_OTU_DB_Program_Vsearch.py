@@ -1,9 +1,9 @@
+from classes.ChewbaccaProgram import ChewbaccaProgram
+from classes.Helpers import getInputFiles, debugPrintInputInfo, init_pool, run_parallel, printVerbose, strip_ixes, \
+    cleanup_pool, bulk_move_to_dir, makeAuxDir
 from itertools import product
-
-from classes.ChewbaccaProgram import *
-from classes.ProgramRunner import *
+from classes.PythonRunner import PythonRunner
 from queryVSearchoutForTaxa import parseVSearchOutputAgainstNCBI
-from classes.Helpers import *
 from Query_Helpers import query_vsearch
 
 
@@ -12,7 +12,7 @@ class Query_OTU_DB_Program_Vsearch(ChewbaccaProgram):
 
     def execute_program(self):
         args = self.args
-        self.query_fasta_db_vsearch(args.input_f, args.outdir, args.referencefasta, args.db,  args.simmilarity,
+        self.query_fasta_db_vsearch(args.input_f, args.outdir, args.referencefasta, args.db, args.simmilarity,
                                     args.coverage, args.processes, args.extraargstring)
 
     def query_fasta_db_vsearch(self, input_f, outdir, ref_fasta, ref_db, simmilarity, coverage, processes,
@@ -30,7 +30,7 @@ class Query_OTU_DB_Program_Vsearch(ChewbaccaProgram):
         :param processes: The number of processes to use in the identification process.
         :param extraargstring: Advanced program parameter string.
         """
-        makeDirOrdie(outdir)
+        # blast6 output format http://www.drive5.com/usearch/manual/blast6out.html
         aln_user_string = "--userfields query+target+id+alnlen+qcov"
         # coi_fasta = os.path.expanduser("~/ARMS/refs/COI.fasta")
         # ncbi_db_string = os.path.expanduser("~/ARMS/refs/ncbi.db")
@@ -50,14 +50,15 @@ class Query_OTU_DB_Program_Vsearch(ChewbaccaProgram):
         # parsed_BIOCODE.out.  Parameters can be changed and this command can be rerun as many times as necessary
         #
         # parseVSearchOutputAgainstNCBI(vsearch_out, ncbi_db, min_coverage, min_similarity)> parsed_nt.out
-        parallel(runPythonInstance,
-                 [(parseVSearchOutputAgainstNCBI, "%s/%s.out" % (outdir, strip_ixes(query)), ncbi_db_string,
-                   "%s/%s_result.out" % (outdir, strip_ixes(query)), simmilarity, coverage)
-                  for query in query_fastas], pool)
+        run_parallel([PythonRunner(parseVSearchOutputAgainstNCBI,
+                                   ["%s/%s.out" % (outdir, strip_ixes(query)), ncbi_db_string,
+                                    "%s/%s.tax" % (outdir, strip_ixes(query)), simmilarity, coverage],
+                                   {"exits": [query, ncbi_db_string]})
+                      for query in query_fastas], pool)
         printVerbose("Done processing.")
 
         # Gather and move auxillary files
-        aux_files = getInputFiles(outdir, "*", "*_result.out", ignore_empty_files=False)
+        aux_files = getInputFiles(outdir, "*", "*.tax", ignore_empty_files=False)
         bulk_move_to_dir(aux_files, makeAuxDir(outdir))
 
         cleanup_pool(pool)

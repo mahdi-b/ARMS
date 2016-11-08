@@ -1,4 +1,7 @@
-from classes.Helpers import *
+import sys
+from classes.Helpers import printVerbose
+
+
 # NOTE: A SEQUENCE MUST NOT APPEAR IN TWO GROUPS FILES.
 def buildOTUtable(latest_groups_files, inital_samples_files, barcodes_file, out_file):
     """Given a single barcodes file with all possible \

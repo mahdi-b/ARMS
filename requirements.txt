@@ -1,0 +1,13 @@
+biopython==1.68
+cycler==0.10.0
+enum34==1.1.6
+ete2==2.3.10
+matplotlib==1.5.3
+numpy==1.11.2
+pandas==0.19.0
+pyparsing==2.1.9
+python-dateutil==2.5.3
+pytz==2016.7
+scipy==0.18.1
+seaborn==0.7.1
+six==1.10.0

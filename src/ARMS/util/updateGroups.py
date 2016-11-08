@@ -1,6 +1,6 @@
 import os
 import sys
-from classes.Helpers import *
+from classes.Helpers import printVerbose
 from parse.parseGroupsFileToDict import parseGroupsFileToDictOfChilden
 from util.merge import merge_files
 
