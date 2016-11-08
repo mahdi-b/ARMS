@@ -26,12 +26,12 @@ nice -10 python ~/ARMS/src/ARMS/chewbacca.py -t 2 trim_adapters  -i 2b_renamed -
 #=================================================================================================
 nice -10 python ~/ARMS/src/ARMS/chewbacca.py -t 2 clean_seqs -i 3_trim_ab -o 4a_cleaned -m 200 -w 5 -q 25
 nice -10 python ~/ARMS/src/ARMS/chewbacca.py -t 2 convert_fastq_to_fasta -i 4a_cleaned -o 4b_fasta
+nice -10 python ~/ARMS/src/ARMS/chewbacca.py -t 2 ungap_fasta -i 4b_fasta -o 4c_ungap -f fasta -g .-
+nice -10 python ~/ARMS/src/ARMS/chewbacca.py -t 2 merge_files -i 4c_ungap -o 4d_merged -f fasta -n BALI
 
 #=================================================================================================
 # Step 5: Dereplicate the data set
 #=================================================================================================
-nice -10 python ~/ARMS/src/ARMS/chewbacca.py -t 2 ungap_fasta -i 4b_fasta -o 4c_ungap -f fasta -g .-
-nice -10 python ~/ARMS/src/ARMS/chewbacca.py -t 2 merge_files -i 4c_ungap -o 4d_merged -f fasta -n BALI
 nice -10 python ~/ARMS/src/ARMS/chewbacca.py -t 2 dereplicate_fasta -i 4d_merged -o 5_derep
 
 ##=================================================================================================
