@@ -47,7 +47,6 @@ class Preclean_Program_Bayeshammer(ChewbaccaProgram):
         aux_files = getInputFiles(outdir, "*", ignore_empty_files=False)
         corrected_dir = "%s/corrected" % outdir
         bulk_move_to_dir(getInputFiles(corrected_dir, "*"), outdir)
-        aux_files += getInputFiles(outdir, "*.yaml", ignore_empty_files=False)
         aux_files += getInputFiles(outdir, "*unpaired*", ignore_empty_files=False)
         aux_files += getInputFiles(outdir, "configs", ignore_empty_files=False)
 
@@ -56,8 +55,13 @@ class Preclean_Program_Bayeshammer(ChewbaccaProgram):
         bulk_move_to_dir(aux_files, aux_dir)
 
         # Rename output files
-        output_files = getInputFiles(outdir, "*")
+        output_files = getInputFiles(outdir, "*", "corrected_*")
         for out_file in output_files:
             move(out_file, "%s/%s_corrected.fastq" % (outdir, strip_ixes(out_file)))
 
+        # move the last minute log file
+        try:
+            move("%s/corrected_corrected.fastq" % outdir, "%s/corrected_corrected.fastq" % aux_dir)
+        except:
+            pass
         cleanup_pool(pool)

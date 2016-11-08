@@ -2,7 +2,8 @@ from Bio import SeqIO
 from classes.BufferedSeqWriter import BufferedSeqWriter
 from classes.ChewbaccaProgram import ChewbaccaProgram
 from classes.Helpers import makeAuxDir, makeDirOrdie, getInputFiles, debugPrintInputInfo, init_pool, printVerbose,\
-                            parallel, runPythonInstance, bulk_move_to_dir, cleanup_pool
+                             bulk_move_to_dir, cleanup_pool, run_parallel
+from classes.PythonRunner import PythonRunner
 from parse.parseBarcodesToDict import parse_barcodes_to_dict
 
 
@@ -48,13 +49,10 @@ class Demux_Program_Chewbacca(ChewbaccaProgram):
         pool = init_pool(min(len(file_id_pairs), processes))
 
         printVerbose("Demuxing sequences...")
-        """parallel(runPythonInstance,
-                 [(split_on_name, input_, barcodes, outdir, id_, filetype)
-                   for input_, id_ in file_id_pairs], pool)
-        """
-        for input_, id_ in file_id_pairs:
-            split_on_name(input_, barcodes, outdir, id_, filetype)
-        printVerbose("Demuxed sequences.")
+        run_parallel([PythonRunner(split_on_name,
+                                   [input_, barcodes, outdir, id_, filetype], {"exists": [input_]})
+                        for input_, id_ in file_id_pairs], pool)
+
 
         # Grab all the auxillary files
         aux_files = getInputFiles(outdir, "unmatched_*", ignore_empty_files=False)

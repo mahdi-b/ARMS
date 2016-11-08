@@ -42,7 +42,7 @@ def main(argv):
     """
     parser = argparse.ArgumentParser(description="arms description", epilog="arms long description")
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + version)
-    parser.add_argument("--verbose", dest='verbose', default=False, action='store_true', help="Increase output verbosity")
+    parser.add_argument("--verbose", dest='verbose', help="Increase output verbosity")
     parser.add_argument('-t', '--processes', type=int, default=1, help="The maximum number of processes to spawn.")
     parser.add_argument('--dryrun', dest='dryrrun', default=False, action='store_true', help="Return command line \
                            commands without validation or execution.")
