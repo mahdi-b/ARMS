@@ -2,6 +2,7 @@ import glob
 import logging
 import os
 import sys
+import traceback
 from multiprocessing import Pool
 import classes.Validator
 from shutil import copy2
@@ -72,8 +73,10 @@ def parallel(function, data, pool):
         kill_pool_and_die(pool)
 
     except  Exception as e:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
         print e
         print sys.exc_info()
+        print repr(traceback.format_tb(exc_traceback))
         kill_pool_and_die(pool)
 
 
@@ -343,9 +346,10 @@ def validate_paired_fastq_reads(input_f, input_r):
         return []
 
     if len(forwards_reads) == 0:
-        print "Forwards reads should include the filename suffix \"_forward\" or \"R1\".  Reverse reads should \
-                        include the filename suffix \"_reverse\" or \"R2\"."
-        return
+        print "Error: No matching reads files found.  \
+                Forwards reads should include the filename suffix \"_forward\" or \"R1\".  Reverse reads should \
+                include the filename suffix \"_reverse\" or \"R2\"."
+        exit()
     return zip(set(forwards_reads), set(reverse_reads))
 
 
