@@ -10,10 +10,12 @@ class Clean_Adapters_Program_Flexbar(ChewbaccaProgram):
         and RC_ADAPTER is defined in the rcadapters file."""
     name = "flexbar"
 
+
     def execute_program(self):
         args = self.args
         self.clean_trim_adapters_flexbar(args.input_f, args.adapters, args.adaptersrc, args.outdir, args.allowedns,
                                          args.processes, args.extraargstring)
+
 
     def clean_trim_adapters_flexbar(self, input_f, adapters, adaptersrc, outdir, allowedns, processes, extraargstring):
         """Use flexbar to trim adapters and barcodes from sequences.  By default, Flexbar does not allow any 'N' \

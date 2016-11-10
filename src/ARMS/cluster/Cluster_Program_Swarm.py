@@ -1,6 +1,7 @@
 from Bio import SeqIO
 from Bio.Alphabet import SingleLetterAlphabet
 from Bio.Seq import Seq
+from classes.BufferedWriter import BufferedSeqWriter
 from classes.ChewbaccaProgram import ChewbaccaProgram
 from classes.Helpers import getInputFiles, debugPrintInputInfo, init_pool, run_parallel, printVerbose, strip_ixes, \
     makeDirOrdie, bulk_move_to_dir, cleanup_pool, makeAuxDir
@@ -83,14 +84,13 @@ class Cluster_Program_Swarm(ChewbaccaProgram):
         # Resolve the user specified names file if necessary
         final_groups_files = handle_groups_file_update(outdir, groupsfile, cleaned_clustered_groups_files)
 
-        # GATHER AUX FILES
-        aux_files = getInputFiles(outdir, "*", "*_seeds.fasta", ignore_empty_files=False)
-
         # Move the final groups file(s) to the groups dir
         groups_dir = makeDirOrdie("%s_groups_files" % outdir)
         bulk_move_to_dir(final_groups_files, groups_dir)
 
+
         # Move aux files to the aux dir
+        aux_files = getInputFiles(outdir, "*", "*_seeds.fasta", ignore_empty_files=False)
         aux_dir = makeAuxDir(outdir)
         bulk_move_to_dir(aux_files, aux_dir)
 
@@ -98,24 +98,18 @@ class Cluster_Program_Swarm(ChewbaccaProgram):
         cleanup_pool(pool)
 
 
-def capitalize_seqs(input_fasta, output_fasta):
+def capitalize_seqs(input_fasta, output_fasta, filetype='fasta'):
     """Capitalizes the ATGC sequence in a fasta file and writes it to a new file.
 
     :param input_fasta: Filepath to the input fasta file to capitalize.
     :param output_fasta: Filepath to the output fasta file.
+    :param filetype: The file format to read and write.  Either 'fasta' or 'fastq'
     :return: Filepath to the output fasta file.
     """
-    seq_buffer = []
-    i = 0
-    output = open(output_fasta, 'a')
+    capitalized_output_file = BufferedSeqWriter(output_fasta, filetype)
 
     for sequence in SeqIO.parse(open(input_fasta, 'rU'), "fasta"):
         sequence.seq = Seq(str(sequence.seq).upper(), SingleLetterAlphabet())
-        seq_buffer.append(sequence)
-        i += 1
-        if i % 5000 == 0:
-            SeqIO.write(seq_buffer, output, "fasta")
-            seq_buffer = []
-    SeqIO.write(seq_buffer, output, "fasta")
-    output.close()
+        capitalized_output_file.write(sequence)
+    capitalized_output_file.flush()
     return output_fasta

@@ -1,5 +1,5 @@
 from Bio import SeqIO
-from classes.BufferedSeqWriter import BufferedSeqWriter
+from classes.BufferedWriter import BufferedSeqWriter
 from classes.ChewbaccaProgram import ChewbaccaProgram
 from classes.Helpers import makeAuxDir, makeDirOrdie, getInputFiles, debugPrintInputInfo, init_pool, printVerbose,\
                              bulk_move_to_dir, cleanup_pool, run_parallel

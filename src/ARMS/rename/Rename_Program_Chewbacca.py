@@ -1,4 +1,5 @@
 import os
+from classes.BufferedWriter import BufferedSeqWriter, BufferedFileWriter
 from classes.ChewbaccaProgram import ChewbaccaProgram
 from classes.PythonRunner import PythonRunner
 from classes.Helpers import getInputFiles, debugPrintInputInfo, init_pool, run_parallel, printVerbose, strip_ixes, \
@@ -64,42 +65,29 @@ def serialRename(input_file, output_fasta_filepath, file_type, clip=True):
     name_map_file = "%s/%s_renamed.mapping" % (os.path.dirname(output_fasta_filepath), strip_ixes(input_file))
     seq_prefix = strip_ixes(input_file)
     i = 0
+    renamed_fasta = BufferedSeqWriter(output_fasta_filepath, file_type)
+    mapping_file_output = BufferedFileWriter(name_map_file)
+    samples_file_output = BufferedFileWriter(samples_file)
 
-    with open(output_fasta_filepath, 'w') as output:
-        with open(name_map_file, 'w') as mapping_file_output:
-            with open(samples_file, 'w') as samples_file_output:
+    for s in SeqIO.parse(input_file, file_type):
+        i += 1
 
-                samples_map = []
-                name_map = []
-                renamed_seqs = []
+        # Store the old_name new_name mapping
+        old_id = s.id
+        s.id = "%s_ID%s" % (seq_prefix, i)
+        mapping_file_output.write("%s\t%s" % (old_id, s.id))
 
-                for s in SeqIO.parse(input_file, file_type):
-                    i += 1
-                    # Buffered write
-                    if i % 5000 == 0:
-                        mapping_file_output.write("".join(name_map))
-                        name_map = []
-                        samples_file_output.write("".join(samples_map))
-                        samples_map = []
-                        SeqIO.write(renamed_seqs, output, file_type)
-                        renamed_seqs = []
+        # Store the sequence-sample map
+        if clip:
+            sample_name = clip_count(seq_prefix)
+        else:
+            sample_name = seq_prefix
+            samples_file_output.write("%s\t%s" % (s.id, sample_name))
 
-                    # Store the old_name new_name mapping
-                    old_id = s.id
-                    s.id = "%s_ID%s" % (seq_prefix, i)
-                    name_map.append("%s\t%s\n" % (old_id, s.id))
+        # Store the renamed sequence
+        s.description = ""
+        renamed_fasta.write(s)
 
-                    # Store the sequence-sample map
-                    if clip:
-                        sample_name = clip_count(seq_prefix)
-                    else:
-                        sample_name = seq_prefix
-                    samples_map.append("%s\t%s\n" % (s.id, sample_name))
-
-                    # Store the renamed sequence
-                    s.description = ""
-                    renamed_seqs.append(s)
-
-                mapping_file_output.write("".join(name_map))
-                samples_file_output.write("".join(samples_map))
-                SeqIO.write(renamed_seqs, output, file_type)
+    renamed_fasta.flush()
+    mapping_file_output.flush()
+    samples_file_output.flush()

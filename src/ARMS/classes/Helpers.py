@@ -1,6 +1,7 @@
 import glob
 import logging
 import os
+import subprocess
 import sys
 import traceback
 from multiprocessing import Pool
@@ -41,12 +42,13 @@ def run_parallel(runnables, pool):
     except KeyboardInterrupt:
         kill_pool_and_die(pool)
 
-
     except  Exception as e:
         exc_type, exc_value, exc_traceback = sys.exc_info()
-        print e
+        print "ERROR: %s" % e
+        """
         print sys.exc_info()
         print repr(traceback.format_tb(exc_traceback))
+        """
         kill_pool_and_die(pool)
 
 
@@ -60,7 +62,8 @@ def makeDirOrdie(dir_path, orDie=True):
         os.makedirs(dir_path)
     else:
         if orDie:
-            sys.exit("Directory %s already exists " % dir_path)
+            sys.exit("ERROR: Directory %s already exists. Please specify a different output directory name and try " +
+                        "again. Aborting. " % dir_path)
     return dir_path
 
 

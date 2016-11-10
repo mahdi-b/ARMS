@@ -113,15 +113,15 @@ def main(argv):
     # ==================================================
     # renameSequences(input, output)
     parser_rename = subparsers.add_parser('rename', description="Given a fasta/fastq file or directory of fasta/fastq \
-                            files, serially regroups each sequence in each file serially, with the filename as a \
-                            prefix.")
+                            files, serially renames each sequence in each file, with the filename as a \
+                            prefix.  e.g. the sequences in abc.fasta are renamed abc_ID0, abc_ID1, abc_ID2, etc.")
     parser_rename.add_argument('-i', '--input_f', required=True, help="Input fasta/fastq file or folder.")
     parser_rename.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
     parser_rename.add_argument('-f', '--filetype', required=True, help="The filetype of the input files.  Either \
                             'fasta' or 'fastq'.")
     parser_rename.add_argument('-c', '--clip', required=False, default=True, help="Set True if input file groups \
-                            contain trailing demux_seqs identifiers.  e.g. True if file name contains '_0', '_1', \
-                            '_2', etc..  Default: True.")
+                            contain trailing identifiers from the demux_seqs step.  e.g. True if file names contain \
+                            '_0', '_1', '_2', etc..  Default: True.")
     parser_rename.add_argument('-p', '--program', required=False, default="chewbacca", help="Indicates which \
                             program to use.  Choices are: 'chewbacca'.  Default: 'chewbacca'.")
     parser_rename.set_defaults(command=Rename_Command)
@@ -130,10 +130,10 @@ def main(argv):
     # ==  Trims barcodes and adapters using flexbar  ==
     # =================================================
     # "flexbar":  "flexbar -r \"%s\" -t \"%s\" -ae \"%s\" -a \"%s\""
-    parser_trim = subparsers.add_parser('trim_adapters', description="Given a single barcodes file, a single adapters \
-                            file, and a single fasta/fastq file or a folder containing fasta/fastq files, removes the \
-                            specified adapters (and preceeding barcodes) from all sequences in the given fasta/fastq \
-                            files.")
+    parser_trim = subparsers.add_parser('trim_adapters', description="Given a single adapters file, a single \
+                            adaptersrc file, and a fasta/fastq file or a folder containing fasta/fastq files, removes \
+                            the specified adapters (and preceeding barcodes) from all sequences in the given \
+                            fasta/fastq files.")
     parser_trim.add_argument('-i', '--input_f', required=True, help="Input fasta/fastq file or folder.")
     parser_trim.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
     parser_trim.add_argument('-a', '--adapters', required=True, help="Forwards Adapters file.")

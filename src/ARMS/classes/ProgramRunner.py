@@ -112,7 +112,11 @@ class ProgramRunner(ValidRunner):
             self.validate_conditions()
             debugPrint("Running " + self.command)
             # call and check_call are blocking, Popen is non-blocking
-            return subprocess.check_call(os.path.expanduser(self.command), shell=True, stdout=output)
+            try:
+                rslt = subprocess.check_call(os.path.expanduser(self.command), shell=True, stdout=output)
+            except subprocess.CalledProcessError as cpe:
+                pass
+            return
 
     def __load_configs__(self):
         """Loads configuration settings from the chewbacca configuration file (located in

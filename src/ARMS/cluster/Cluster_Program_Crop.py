@@ -1,3 +1,4 @@
+from classes.BufferedWriter import BufferedFileWriter
 from classes.ChewbaccaProgram import ChewbaccaProgram
 from classes.ProgramRunner import ProgramRunner, ProgramRunnerCommands
 from classes.PythonRunner import PythonRunner
@@ -66,7 +67,7 @@ class Cluster_Program_Crop(ChewbaccaProgram):
         printVerbose("Parsing the groups file from clustering")
         clustered_groups_files = getInputFiles(outdir, "*.cluster.list")
         debugPrintInputInfo(clustered_groups_files, "converted to groups files")
-        run_parallel([PythonRunner(self.parseCROPoutToGroups, [input_,
+        run_parallel([PythonRunner(parseCROPoutToGroups, [input_,
                                    "%s/%s_uncount.groups" % (outdir, strip_ixes(input_))],
                                    {"exists": [input_]})
                       for input_ in clustered_groups_files], pool)
@@ -101,30 +102,23 @@ class Cluster_Program_Crop(ChewbaccaProgram):
         cleanup_pool(pool)
 
 
-    def parseCROPoutToGroups(self, crop_out_file, output_groups_file):
-        """Parses a CROP output file to a groups file.  Crop files are pretty close to the groups format, we just need to
-            replace commas with spaces, and clip the counts from child names.
-            e.g.
-            Crop line:
-                BALI4606_0_ID2033_1	BALI4606_0_ID2033_1,BALI4606_0_ID1668_1,BALI4606_0_ID2079_1
+def parseCROPoutToGroups(crop_out_file, output_groups_file):
+    """Parses a CROP output file to a groups file.  Crop files are pretty close to the groups format, we just need
+        to replace commas with spaces, and clip the counts from child names.
+        e.g.
+        Crop line:
+            BALI4606_0_ID2033_1	BALI4606_0_ID2033_1,BALI4606_0_ID1668_1,BALI4606_0_ID2079_1
 
-            groups line:
-                BALI4606_0_ID2033   BALI4606_0_ID2033 BALI4606_0_ID1668 BALI4606_0_ID2079
+        groups line:
+            BALI4606_0_ID2033   BALI4606_0_ID2033 BALI4606_0_ID1668 BALI4606_0_ID2079
 
-        :param crop_out_file: The file path to the input crop output file.
-        :param output_groups_file: The file path to write the output groups file to.
-        :return: The filepath to the output groups file
-        """
-
-        with open(output_groups_file, 'w') as out:
-            i = 0
-            output = ""
-            for line in open(crop_out_file, 'r'):
-                i += 1
-                if i % 100000 == 0:
-                    out.write(output)
-                    output = ""
-                name, children = line.split("\t")
-                seqs = [clip_count(seq) for seq in children.split(",")]
-                output += "%s\t%s\n" % (clip_count(name), " ".join(seqs))
-            out.write(output)
+    :param crop_out_file: The file path to the input crop output file.
+    :param output_groups_file: The file path to write the output groups file to.
+    :return: The filepath to the output groups file
+    """
+    out = BufferedFileWriter(output_groups_file)
+    for line in open(crop_out_file, 'r'):
+        name, children = line.split("\t")
+        seqs = [clip_count(seq) for seq in children.split(",")]
+        out.write("%s\t%s" % (clip_count(name), " ".join(seqs)))
+    out.flush()

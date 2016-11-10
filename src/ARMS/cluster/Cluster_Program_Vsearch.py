@@ -66,14 +66,12 @@ class Cluster_Program_Vsearch(ChewbaccaProgram):
         # Resolve the user specified names file if necessary
         final_groups_files = handle_groups_file_update(outdir, groupsfile, cleaned_clustered_groups_files)
 
-        # GATHER AUX FILES
-        aux_files = getInputFiles(outdir, "*", "*_seeds.fasta", ignore_empty_files=False)
-
         # Move the final groups file(s) to the groups dir
         groups_dir = makeDirOrdie("%s_groups_files" % outdir)
         bulk_move_to_dir(final_groups_files, groups_dir)
 
         # Move aux files to the aux dir
+        aux_files = getInputFiles(outdir, "*", "*_seeds.fasta", ignore_empty_files=False)
         aux_dir = makeAuxDir(outdir)
         bulk_move_to_dir(aux_files, aux_dir)
 
