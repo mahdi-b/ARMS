@@ -11,7 +11,7 @@ import os
 def add_to_msa(input_fna, ref_fna, ref_faa_msa, name_map, outdir):
 
     load_saved_data = True
-    save_data_to_file = True
+    save_data_to_file = False
 
     # read MSA file to dict
     ref_msa = SeqIO.to_dict(SeqIO.parse(open(ref_faa_msa, 'r'), 'fasta'))
@@ -124,10 +124,10 @@ def add_to_msa(input_fna, ref_fna, ref_faa_msa, name_map, outdir):
         priority +=1
     print cumulative_insertions
 
+
+    print "C: " + apply_deltas(cumulative_insertions, consensus, '@', True)
     # A ruler
     ruler = (' ' * 4 + "*" + ' ' * 4 + "!") * 200
-
-    print "C: " + consensus
     print "R: " + apply_deltas(cumulative_insertions, ruler, '@', True)
 
     if len(cumulative_insertions) > 0:
@@ -162,12 +162,12 @@ def add_to_msa(input_fna, ref_fna, ref_faa_msa, name_map, outdir):
         if end != start:
             for j in range(len(formatted_queries)):
                 tmp = list(formatted_queries[j])
-                tmp[start:end+1] = maps[i]["".join(tmp[start:end+1]).lower()].upper()
+                tmp[start:end+1] = maps[i]["".join(tmp[start:end+1]).replace('-','').lower()].upper()
                 formatted_queries[j] = tmp
             i+=1
-
+    print "C: " + apply_deltas(cumulative_insertions, consensus, '@', True)
     for seq in formatted_queries:
-        print "".join(seq)
+        print "Q: " + "".join(seq)
 
     with open("%s/rslt.log" % outdir, 'w') as log:
         log.write(apply_deltas(cumulative_insertions, ruler, '@'))

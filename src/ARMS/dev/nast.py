@@ -178,10 +178,10 @@ def realign(seqs, start, end, outfilename):
     :param outfilename: The file to write the realignment sequences to.
     :return: dict{string:string}  A map of unique subsequences to their realignments.
     """
-    old_vals = map(str.lower, list(set([seq[start:end] for seq in seqs])))
-    gaps = '-'*(end-start)
+    old_vals = map(str.lower, list(set([seq[start:end].replace('-','') for seq in seqs])))
+
     try:
-        old_vals.remove(gaps)
+        old_vals.remove('')
     except:
         pass
     #print old_vals
@@ -198,7 +198,8 @@ def realign(seqs, start, end, outfilename):
     new_vals = muscle_realign(outfilename, rslt_name)
     #print new_vals
     val_map = dict((str(key), val) for key, val in zip(old_vals, new_vals))
-    val_map[gaps] = gaps
+    gaps = '-' * (end - start)
+    val_map[''] = gaps
     #print val_map.keys()
     return val_map
 
