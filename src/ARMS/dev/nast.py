@@ -26,8 +26,14 @@ def locate_deltas(ref_msa_template, nast_ref, nast_query, priority=0):
         else:
             template_cursor += 1
         nast_cursor += 1
-    if template_insertions + len(ref_msa_template) != len(nast_ref):
+    if template_insertions + len(ref_msa_template) < len(nast_ref):
         print "ERROR: NOT ALL GAPS FOUND!"
+        print "len MSA: %d" % len(ref_msa_template)
+        print "TEMPLATE INSERTIONS: %d" %template_insertions
+        print "len nast_ref: %d" % len(nast_ref)
+        print "M: " + ref_msa_template.seq
+        print "N: " + nast_ref
+        print "Q: " + nast_query
         exit()
     # collapse the character insertion lists at each location (key) into a single string for insertion
     for key in local_insertions.keys():
@@ -110,6 +116,7 @@ def apply_deltas(delta_dict, sequence, gap_char='-', gap_letter=False):
                 temp[pos:pos + length ] = list(chars)
                 temp[pos+length:pos+length] = [gap_char] * (max_char_len - length)
                 found = True
+                print "replaced %s with %s" % (temp[pos+length:pos+length], template)
                 break
             else: pass
         if not found:
@@ -122,7 +129,7 @@ def apply_deltas(delta_dict, sequence, gap_char='-', gap_letter=False):
     return "".join(temp)
 
 
-def get_segments(cumulative_insertions, ruler):
+def get_regions(cumulative_insertions, ruler):
     """Returns effective final gappings as segments."""
     gap_template = apply_deltas(cumulative_insertions, ruler, '@')
     gap_segments = []
@@ -183,6 +190,8 @@ def muscle_realign(infile, outfile):
 
 
 def realign(seqs, start, end, outfilename):
+    """Calls muscle with regions between start:end in each seq, and calls muscle on those regions.
+    Returns a replacement dictionary for input sequences."""
     old_vals = map(str.lower, list(set([seq[start:end] for seq in seqs])))
     gaps = '-'*(end-start)
     try:
@@ -313,7 +322,7 @@ def nast_regap(ref_msa_template, pairwise_ref, pairwise_query):
     newTemplateAlign = []
     candAln = []
 
-    while (tempAln[fullAlignIndex] == '.' or tempAln[fullAlignIndex] == '-'):
+    while (tempAln[fullAlignIndex] == '-'):
         candAln += '-'  ## add the initial '-' and '.' to the candidate and template
         newTemplateAlign += tempAln[fullAlignIndex]
         fullAlignIndex += 1
@@ -400,3 +409,12 @@ def nast_regap(ref_msa_template, pairwise_ref, pairwise_query):
     newTemplateAlign += trailing_dashes
 
     return "".join(candAln).upper(), "".join(newTemplateAlign).upper()
+
+
+def augment(base_seq, augment):
+    """Fills in mising data (gaps) in a base_seq with data from an augmenting sequence.  Does not modify inputs."""
+    base = list(base_seq)
+    for i in range(len(base)):
+        if base[i] == '-':
+            base[i] = augment[i]
+    return base

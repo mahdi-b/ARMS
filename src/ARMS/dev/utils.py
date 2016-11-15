@@ -78,9 +78,8 @@ def globalNucAlign(seq1,seq2):
     return pairwise2.align.globalxx(seq1, seq2)
 
 
-def globalProtAlign(seq1, seq2):
-    return pairwise2.align.globalds(seq1, seq2, matlist.blosum62, -10, -.5)[0]
-
+def globalProtAlign(seq1, seq2, gap_open_penalty=-2, gap_extend_penalty=-1):
+    return pairwise2.align.globalds(seq1, seq2, matlist.blosum62, gap_open_penalty, gap_extend_penalty)[0]
 
 
 def isIndel(query_name):
