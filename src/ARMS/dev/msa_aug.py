@@ -2,7 +2,7 @@ from Bio import SeqIO
 from collections import defaultdict
 from consensus import dumb_consensus
 from nast import nast_regap, locate_deltas, apply_deltas, mask_deltas, make_faa_gc_lookup, \
-    get_best_hits_from_vsearch, translate_to_prot, update_global_deltas, get_realign_segments, get_regions, augment, realign
+    get_best_hits_from_vsearch, translate_to_prot, update_global_deltas, get_realignment_regions, augment, realign
 from utils import globalProtAlign
 
 import os
@@ -93,7 +93,6 @@ def add_to_msa(input_fna, ref_fna, ref_faa_msa, name_map, outdir):
     # Regap the pairwise alignments according to the original MSA
     # NOTE: if you used augmented MSA templates to generage the pairwise alignement, you must also use augmented MSA
     #       templates for regapping and delta detection.
-    #nast_regap(ref_msa_template, pairwise_ref, pairwise_query):
     regappings = dict((name, nast_regap(aug_msa_template_refs[name], pairwise_refs[name], pairwise_queries[name]))
                        for name in name_keys)
     nast_queries = dict((name, regappings[name][0]) for name in name_keys)
@@ -127,7 +126,7 @@ def add_to_msa(input_fna, ref_fna, ref_faa_msa, name_map, outdir):
 
     # A ruler
     ruler = (' ' * 4 + "*" + ' ' * 4 + "!") * 200
-    get_realign_segments(cumulative_insertions)
+
     print "C: " + consensus
     print "R: " + apply_deltas(cumulative_insertions, ruler, '@', True)
 
@@ -144,7 +143,8 @@ def add_to_msa(input_fna, ref_fna, ref_faa_msa, name_map, outdir):
             print "Q: " + nast_queries[name]
 
     # COMPUTE REGIONS TO REALIGN
-    realignment_regions = get_regions(cumulative_insertions, ruler)
+    # get_realign_segments(cumulative_insertions)
+    realignment_regions = get_realignment_regions(cumulative_insertions)
     formatted_queries = [apply_deltas(cumulative_insertions, nast_queries[name], '-') for name in name_keys]
 
     # DO REALIGNMENT WITH MUSCLE
@@ -173,8 +173,10 @@ def add_to_msa(input_fna, ref_fna, ref_faa_msa, name_map, outdir):
         log.write(apply_deltas(cumulative_insertions, ruler, '@'))
 
     with open("%s/rslt.msa.faa" % outdir, 'w') as outputFile:
-        for query in name_keys:
-            outputFile.write(">%s\n%s\n" % (query, apply_deltas(cumulative_insertions, nast_queries[query], '@')))
+         for seq in SeqIO.parse(open(ref_faa_msa,'r'),'fasta'):
+            outputFile.write(">%s\n%s\n" % (seq.id,  apply_deltas(cumulative_insertions, seq.seq, '-')))
+         for query in name_keys:
+            outputFile.write(">%s\n%s\n" % (query, apply_deltas(cumulative_insertions, nast_queries[query], '-')))
 
     with open("%s/rslt.count" % outdir, 'w') as countFile:
         for name in name_keys:

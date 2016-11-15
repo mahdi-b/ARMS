@@ -7,6 +7,15 @@ import subprocess
 import select
 
 def locate_deltas(ref_msa_template, nast_ref, nast_query, priority=0):
+    """Finds extra characters in the MSA template and the regapped pairwise reference, logging them as deltas.
+
+    :param ref_msa_template: Seq. The untouched MSA reference sequence.
+    :param nast_ref: string.  The regapped pairwise reference sequence.
+    :param nast_query: string.  The regapped pairwise query sequence.
+    :param priority: int.  An integer that denotes which deltas belong together.  Should increase with each subsequent call.
+    :return: tuple.  A tuple of (a dictionary mapping delta starting positions to the sequences inserted there,
+                the total number of insertions in this query)
+    """
     # NOTE: nast_ref is longer than ref_msa_template.  OR ELSE
     local_insertions = defaultdict(list)
     if len(ref_msa_template) == len(nast_ref):
@@ -43,16 +52,22 @@ def locate_deltas(ref_msa_template, nast_ref, nast_query, priority=0):
     return local_insertions, template_insertions
 
 def update_global_deltas(local_deltas, global_deltas):
+    """Updates the list of global deltas with a set of local deltas (by appending the new deltas).
+
+    :param local_deltas: dict{int:string}. A dictionary of local deltas, mapping insertion locations to insertion strings.
+    :param global_deltas: dict{int:string}. A dictionary of global deltas, mapping insertion locations to insertion strings
+    """
     for key in local_deltas.keys():
         global_deltas[key].add(local_deltas[key])
 
 
 def mask_deltas(delta_dict, sequence):
-    """
+    """Masks (by converting to lowercase) the deltas contributed by a sequence for easy identification later on.
 
-    :param delta_dict: A dictionary of strings indexed by position.
-    :param sequence:
-    :return:
+    :param delta_dict: dict{int:string}. A dictionary of insertion strings indexed by position.  Contains only insertions contributed by
+                        the sequence in question.
+    :param sequence: string. The sequence to mask.
+    :return: string. A masked copy of the sequence.
     """
     temp = list(sequence)
     insertions_so_far = 0
@@ -65,35 +80,19 @@ def mask_deltas(delta_dict, sequence):
     return "".join(temp)
 
 
-def revise_deltas(delta_dict, queries):
-    print delta_dict
-    keys = delta_dict.keys()
-    lens = [max(map(len, delta_dict[key])) for key in keys]
-    points = [(x,x+y) for x,y in zip(keys,lens)]
-    points.sort(key=lambda x:x[0])
-    start = points[0][0]
-    end = points[0][1]
-    s=start
-    e=end
-    segments = []
-
-    for (x,y) in points:
-        if x<= e:
-            if y > e:
-                e = y
-        # new segment
-        if x > e:
-            segments.append((s,e))
-            s=x
-            e=y
-    segments.append((s,e))
-    s = set(["\t".join([seq[start:end] for (start, end) in segments]) for seq in queries])
-    print "\n".join(s)
-    return segments
-
 
 def apply_deltas(delta_dict, sequence, gap_char='-', gap_letter=False):
+    """Applies deltas to a sequence in order to make it fit in a new MSA.  Inserts gap_chars at the appropriate
+    locations.  If a masked string (representing an insertion caused by this sequence) is detected, it is changed to
+    uppercase.  Does not modify the passed in sequence.
 
+    :param delta_dict: dict{int:string} A dictionary containing ALL changes that should be applied to this sequence.
+    :param sequence: string. The sequence to use as a basis for modification.
+    :param gap_char: char. The gap character to insert.
+    :param gap_letter: bool. A custom flag used to generate the ruler.  If true, will always insert strings instead of gaps
+                        into the sequence.
+    :return: A copy of the sequence with the deltas applied.
+    """
     temp = list(sequence)
     insertions_so_far = 0
     for key in sorted(delta_dict.keys()):
@@ -116,7 +115,7 @@ def apply_deltas(delta_dict, sequence, gap_char='-', gap_letter=False):
                 temp[pos:pos + length ] = list(chars)
                 temp[pos+length:pos+length] = [gap_char] * (max_char_len - length)
                 found = True
-                print "replaced %s with %s" % (temp[pos+length:pos+length], template)
+                #print "replaced %s with %s" % (temp[pos+length:pos+length], template)
                 break
             else: pass
         if not found:
@@ -129,9 +128,14 @@ def apply_deltas(delta_dict, sequence, gap_char='-', gap_letter=False):
     return "".join(temp)
 
 
-def get_regions(cumulative_insertions, ruler):
-    """Returns effective final gappings as segments."""
-    gap_template = apply_deltas(cumulative_insertions, ruler, '@')
+def get_realignment_regions(cumulative_insertions):
+    """Given a string with deltas applied, find the gapping regions, and return them as a list of tuples.
+
+    :param cumulative_insertions: dict{int:string}. A dictionary of all the deltas to apply.
+    :return: [(),]. A list of tuples representing regions where insertions occured.
+    """
+    template = ' ' * 2 * max(cumulative_insertions.keys())
+    gap_template = apply_deltas(cumulative_insertions, template, '@')
     gap_segments = []
     last_char = ''
     start = -1
@@ -150,38 +154,13 @@ def get_regions(cumulative_insertions, ruler):
     return gap_segments
 
 
-def get_realign_segments(deltas):
-    keys = sorted(deltas.keys())
-    lens = dict((key, max(map(len,deltas[key]))) for key in keys)
-    print lens
-    segments = [(x,x+lens[x]) for x in keys]
-    print segments
-    # if track
-    start = 0
-    end = 0
-    rslt = []
-    for (x,y) in segments:
-        if x > end:
-            rslt.append((start,end))
-            start, end = x, y
-        else:
-            end = y
-    rslt.append((start,end))
-    print rslt
-
-
-def wait_for_file(filename):
-    i=0
-    while  True:
-        try:
-            print "%d waiting for %s\n" % (i,filename)
-            i+=1
-            open(filename, 'r')
-            return
-        except OSError:
-            print "notyet"
-
 def muscle_realign(infile, outfile):
+    """Calls muscle for realignment on a single region.  Returns a list of Seqs representing the given realigned region.
+
+    :param infile: string. The input file path.
+    :param outfile: string. The output file path.
+    :return: [Seq,]. A list of realigned seqs.
+    """
     select.select([open(infile)],[],[])
     cmd = "muscle -in %s -out %s" % (infile, outfile)
     subprocess.check_call(cmd, shell=True)
@@ -191,14 +170,21 @@ def muscle_realign(infile, outfile):
 
 def realign(seqs, start, end, outfilename):
     """Calls muscle with regions between start:end in each seq, and calls muscle on those regions.
-    Returns a replacement dictionary for input sequences."""
+    Returns a replacement dictionary for input sequences.
+    :param seqs: [string,]  A list of all the sequences in an MSA.  These are sequences that have alrady had global
+                            deltas applied.
+    :param start: The start index of the realignment region.
+    :param end: The end index of the realignment region.
+    :param outfilename: The file to write the realignment sequences to.
+    :return: dict{string:string}  A map of unique subsequences to their realignments.
+    """
     old_vals = map(str.lower, list(set([seq[start:end] for seq in seqs])))
     gaps = '-'*(end-start)
     try:
         old_vals.remove(gaps)
     except:
         pass
-    print old_vals
+    #print old_vals
     with open(outfilename, 'w') as output:
         out = ""
         for i in range(len(old_vals)):
@@ -210,16 +196,23 @@ def realign(seqs, start, end, outfilename):
         output.write(out)
     rslt_name = "%s.mus.aln" % outfilename
     new_vals = muscle_realign(outfilename, rslt_name)
-    print new_vals
+    #print new_vals
     val_map = dict((str(key), val) for key, val in zip(old_vals, new_vals))
     val_map[gaps] = gaps
-    print val_map.keys()
+    #print val_map.keys()
     return val_map
 
 
 
 def get_best_hits_from_vsearch(input_fna, ref_fna, outdir):
+    """Calls vsearch with an input fasta, and returns a dictionary mapping each sequence to its best hit. (subject to
+        the ID threshold (70%) in vsearch (See ProgramRunnerCommands.ALIGN_VSEARCH).
 
+    :param input_fna: string.  Filepath to the input fna fasta file.
+    :param ref_fna: string. Filepath to the reference fna fasta file.
+    :param outdir: string. Filepath to the output directory for the hits file.
+    :return: {string:string} A dictionary mapping input sequence names to the best hit in the reference DB.
+    """
     def best_hits_from_vsearch(v_search_output):
         best_hits = {}
         for line in open(v_search_output, 'r'):
@@ -250,8 +243,6 @@ def get_best_hits_from_vsearch(input_fna, ref_fna, outdir):
                             {"exists": [input_fna, ref_fna], "positive": [processes]},
                             extraargstring).run()
 
-
-    print "cleaning up."
     vsearch_output = "%s/%s.out" % (outdir, strip_ixes(input_fna))
 
     # Choose the best hit
@@ -259,6 +250,11 @@ def get_best_hits_from_vsearch(input_fna, ref_fna, outdir):
 
 
 def make_faa_gc_lookup(name_map):
+    """Reads a fna:faa names map file and returns a dict.  Also returns an fna-name:gc map.
+
+    :param name_map: Filepath to a two-column file mapping fna sequence names to faa sequence names.
+    :return: ( {faa names:fna names}, {faa-name:genetic code} )
+    """
     lookup = {}
     fna_faa ={}
     for line in open(name_map,'r'):
@@ -269,6 +265,13 @@ def make_faa_gc_lookup(name_map):
 
 
 def translate(record, is_fwd_read, gc):
+    """Translates fna to faa.  Permutes over all ORF using the provided GC.
+
+    :param record: SeqRecord.  The sequence to translate
+    :param is_fwd_read: bool True if forward read.  Flase if RC.
+    :param gc: int The genetic code table ot use.
+    :return: A list of possible translations
+    """
     possible_translations = []
     for orf, table in product(range(3), [gc]):
         translation = ""
@@ -286,10 +289,10 @@ def translate(record, is_fwd_read, gc):
 def translate_to_prot(input_fna, best_hits, gc_lookup_map):
     """Returns dict of non-stopping translations for sequences in best_hits by name.
 
-    :param input_fna:
-    :param best_hits:
-    :param name_map:
-    :return:
+    :param input_fna: string. filepath to the input fna fasta file.
+    :param best_hits: dict{name:name} map of fna sequence name to name of the closest match in the DB.
+    :param gc_lookup_map: dict{name,int} map of fna sequence names to gc #.
+    :return: dict{name:Seq} Map of faa name to translated Seq.
     """
     translations = {}
 
@@ -309,7 +312,29 @@ def translate_to_prot(input_fna, best_hits, gc_lookup_map):
     return translations
 
 
+
+def augment(base_seq, augment):
+    """Fills in mising data (gaps) in a base_seq with data from an augmenting sequence.  Does not modify inputs.
+
+    :param base_seq: string. The base sequence to use as a template.  Non-gap caracters in this sequence will not be replaced.
+    :param augment: string. The augmenting sequence to take data from.
+    :return: [char,] A copy of base_seq where gaps are filled in with data from augment.
+    """
+    base = list(base_seq)
+    for i in range(len(base)):
+        if base[i] == '-':
+            base[i] = augment[i]
+    return base
+
+
 def nast_regap(ref_msa_template, pairwise_ref, pairwise_query):
+    """Applies the reference MSA's gapping to the pairwise query and ref sequences.
+
+    :param ref_msa_template: string. The untouched msa sequence.
+    :param pairwise_ref: string. the pairwise reference sequence.
+    :param pairwise_query: string. the pairwise query sequence.
+    :return: (a copy of the regapped query sequence, a copy of the regapped reference sequence)
+    """
     """Taken from mothur's nast.cpp"""
     pairwiseLength = len(pairwise_query)
     candPair = list(pairwise_query)
@@ -409,12 +434,3 @@ def nast_regap(ref_msa_template, pairwise_ref, pairwise_query):
     newTemplateAlign += trailing_dashes
 
     return "".join(candAln).upper(), "".join(newTemplateAlign).upper()
-
-
-def augment(base_seq, augment):
-    """Fills in mising data (gaps) in a base_seq with data from an augmenting sequence.  Does not modify inputs."""
-    base = list(base_seq)
-    for i in range(len(base)):
-        if base[i] == '-':
-            base[i] = augment[i]
-    return base
