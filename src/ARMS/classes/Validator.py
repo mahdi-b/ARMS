@@ -10,7 +10,7 @@ def exists(files):
     for file_ in files:
         # print(str(file_))
         if not os.path.exists(file_):
-            raise Exception("File %s does not exist, executions halted" % file_)
+            raise Exception("File %s does not exist." % file_)
     return True
 
 

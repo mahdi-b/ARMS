@@ -1,4 +1,4 @@
-
+from classes.BufferedWriter import BufferedFileWriter
 
 def merge_files(input_file_list, output_file):
     """Concatenates the contents of input_file_list into one output_file.  Overwrites any pre-existing content in
@@ -7,17 +7,9 @@ def merge_files(input_file_list, output_file):
     :param input_file_list: List of filepaths to join.
     :param output_file: File path to the output file.  Pre-existing contents will be overwritten
     """
-    with open(output_file, 'w') as outfile:
-        i = 0
-        output = ""
-        for fname in input_file_list:
-            with open(fname) as infile:
-                for line in infile:
-                    i += 1
-                    output += line
-                    if i%50000 == 0:
-                        outfile.write(output)
-                        output = ""
-        outfile.write(output)
-    outfile.close()
+    merged_file = BufferedFileWriter(output_file)
+    for fname in input_file_list:
+        for line in open(fname):
+            merged_file.write(line)
+    merged_file.flush()
     return output_file
