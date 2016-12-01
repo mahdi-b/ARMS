@@ -52,7 +52,7 @@ class Query_OTU_Fasta_Program_Vsearch(ChewbaccaProgram):
         pool = init_pool(min(len(inputs), processes))
 
         # VSEARCH ALIGNMENT
-        query_vsearch(inputs, outdir, processes, aln_user_string, extraargstring, pool)
+        query_vsearch(inputs, outdir, simmilarity, processes, aln_user_string, extraargstring, pool)
 
         printVerbose("Parsing output...")
         # Parse the alignment results and put those that pass the criterion (97 similarity, 85 coverage) in

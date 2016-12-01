@@ -18,19 +18,17 @@ def buildOTUtable(latest_groups_files, inital_samples_files, barcodes_file, out_
     seq_to_sample = {}
     # read the initaial groups/samples file (from rename)
     # make a single dict from all the groups/samples files mapping seqname to group
-    for groups_file in inital_samples_files:
-        with open(groups_file, 'r') as current_groups_file:
-            for line in current_groups_file:
-                name, sample = line.split("\t")
-                seq_to_sample[name] = sample.rstrip()
-    printVerbose("Finding sample names...")
-    # read the barcodes file to get a list of all the possible groups.  sort it
-    all_sample_names = []
-    with open(barcodes_file, 'r') as barcodes:
-        for line in barcodes:
-            all_sample_names.append(line.split()[0].rstrip())
-    all_sample_names.sort()
-    printVerbose("Done finding sample names.  Found:")
+    all_sample_names = set()
+    for samples_file in inital_samples_files:
+        printVerbose("Reading samples file: %s" % samples_file)
+        with open(samples_file, 'r') as current_samples_file:
+            for line in current_samples_file:
+                name, sample = line.split()
+                sample_name = sample.rstrip()
+                seq_to_sample[name] = sample_name
+                all_sample_names.add(sample_name)
+    all_sample_names = sorted(all_sample_names)
+    printVerbose("Found the following sample names:")
     printVerbose(str(all_sample_names))
 
     with open(out_file, 'w') as out:
@@ -65,7 +63,6 @@ def buildOTUtable(latest_groups_files, inital_samples_files, barcodes_file, out_
                     sample_counts = {}
                     for sample_name in all_sample_names:
                         sample_counts[sample_name] = 0
-
                     # for each item in the child list:
                     for child in children.split():
                         # my_sample = lookup that item in the dict to get its sample name

@@ -10,8 +10,8 @@ import os
 #query.fna", bold10k.fna", bold10k.faa.msa, bold10k_name_pairs.txt
 def add_to_msa(input_fna, ref_fna, ref_faa_msa, name_map, outdir):
 
-    load_saved_data = True
-    save_data_to_file = False
+    load_saved_data = False
+    save_data_to_file = True
 
     # read MSA file to dict
     ref_msa = SeqIO.to_dict(SeqIO.parse(open(ref_faa_msa, 'r'), 'fasta'))
@@ -41,7 +41,7 @@ def add_to_msa(input_fna, ref_fna, ref_faa_msa, name_map, outdir):
         data = eval(lines)
         pairwise_queries = data["pairwise_queries"]
         pairwise_refs = data["pairwise_refs"]
-        consensus = data["consensus"]
+        consensus = data["consensus"].replace('-','X')
         t_consensus = list(consensus)
         aug_msa_template_refs = dict((name, augment(msa_template_refs[name], t_consensus)) for name in name_keys)
 
@@ -81,7 +81,6 @@ def add_to_msa(input_fna, ref_fna, ref_faa_msa, name_map, outdir):
                     }
             outputfile.write(str(data))
         outputfile.close()
-
     """
     print "CS: " + consensus
     for name in name_keys:
@@ -98,13 +97,13 @@ def add_to_msa(input_fna, ref_fna, ref_faa_msa, name_map, outdir):
     nast_queries = dict((name, regappings[name][0]) for name in name_keys)
     nast_refs = dict((name, regappings[name][1]) for name in name_keys)
 
-    """
+
     print "C: " + consensus
     for name in name_keys:
         print "A: " + "".join(aug_msa_template_refs[name])
         print "R: " + nast_refs[name]
         print "Q: " + nast_queries[name]
-    """
+
     delta_counts = {}
     # compute the deltas between the pairwise template and the MSA template
     cumulative_insertions = defaultdict(set)
@@ -132,9 +131,36 @@ def add_to_msa(input_fna, ref_fna, ref_faa_msa, name_map, outdir):
 
     if len(cumulative_insertions) > 0:
         for name in name_keys:
+            print "A: " + "".join(aug_msa_template_refs[name])
             print "T: " + apply_deltas(cumulative_insertions, msa_template_refs[name], '@')
             print "Q: " + apply_deltas(cumulative_insertions, nast_queries[name], '@')
-            "\n"
+
+        # COMPUTE REGIONS TO REALIGN
+        # get_realign_segments(cumulative_insertions)
+        realignment_regions = get_realignment_regions(cumulative_insertions)
+        formatted_queries = [apply_deltas(cumulative_insertions, nast_queries[name], '-') for name in name_keys]
+
+        # DO REALIGNMENT WITH MUSCLE
+        i=0
+        maps = []
+        for (start,end) in realignment_regions:
+            if end != start:
+                print start, end
+                maps.append(realign(formatted_queries, start, end+1, "%d_realigned.fa" % i))
+                i += 1
+
+        # Copy realigned sections back into their respective sequences
+        i=0
+        for (start,end) in realignment_regions:
+            if end != start:
+                for j in range(len(formatted_queries)):
+                    tmp = list(formatted_queries[j])
+                    tmp[start:end+1] = maps[i]["".join(tmp[start:end+1]).replace('-','').lower()].upper()
+                    formatted_queries[j] = tmp
+                i+=1
+        print "C: " + apply_deltas(cumulative_insertions, consensus, '@', True)
+        for seq in formatted_queries:
+            print "Q: " + "".join(seq)
 
     else:
         for name in name_keys:
@@ -142,32 +168,7 @@ def add_to_msa(input_fna, ref_fna, ref_faa_msa, name_map, outdir):
             print "T: " + msa_template_refs[name].seq
             print "Q: " + nast_queries[name]
 
-    # COMPUTE REGIONS TO REALIGN
-    # get_realign_segments(cumulative_insertions)
-    realignment_regions = get_realignment_regions(cumulative_insertions)
-    formatted_queries = [apply_deltas(cumulative_insertions, nast_queries[name], '-') for name in name_keys]
 
-    # DO REALIGNMENT WITH MUSCLE
-    i=0
-    maps = []
-    for (start,end) in realignment_regions:
-        if end != start:
-            print start, end
-            maps.append(realign(formatted_queries, start, end+1, "%d_realigned.fa" % i))
-            i += 1
-
-    # Copy realigned sections back into their respective sequences
-    i=0
-    for (start,end) in realignment_regions:
-        if end != start:
-            for j in range(len(formatted_queries)):
-                tmp = list(formatted_queries[j])
-                tmp[start:end+1] = maps[i]["".join(tmp[start:end+1]).replace('-','').lower()].upper()
-                formatted_queries[j] = tmp
-            i+=1
-    print "C: " + apply_deltas(cumulative_insertions, consensus, '@', True)
-    for seq in formatted_queries:
-        print "Q: " + "".join(seq)
 
     with open("%s/rslt.log" % outdir, 'w') as log:
         log.write(apply_deltas(cumulative_insertions, ruler, '@'))

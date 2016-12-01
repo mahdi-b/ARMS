@@ -1,7 +1,17 @@
-from Bio.Seq import Seq
+from Bio.Align import MultipleSeqAlignment
+from Bio.Phylo.TreeConstruction import DistanceCalculator
+from Bio.Phylo.TreeConstruction import DistanceTreeConstructor
+
+def consensus(msa):
+    alignment = MultipleSeqAlignment(msa)
+    calculator = DistanceCalculator('identity')
+    dm = calculator.get_distance(alignment)
+    constructor = DistanceTreeConstructor(calculator, 'nj')
+    tree = constructor.build_tree(alignment)
+    print tree
 
 """FROM http://biopython.org/DIST/docs/api/Bio.Align.AlignInfo-pysrc.html"""
-def dumb_consensus(msa, threshold=.7, ambiguous="-", require_multiple=True):
+def dumb_consensus(msa, threshold=.7, ambiguous="X", require_multiple=True):
     """Output a fast consensus sequence of the alignment.
 
  This doesn't do anything fancy at all. It will just go through the

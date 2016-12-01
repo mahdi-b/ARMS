@@ -82,7 +82,7 @@ def serialRename(input_file, output_fasta_filepath, file_type, clip=True):
             sample_name = clip_count(seq_prefix)
         else:
             sample_name = seq_prefix
-            samples_file_output.write("%s\t%s" % (s.id, sample_name))
+        samples_file_output.write("%s\t%s" % (s.id, sample_name))
 
         # Store the renamed sequence
         s.description = ""

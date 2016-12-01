@@ -329,14 +329,14 @@ def main(argv):
     parser_query_fasta.add_argument('-x', '--taxinfo', required=True, help="Filepath to a two-column, tab-delimited \
                             file mapping a sequence's fasta id (in the referencefasta file) to a taxonomic \
                             identification.")
-    parser_query_fasta.add_argument('-s', '--simmilarity', required=False, default=97, type=int, help="Minimum %%  \
-                            simmilarity (integer between 0 and 100) between query and reference sequences required for \
-                            positive identification. Default: 97")
+    parser_query_fasta.add_argument('-s', '--simmilarity', required=False, default=0.97, type=float, help="Minimum %%  \
+                            simmilarity (decimal between 0 and 1) between query and reference sequences required for \
+                            positive identification. Default: .97")
     parser_query_fasta.add_argument('-p', '--program', required=False, default="vsearch", help="Indicates which \
                             program to use.  Choices are: 'vsearch'.  Default: 'vsearch'.")
-    parser_query_fasta.add_argument('-c', '--coverage', required=False, default=85, type=int, help="Minimum %% coverage \
-                            (integer between 0 and 100) required query and reference sequences required for positive \
-                            identification. Default: 85")
+    parser_query_fasta.add_argument('-c', '--coverage', required=False, default=0.85, type=float, help="Minimum %% coverage \
+                            (decimal between 0 and 1) required query and reference sequences required for positive \
+                            identification. Default: .85")
     parser_query_fasta.add_argument('-j', '--threads', required=False, type=int, default=2,
                                     help="Number of threads to use per query process.")
     parser_query_fasta.set_defaults(command=Query_OTU_Fasta_Command)
@@ -355,12 +355,12 @@ def main(argv):
                             to use as a reference.")
     parser_query_db.add_argument('-d', '--db', required=True, help="Filepath to the curated fasta file \
                             to use as a reference.")
-    parser_query_db.add_argument('-s', '--simmilarity', required=False, default=97, type=int, help="Minimum %%  \
-                                simmilarity (integer between 0 and 100) between query and reference sequences \
-                                required for positive identification. Default: 97")
-    parser_query_db.add_argument('-c', '--coverage', required=False, default=85, type=int, help="Minimum %% coverage \
-                                (integer between 0 and 100) required query and reference sequences required for \
-                                positive identification. Default: 85")
+    parser_query_db.add_argument('-s', '--simmilarity', required=False, default=0.97, type=float, help="Minimum %%  \
+                                simmilarity (decimal between 0 and 1) between query and reference sequences \
+                                required for positive identification. Default: .97")
+    parser_query_db.add_argument('-c', '--coverage', required=False, default=0.85, type=float, help="Minimum %% coverage \
+                                (decimal between 0 and 1) required query and reference sequences required for \
+                                positive identification. Default: .85")
     parser_query_db.add_argument('-j', '--threads', required=False, type=int, default=2,
                                  help="Number of threads to use per query process.")
     parser_query_db.add_argument('-p', '--program', required=False, default="vsearch", help="Indicates which \

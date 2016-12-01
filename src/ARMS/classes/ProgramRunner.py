@@ -171,7 +171,7 @@ class ProgramRunner(ValidRunner):
                                                     " --threads %d --quiet --derep_fulllength %s --sizeout \
                                                     --fasta_width 0 --output %s -uc %s",
             ProgramRunnerCommands.ALIGN_VSEARCH: self.program_paths[ProgramRunnerPrograms.VSEARCH] +
-                                                    " --threads %d --usearch_global %s --db %s --id 0.9 --userfields \
+                                                    " --threads %d --usearch_global %s --db %s --id %f --userfields \
                                                     query+target+id+alnlen+qcov+qstrand --userout %s --alnout %s %s",
             ProgramRunnerCommands.PRECLEAN_SPADES: "python " + self.program_paths[ProgramRunnerPrograms.SPADES] +
                                                     " --only-error-correction --disable-gzip-output -1 %s -2 %s -o %s \

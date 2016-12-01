@@ -23,9 +23,9 @@ class Query_OTU_DB_Program_Vsearch(ChewbaccaProgram):
         :param outdir: Filepath to the output directory.
         :param ref_fasta: Filepath to the curated fasta file to use as a reference.
         :param ref_db: Filepath to the curated fasta file to use as a reference.
-        :param simmilarity:"Minimum % simmilarity (integer between 0 and 100) between query and reference sequences
+        :param simmilarity:"Minimum % simmilarity (decimal between 0 and 1) between query and reference sequences
                             required for positive identification.
-        :param coverage:Minimum % coverage (integer between 0 and 100) required query and reference sequences required
+        :param coverage:Minimum % coverage (decimal between 0 and 1) required query and reference sequences required
                             for positive identification.
         :param processes: The number of processes to use in the identification process.
         :param extraargstring: Advanced program parameter string.
@@ -43,7 +43,7 @@ class Query_OTU_DB_Program_Vsearch(ChewbaccaProgram):
         pool = init_pool(min(len(query_fastas), processes))
 
         # VSEARCH ALIGNMENT
-        query_vsearch(inputs, outdir, processes, aln_user_string, extraargstring, pool)
+        query_vsearch(inputs, outdir, simmilarity, processes, aln_user_string, extraargstring, pool)
 
         printVerbose("Parsing output...")
         # Parse the alignment results and put those that pass the criterion (97 similarity, 85 coverage) in

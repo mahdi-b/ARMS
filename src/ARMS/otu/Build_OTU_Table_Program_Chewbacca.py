@@ -4,7 +4,7 @@ from classes.Helpers import getInputFiles, debugPrintInputInfo, printVerbose
 
 
 class Build_OTU_Table_Program_Chewbacca(ChewbaccaProgram):
-    name = "bayeshammer"
+    name = "chewbacca"
 
     def execute_program(self):
         args = self.args

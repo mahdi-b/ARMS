@@ -40,6 +40,7 @@ python ~/ARMS/src/ARMS/chewbacca.py -t 2 dereplicate_fasta -i 4d_merged -o 5_der
 ##=================================================================================================
 python ~/ARMS/src/ARMS/chewbacca.py -t 2 partition -i 5_derep -o 6_partitioned -c 200 -f fasta
 
+
 ##=================================================================================================
 ## Step 7: run MACSE
 ##=================================================================================================
@@ -72,8 +73,8 @@ python ~/ARMS/src/ARMS/chewbacca.py build_matrix -b ~/ARMS/data/barcodes.txt -g 
 ##=================================================================================================
 ## Step 11: Identify hits against biocode/Bold/ncbi
 ##=================================================================================================
-python ~/ARMS/src/ARMS/chewbacca.py -t 2 query_fasta  -j 4 -i 10_clustered -o 12_biocode -r ~/ARMS/data/BiocodePASSED_SAP.txt -x ~/ARMS/data/BiocodePASSED_SAP_tax_info_formatted.txt -s 97 -c 85
-python ~/ARMS/src/ARMS/chewbacca.py -t 2 query_fasta  -j 4 -i 10_clustered  -o 13_bold -r ~/ARMS/data/bold100k.fna -x ~/ARMS/data/seq_lin.mapping -s 97 -c 85
+python ~/ARMS/src/ARMS/chewbacca.py -t 2 query_fasta  -j 4 -i 10_clustered -o 12_biocode -r ~/ARMS/data/BiocodePASSED_SAP.txt -x ~/ARMS/data/BiocodePASSED_SAP_tax_info_formatted.txt -s .7 -c .7
+python ~/ARMS/src/ARMS/chewbacca.py -t 2 query_fasta  -j 4 -i 10_clustered  -o 13_bold -r ~/ARMS/data/bold100k.fna -x ~/ARMS/data/seq_lin.mapping -s .7 -c .7
 python ~/ARMS/src/ARMS/chewbacca.py -t 2 query_db -i 10_clustered -o 14_ncbi -r ~/ARMS/refs/COI.fasta -d ~/ARMS/refs/ncbi.db
 
 

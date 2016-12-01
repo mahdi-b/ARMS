@@ -205,7 +205,7 @@ def realign(seqs, start, end, outfilename):
 
 
 
-def get_best_hits_from_vsearch(input_fna, ref_fna, outdir):
+def get_best_hits_from_vsearch(input_fna, ref_fna, outdir, id_pct=.7):
     """Calls vsearch with an input fasta, and returns a dictionary mapping each sequence to its best hit. (subject to
         the ID threshold (70%) in vsearch (See ProgramRunnerCommands.ALIGN_VSEARCH).
 
@@ -239,7 +239,7 @@ def get_best_hits_from_vsearch(input_fna, ref_fna, outdir):
     #     # vsearch --usearch_global %s seeds.pick.fasta  --db ../data/BiocodePASSED_SAP.txt --id 0.9 \
     # --userfields query+target+id+alnlen+qcov --userout %sout --alnout %s alnout.txt
     ProgramRunner(ProgramRunnerCommands.ALIGN_VSEARCH,
-                            [processes, input_fna, ref_fna, "%s/%s.out" % (outdir, strip_ixes(input_fna)),
+                            [processes, input_fna, ref_fna, id_pct, "%s/%s.out" % (outdir, strip_ixes(input_fna)),
                              "%s/%s.alnout" % (outdir, strip_ixes(input_fna)), aln_user_string],
                             {"exists": [input_fna, ref_fna], "positive": [processes]},
                             extraargstring).run()

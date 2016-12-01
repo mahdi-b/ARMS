@@ -10,6 +10,7 @@ class BufferedFileWriter(object):
         except:
             print "ERROR: Could not open the file %s for writing." % output_f
         self.len = 0
+        self.has_written = False
         self.buffer = []
         self.filetype = filetype
         self.max_buff = max_buff
@@ -25,9 +26,13 @@ class BufferedFileWriter(object):
         self.out_stream.write("\n".join(self.buffer))
         self.buffer = []
         self.len = 0
+        self.has_written = True
 
 
     def flush(self):
+        # If we have previously written content to this file, write a newline.
+        if self.has_written:
+            self.out_stream.write("\n")
         self.__write__()
         self.out_stream.close()
 

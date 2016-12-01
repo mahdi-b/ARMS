@@ -62,8 +62,9 @@ def makeDirOrdie(dir_path, orDie=True):
         os.makedirs(dir_path)
     else:
         if orDie:
-            sys.exit("ERROR: Directory %s already exists. Please specify a different output directory name and try " +
-                        "again. Aborting. " % dir_path)
+            sys.exit("ERROR: Directory %s already exists. Please specify a different output directory name and try \
+again. Aborting. " % dir_path)
+
     return dir_path
 
 
