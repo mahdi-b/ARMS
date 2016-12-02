@@ -73,9 +73,9 @@ python ~/ARMS/src/ARMS/chewbacca.py build_matrix -b ~/ARMS/data/barcodes.txt -g 
 ##=================================================================================================
 ## Step 11: Identify hits against biocode/Bold/ncbi
 ##=================================================================================================
-python ~/ARMS/src/ARMS/chewbacca.py -t 2 query_fasta  -j 4 -i 10_clustered -o 12_biocode -r ~/ARMS/data/BiocodePASSED_SAP.txt -x ~/ARMS/data/BiocodePASSED_SAP_tax_info_formatted.txt -s .7 -c .7
-python ~/ARMS/src/ARMS/chewbacca.py -t 2 query_fasta  -j 4 -i 10_clustered  -o 13_bold -r ~/ARMS/data/bold100k.fna -x ~/ARMS/data/seq_lin.mapping -s .7 -c .7
-python ~/ARMS/src/ARMS/chewbacca.py -t 2 query_db -i 10_clustered -o 14_ncbi -r ~/ARMS/refs/COI.fasta -d ~/ARMS/refs/ncbi.db
+python ~/ARMS/src/ARMS/chewbacca.py -t 2 query_fasta  -j 4 -i 10_clustered -o 12_biocode -r ~/ARMS/data/BiocodePASSED_SAP.txt -x ~/ARMS/data/BiocodePASSED_SAP_tax_info_formatted.txt -s 0.7 -c 0.7
+python ~/ARMS/src/ARMS/chewbacca.py -t 2 query_fasta  -j 4 -i 10_clustered  -o 13_bold -r ~/ARMS/data/bold100k.fna -x ~/ARMS/data/seq_lin.mapping -s 0.7 -c 0.7
+python ~/ARMS/src/ARMS/chewbacca.py -t 2 query_db -i 10_clustered -o 14_ncbi -r ~/ARMS/refs/COI.fasta -d ~/ARMS/refs/ncbi.db -s 0.7 -c 0.7
 
 
 

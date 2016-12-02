@@ -15,7 +15,7 @@ def buildLine(row_name_str, child_list):
     return out
 
 
-def annotateOTUtable(otu_file, annotation_file, out_file, id_col=0, tax_col=5, clip_count_from_annotations=True):
+def annotateOTUtable(otu_file, annotation_file, out_file, id_col=0, tax_col=6, clip_count_from_annotations=True):
     """Given the best hits from a cleaned, annotated (with taxonomic names), Vsearch out file, renames each
         sequence ID in OTU table with its taxonomic name in the Vsearch outfile.
 

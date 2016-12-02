@@ -61,10 +61,10 @@ def parseVSearchOutputAgainstFasta(vsearch_outfile, taxInfo, output_file, min_si
         printVerbose("Reading %s as query file..." % vsearch_outfile)
         for line in open(vsearch_outfile, 'r'):
             data = line.split()
-            if float(data[2]) < min_simm or float(data[4]) < min_coverage:
+            if float(data[2]) > min_simm and float(data[4]) > min_coverage:
 
                 if biocodeTax.has_key(data[1]):
-                    print "Found %s as %s" % (data[1], biocodeTax[data[1]])
+                    printVerbose("Found %s as %s" % (data[1], biocodeTax[data[1]]))
                     data.append(biocodeTax[data[1]])
                     rslt.append("\t".join(data))
                 else:
@@ -107,12 +107,12 @@ def parseVSearchOutputAgainstNCBI(vsearch_out, database, output_file, min_covera
         for line in open(vsearch_out, 'r'):
             data = line.split()
 
-            if float(data[4]) < min_coverage or float(data[2]) < min_simm:
+            if float(data[4]) > min_coverage or float(data[2]) > min_simm:
                 hit = c.execute(query % data[1]).fetchone()
                 if hit:
                     taxonomy = getTaxFromId(hit[0])
                     data.append(taxonomy)
-                    print "\t".join(data)
+                    printVerbose("\t".join(data))
                     out.write("\t".join(data))
                     out.write("\n")
                 else:
