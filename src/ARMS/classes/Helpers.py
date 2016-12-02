@@ -45,10 +45,6 @@ def run_parallel(runnables, pool):
     except  Exception as e:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         print "ERROR: %s" % e
-        """
-        print sys.exc_info()
-        print repr(traceback.format_tb(exc_traceback))
-        """
         kill_pool_and_die(pool)
 
 
@@ -62,9 +58,8 @@ def makeDirOrdie(dir_path, orDie=True):
         os.makedirs(dir_path)
     else:
         if orDie:
-            sys.exit("ERROR: Directory %s already exists. Please specify a different output directory name and try \
-again. Aborting. " % dir_path)
-
+            sys.exit("ERROR: Directory %s already exists." % dir_path +
+                     " Please specify a different output directory and try again." )
     return dir_path
 
 

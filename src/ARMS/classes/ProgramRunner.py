@@ -67,7 +67,7 @@ class ProgramRunner(ValidRunner):
         ProgramRunnerPrograms.VSEARCH: os.path.expanduser("~/ARMS/programs/vsearch/vsearch"),
         ProgramRunnerPrograms.TRIMMOMATIC: os.path.expanduser("~/ARMS/programs/Trimmomatic-0.33/trimmomatic-0.33.jar"),
         ProgramRunnerPrograms.MACSE: os.path.expanduser("~/ARMS/programs/macse/macse_v1.01b.jar"),
-        ProgramRunnerPrograms.JAVA: os.path.expanduser("java -jar")
+        ProgramRunnerPrograms.JAVA: os.path.expanduser("/usr/bin/java")
     }
 
     def __init__(self, program_, params, conditions_={}, custom_arg_string="", dryrun=False):
@@ -115,7 +115,7 @@ class ProgramRunner(ValidRunner):
             try:
                 rslt = subprocess.check_call(os.path.expanduser(self.command), shell=True, stdout=output)
             except subprocess.CalledProcessError as cpe:
-                pass
+                print "ERROR: Received an error from a called subprogram.  Aborting execution."
             return
 
     def __load_configs__(self):

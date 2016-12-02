@@ -9,7 +9,8 @@ from clean.Clean_Adapters_Command import Clean_Adapters_Command
 from clean.Clean_Deep_Command import Clean_Deep_Command
 from clean.Clean_Quality_Command import Clean_Quality_Command
 from cluster.Cluster_Command import Cluster_Command
-from demux.Demux_Command import Demux_Command
+from demux.Demux_Barcode_Command import Demux_Barcode_Command
+from demux.Demux_Name_Command import Demux_Name_Command
 from dereplicate.Dereplicate_Command import Dereplicate_Command
 from otu.Annotate_OTU_Table_Command import Annotate_OTU_Table_Command
 from otu.Build_OTU_Table_Command import Build_OTU_Table_Command
@@ -96,17 +97,39 @@ def main(argv):
     # ====================================
     # "barcode.splitter": "cat \"%s\" | " + programPaths["FASTX"] + "fastx_barcode_splitter.pl  --bcfile \"%s\" \
     #                                    -prefix \"%s\" --suffix .fastq --bol --mismatches 1",
-    parser_demux = subparsers.add_parser('demux_samples', description="Given a single barcodes file, and a \
+    parser_demux_barcode = subparsers.add_parser('demux_barcode', description="Given a single barcodes file, and a \
                             fasta/fastq file or a folder containing fasta/fastq files, splits each input fasta/fastq \
                             file into separate sample files (based on each sequence's barcode), for each barcode in \
                             the barcodes file.  Sample files of size zero are ignored.")
-    parser_demux.add_argument('-i', '--input_f', required=True, help="Input fasta/fastq file or folder.")
-    parser_demux.add_argument('-b', '--barcodes', required=True,
-                              help="Tab delimted files of barcodes and corresponding samples.")
-    parser_demux.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
-    parser_demux.add_argument('-p', '--program', required=False, default="fastx", help="Indicates which \
+    parser_demux_barcode.add_argument('-i', '--input_f', required=True, help="Input fasta/fastq file or folder.")
+    parser_demux_barcode.add_argument('-b', '--barcodes', required=True,
+                              help="Tab delimted files of barcodes and corresponding sample names.")
+    parser_demux_barcode.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
+    parser_demux_barcode.add_argument('-p', '--program', required=False, default="fastx", help="Indicates which \
                             program to use.  Choices are: 'fastx'.  Default: 'fastx'.")
-    parser_demux.set_defaults(command=Demux_Command)
+    parser_demux_barcode.set_defaults(command=Demux_Barcode_Command)
+
+
+    # =====================================
+    # ==   Split by name with Chewbacca  ==
+    # =====================================
+    # "barcode.splitter": "cat \"%s\" | " + programPaths["FASTX"] + "fastx_barcode_splitter.pl  --bcfile \"%s\" \
+    #                                    -prefix \"%s\" --suffix .fastq --bol --mismatches 1",
+    parser_demux_name = subparsers.add_parser('demux_name', description="Given a barcodes file listing sequence names \
+                            and 'fake' barcode sequences, and a \
+                            fasta/fastq file or a folder containing fasta/fastq files, splits each input fasta/fastq \
+                            file into separate sample files (based on a sample-keyword in each sequence's name), \
+                            for each sample name in the barcodes file.  Sample files of size zero are ignored.")
+    parser_demux_name.add_argument('-i', '--input_f', required=True, help="Input fasta/fastq file or folder.")
+    parser_demux_name.add_argument('-b', '--barcodes', required=True,
+                              help="Tab delimted files of barcodes and corresponding sample names.  Barcode sequences \
+                              are ignored and can be faked.  Only sample names will be read.")
+    parser_demux_name.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
+    parser_demux_name.add_argument('-p', '--program', required=False, default="chewbacca", help="Indicates which \
+                            program to use.  Choices are: 'chewbacca'.  Default: 'chewbacca'.")
+    parser_demux_name.set_defaults(command=Demux_Name_Command)
+
+
 
     # ==================================================
     # ==  Rename reads serially with renameSequences  ==
