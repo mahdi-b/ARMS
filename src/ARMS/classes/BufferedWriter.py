@@ -1,5 +1,5 @@
 from Bio import SeqIO
-
+import os
 
 class BufferedFileWriter(object):
     """An object that handles the buffered writing of text to files.  Be sure to call flush() at some point."""
@@ -14,9 +14,10 @@ class BufferedFileWriter(object):
         self.buffer = []
         self.filetype = filetype
         self.max_buff = max_buff
-
+        self.empty = True
 
     def write(self, data):
+        self.empty = False
         self.buffer.append(data)
         self.len +=1
         if self.len > self.max_buff:
@@ -36,6 +37,9 @@ class BufferedFileWriter(object):
         self.__write__()
         self.out_stream.close()
 
+    def delete(self):
+        self.out_stream.close()
+        os.remove(self.out_stream.name)
 
 class BufferedSeqWriter(BufferedFileWriter):
     """An object that handles the buffered writing of seqences to files.  Be sure to call flush() at some point."""

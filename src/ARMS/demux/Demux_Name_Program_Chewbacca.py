@@ -26,7 +26,7 @@ class Demux_Program_Chewbacca(ChewbaccaProgram):
 
     def execute_program(self):
         args = self.args
-        self.demux_by_name(args.input_f, args.barcodes, args.outdir, "fastq", args.processes, args.extraargstring)
+        self.demux_by_name(args.input_f, args.barcodes, args.outdir, args.filetype, args.processes, args.extraargstring)
 
     def demux_by_name(self, input_f, barcodes, outdir, filetype, processes, extraargstring):
         """Demuxes using SeqIO.
@@ -38,7 +38,6 @@ class Demux_Program_Chewbacca(ChewbaccaProgram):
         :param processes: Number of processes to use to demux input fileset.
         :param extraargstring: Advanced program parameter string.
         """
-        makeDirOrdie(outdir)
         aux_dir = makeAuxDir(outdir)
         # Get input files
         files_to_split = getInputFiles(input_f)
@@ -62,7 +61,23 @@ class Demux_Program_Chewbacca(ChewbaccaProgram):
 
 
 def split_on_name(input_f, barcodes_file, outdir, id_, filetype):
+    """Demuxes a single input file into separate files.  Matches unique strings in sequence names to the unique sample
+        names in the barcodes_file.
+
+    :param input_f: Filepath to the fasta file to demux.
+    :param barcodes_file: Filepath tot he barcodes file to parse.  Note: only the sequence names are read. Barcode data
+                            can be faked.
+    :param outdir: Filepath to the output directory where demuxed fasta files should be written.
+    :param id_: A unique integer id for a fasta file to demux.
+    :param filetype: Either 'fasta' or 'fastq' indicating the input and output filetypes.
+    """
+
+    unmatched_name = "unmatched"
     sample_names = parse_barcodes_to_dict(barcodes_file).keys()
+    sample_names.append(unmatched_name)
+    sample_names.sort(reverse=True)
+    printVerbose("Possible samples:")
+    printVerbose(str(sample_names))
     out_streams = {}
     for sample_name in sample_names:
         outfile =  "%s/%s_%s_splitOut.fastq" % ( outdir, sample_name, id_)
@@ -72,9 +87,17 @@ def split_on_name(input_f, barcodes_file, outdir, id_, filetype):
     seq_dict = SeqIO.index(input_f, filetype)
 
     for name in seq_dict.keys():
+        matched = False
         for sample_name in sample_names:
             if sample_name in name:
                 out_streams[sample_name].write(seq_dict[name])
+                matched = True
+                break
+        if not matched:
+            out_streams[unmatched_name].write(seq_dict[name])
 
     for writer in out_streams.keys():
-        out_streams[writer].flush()
+            out_streams[writer].flush()
+            # Remove empty files
+            if out_streams[writer].empty:
+                out_streams[writer].delete()

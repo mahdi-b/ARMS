@@ -1,6 +1,6 @@
 from classes.ChewbaccaCommand import ChewbaccaCommand
-from Demux_Program_Chewbacca import Demux_Program_Chewbacca
-from Demux_Program_Fastx import Demux_Program_Fastx
+from Demux_Name_Program_Chewbacca import Demux_Program_Chewbacca
+from Demux_Barcode_Program_Fastx import Demux_Program_Fastx
 
 
 class Demux_Name_Command(ChewbaccaCommand):
@@ -78,15 +78,15 @@ class Demux_Name_Command(ChewbaccaCommand):
                 AAAAAAAAAAAG
 
             SampleA_1_demux.fastq:
-                @Seq6
-                AGACGCAAAAAC
+                @SampleA:002
+                TAAAAAAAAAAA
 
-            SampleB_1_demux.fastq:
-                @Seq7
-                AGTGTAAAAAAG
+            SampleAA_1_demux.fastq:
+                @SampleAA:001
+                GAAAAAAAAAAA
 
         rslt_aux/
-            unmatched_0_demux.fastq:
+            unmatched_1_demux.fastq:
                 @Seq8
                 CGTGTAAAAAAG
     """

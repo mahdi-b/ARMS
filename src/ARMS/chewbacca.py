@@ -124,6 +124,8 @@ def main(argv):
     parser_demux_name.add_argument('-b', '--barcodes', required=True,
                               help="Tab delimted files of barcodes and corresponding sample names.  Barcode sequences \
                               are ignored and can be faked.  Only sample names will be read.")
+    parser_demux_name.add_argument('-f', '--filetype', required=True, help="Indicates input and output filetype.  \
+                            Either 'fasta' or 'fastq'.")
     parser_demux_name.add_argument('-o', '--outdir', required=True, help="Directory where outputs will be saved.")
     parser_demux_name.add_argument('-p', '--program', required=False, default="chewbacca", help="Indicates which \
                             program to use.  Choices are: 'chewbacca'.  Default: 'chewbacca'.")

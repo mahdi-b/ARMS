@@ -1,6 +1,6 @@
 from classes.ChewbaccaCommand import ChewbaccaCommand
-from Demux_Program_Chewbacca import Demux_Program_Chewbacca
-from Demux_Program_Fastx import Demux_Program_Fastx
+from Demux_Name_Program_Chewbacca import Demux_Program_Chewbacca
+from Demux_Barcode_Program_Fastx import Demux_Program_Fastx
 
 
 class Demux_Barcode_Command(ChewbaccaCommand):
