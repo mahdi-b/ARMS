@@ -1,85 +1,71 @@
 
-.. _`file_types`:
-
 File Types
 ==========
-Chewbacca uses several filetypes throughout its functions.
-Getting acquainted with these filetypes will save you time and a lot of headaches.
+Chewbacca uses several common file types. Those are described below.
 
 Fasta File
 -----------
-**Common Extensions: .fa, .fasta, .FASTA**
-
-Fasta files are commonly used in Biological sciences to store data and metadata about genetic sequences.
-  Read more here: https://en.wikipedia.org/wiki/FASTA_format
-
+**common extensions: .fa, .fasta, .FASTA**
+Read more here: https://en.wikipedia.org/wiki/FASTA_format
 
 FastQ File
 -----------
-**Common Extensions: .fq, .fastq, .FASTQ**
-
-FastQ files are very simmiliar to fasta files, but include quality scores for the integrity of the genetic sequences.
-  Read more here: https://en.wikipedia.org/wiki/FASTQ_format
-
-.. _`.groups`:
+**extensions: .fq, .fastq, .FASTQ**
+Read more here: https://en.wikipedia.org/wiki/FASTQ_format
 
 Groups File
 ------------
 **Common Extensions: .groups**
 
-Groups files are used by Chewbacca to keep track of the identities and counts of sequences in groups/clusters/OTUs throughout the analytical process.  Ultimately, this data is used to generate an :ref:`OTU_table`.
-These files are generated and updated when dereplication or clustering occur.
-
+Groups files are used by Chewbacca to keep track of groups, or clusters, of relatively similar sequences.
+Group files are generated or updated after each dereplication or clustering step.
 A Groups file consists of one or more lines in the following format:
 
-::
+  *GROUPID <tab> SequenceID (<space> SequenceID)* ...
 
-  GROUPNAME <tab> SequenceName <space> SequenceName <space> ...
+As an example:
 
-**Example**
-
-::
-
-	Rodent_gutID111	Rodent_gutID111 Rodent_gutID112 Rodent_gutID113
-	Rodent_noseID115	Rodent_stomachID115 Rodent_gutID117
-	Rodent_gutID119	Rodent_gutID119
+	Hawaii_site1_0_ID111  Hawaii_site1_0_ID111 Hawaii_site1_0_ID112 Hawaii_site1_0_ID113
+	Indonedia_site1_0_ID115       Indonedia_site1_0_ID115 Indonedia_site1_0_ID117
+	Philippines_site1_0_ID119     philippines_site1_0_ID119
 
 **Notes:**
 
-1. The GROUPNAME for a group/cluster will likely be the name of a sample within that group/cluster.
-	This means that one sequence name will likely appear twice on a line (once as a GROUPNAME, and once as a SequenceName).
-	This is not an error, but the intended format.
+1. The GROUPID for a group/cluster is a representative sequence from that cluster.
+        This means that a sequenceId  will likely appear twice on a line (once as a GROUPID, and once in the sequence SequenceIds list).
 2. See the "naming conventions" section for more info on chewbacca sequence naming standards.
-3. In any given .groups file, a sequence name should be listed in ONE line (in one group/cluster/otu).
-4. The sequencing data for sequences are stored separately.
-
-.. _`.samples`:
+   SequenceId are created using the a combination of sameple name, file offset,and the sequential number
+   ex. Hawaii_site1_0_ID119.
+   - Hawaii_site1: This sequence is from the Rodent_gut sample.
+   - 0 file offset. When more than one sequence file is used, the files are annotated using different offesets.
+     This makes it easy to track which sequences came from which file, which could potentially represent different
+     sequencing runs, or other things of interest.
 
 Samples File
 -------------
 **Common Extensions: .samples**
 
+**extensions: .samples**
+
 Samples files are used by Chewbacca to map sequence names to the the name of their respective sample names.
-This file is generally written once, early on in the analytical process, at the time of sequence renaming.
+This file is generally written once, early on in the anylitical process, at the time of sequence renaming.
 The primary purposes for writing this file are for annotation and construction of an OTU table at the end of the analysis.
 
 A Samples file consists of one or more lines in the following format:
 
-::
-
-  SequenceName <tab> SampleName
+  *SequenceID <tab> SampleID*
 
 **Example**
 
-::
-
-	Rodent_gutID111	GUT_SAMPLE_21
-	Rodent_gutID112 GUT_SAMPLE_21
+	Hawaii_site1_0_ID111 GUT_SAMPLE_21
+	Hawaii_site1_0_ID112 GUT_SAMPLE_21
 	Rodent_gutID113 GUT_SAMPLE_22
-	Rodent_noseID115	NOSE_SAMPLE_1
-	Rodent_stomachID115	STOMACH_SAMPLE_2
+	Rodent_noseID115     NOSE_SAMPLE_1
+	Rodent_stomachID115  STOMACH_SAMPLE_2
 
-.. _.barcodes:
+Note that more than one sample file is generated when sequences form asample are present in more than one files. In such case,
+Each file is assigned the a different offet. Ex.: Rodent_gut_0.samples, Rodent_gut_1.samples, etc...
+
 
 Barcodes file
 --------------
@@ -95,32 +81,25 @@ A Samples file consists of one or more lines in the following format:
 
 **Example**
 
-::
 
-	GUT_SAMPLE_21        AGACGC
-	GUT_SAMPLE_22        AGTAGT
-	NOSE_SAMPLE_1        ACTAGG
-	STOMACH_SAMPLE_2	AGTACG
-
-.. _`.adapters`:
+	BALI_site_1          agacgc
+	BALI_site_2          agtgta
+	Hawaii_site_1        actagc
 
 Adapters file
 --------------
 **Common Extensions: .adapters, .txt, .fa, .fasta**
 
-Adapters files are fasta files that contain the forward-read adapters pyrosequencing adapters.
+Adapters files are fasta files that contain the sequencing adapters.
 An Adapters file should be paired with an RC Adapters file, and should contain the same number of entries as its paired RC Adapters file.
 
 **Example**
-
-::
 
 	>adapter1
 	GGWACWGGWTGAACWGTWTAYCCYCC
 	>adapter2
 	TANACYTCNGGRTGNCCRAARAAYCA
 
-.. _`.adaptersRC`:
 
 RC Adapters file
 -----------------
@@ -131,14 +110,10 @@ An RC Adapters file should be paired with an Adapters file, and should contain t
 
 **Example**
 
-::
-
 	>adapter1_RC
 	TGRTTYTTYGGNCAYCCNGARGTNTA
 	>adapter2_RC
 	GGRGGRTAWACWGTTCAWCCWGTWCC
-
-.. _`.tax`:
 
 Tax file
 ---------
@@ -149,19 +124,15 @@ These files are generated by the :ref`id_OTU` command, and ingested by the :ref`
 
 Given the blast6 output format, a Tax file consists of one or more lines in the following format:
 
-::
 
 	<query> <tab> <target> <tab> <id> <tab> <alnlen> <tab> <qcov>
 
 **Example**
 
-::
 
 	BALI4606_0_ID1264_2	GBMAA1117-14	90.6	265	84.7	Animalia;Porifera;Demospongiae;Haplosclerida;Phloeodictyidae;;Calyx;Calyx podatypa
 	BALI4462_0_ID921_1	GBCI5234-15	98.8	258	82.4	Animalia;Cnidaria;Anthozoa;Alcyonacea;Xeniidae;;Xenia;Xenia sp. 1 CSM2014
 	BALI4673_0_ID837_1	KHA237-14	96.1	279	100.0	Animalia;Cnidaria;Anthozoa;Actiniaria;;;;
-
-.. _`OTU_table`:
 
 OTU Table
 ---------
@@ -171,31 +142,24 @@ OTU tables are commonly used in Biological surveys to list OTU abundances in dif
 
 OTU tables consist of a header line in the following format:
 
-::
-
 	OTU <tab> <Samplename1> <tab> <Samplename2> <tab> <Samplename3> ...
 
 followed by one or more lines (one per OTU) in the follwing format:
-
-::
 
 	<OTU_name> <tab> <Abundance at Samplename1> <tab> <Abundance at Samplename2> <tab> <Abundance at Samplename3>
 
 **Example**
 
-::
 
-	OTU	Rat_Gut_Sample1	Rat_Nose_Sample1
-	Rat_Gut_ID3	3	0
-	Rat_Gut_ID25	1	1
-
-.. _`.mapping`:
+	OTU	Hawaii_site1	Indonesia_site2	...
+	Rat_Gut_ID3	3	0	...
+	Rat_Gut_ID25	1	1	...
 
 Mapping file
 ------------
 **Common Extensions: .mapping, .txt**
 
-Mapping files are artifacts of renaming (via the :ref:`rename` command), and map old sequence names to new sequence names.  This allows users to use more convenient sequence names during analysis, while still having access to the original sequence names for record keeping.
+Mapping files are artifacts of renaming (via the :ref:`rename` command), and map old sequence ids to new sequence ids.  This allows users to use shorter and meaningful sequence ids, while still having access to the original sequence names.
 
 A Mapping file consists of one or more lines in the following format:
 
@@ -211,5 +175,4 @@ A Mapping file consists of one or more lines in the following format:
 	M03292:26:000000000-AH6AG:1:1101:12506:1361	BALI4462_0_ID2
 	M03292:26:000000000-AH6AG:1:1101:15278:1402	BALI4462_0_ID3
 	M03292:26:000000000-AH6AG:1:1101:16930:1429	BALI4462_0_ID4
-
 
